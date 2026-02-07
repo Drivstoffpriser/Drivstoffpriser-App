@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/constants.dart';
+import '../../config/routes.dart';
 import '../../providers/user_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -11,6 +12,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
     final user = userProvider.user;
+    final isAuth = userProvider.isAuthenticated;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -38,8 +40,12 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           Text(user.displayName,
                               style: Theme.of(context).textTheme.titleMedium),
-                          Text('User ID: ${user.id}',
-                              style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            isAuth
+                                ? 'Email account'
+                                : 'Anonymous (browsing only)',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             '${user.reportCount} reports · Trust: ${(user.trustScore * 100).toStringAsFixed(0)}%',
@@ -54,7 +60,31 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const Divider(),
+          // Auth actions
+          if (!isAuth)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: FilledButton.icon(
+                icon: const Icon(Icons.person_add),
+                label: const Text('Create Account / Sign In'),
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.auth);
+                },
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.logout),
+                label: const Text('Sign Out'),
+                onPressed: () async {
+                  await userProvider.signOut();
+                },
+              ),
+            ),
+
+          const Divider(height: 32),
 
           // Theme toggle
           SwitchListTile(

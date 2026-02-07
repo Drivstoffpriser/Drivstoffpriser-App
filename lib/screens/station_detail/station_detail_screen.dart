@@ -6,6 +6,7 @@ import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
 import 'widgets/price_card.dart';
 import 'widgets/price_history_chart.dart';
@@ -50,9 +51,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        child: Text(widget.station.brand.substring(0, 1)),
-                      ),
+                      BrandLogo(brand: widget.station.brand),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(

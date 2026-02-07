@@ -6,6 +6,7 @@ import '../../config/routes.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../services/distance_service.dart';
+import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
 import '../map/widgets/fuel_filter_bar.dart';
 
@@ -71,9 +72,7 @@ class StationListScreen extends StatelessWidget {
                       }
 
                       return ListTile(
-                        leading: CircleAvatar(
-                          child: Text(station.brand.substring(0, 1)),
-                        ),
+                        leading: BrandLogo(brand: station.brand),
                         title: Text(station.name),
                         subtitle: Text(
                           [

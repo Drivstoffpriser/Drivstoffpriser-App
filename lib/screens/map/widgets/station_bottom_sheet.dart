@@ -7,6 +7,7 @@ import '../../../models/station.dart';
 import '../../../providers/location_provider.dart';
 import '../../../providers/station_provider.dart';
 import '../../../services/distance_service.dart';
+import '../../../widgets/brand_logo.dart';
 
 class StationBottomSheet extends StatelessWidget {
   const StationBottomSheet({super.key});
@@ -122,13 +123,7 @@ class _StationTile extends StatelessWidget {
 
     return ListTile(
       dense: true,
-      leading: CircleAvatar(
-        radius: 18,
-        child: Text(
-          station.brand.substring(0, 1),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
+      leading: BrandLogo(brand: station.brand, radius: 18),
       title: Text(station.name, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         [

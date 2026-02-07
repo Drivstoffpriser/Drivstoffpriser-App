@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/station.dart';
 import '../services/distance_service.dart';
-import '../services/mock_data_service.dart';
+import '../services/firestore_service.dart';
 
 enum SortMode { cheapest, nearest }
 
@@ -14,6 +16,9 @@ class StationProvider extends ChangeNotifier {
   FuelType _selectedFuelType = FuelType.diesel;
   SortMode _sortMode = SortMode.cheapest;
   bool _isLoading = false;
+
+  StreamSubscription? _stationsSub;
+  StreamSubscription? _pricesSub;
 
   List<Station> get stations => _stations;
   List<CurrentPrice> get prices => _prices;
@@ -25,13 +30,20 @@ class StationProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Cancel any existing subscriptions
+    await _stationsSub?.cancel();
+    await _pricesSub?.cancel();
 
-    _stations = MockDataService.getStations();
-    _prices = MockDataService.getCurrentPrices();
-    _isLoading = false;
-    notifyListeners();
+    _stationsSub = FirestoreService.stationsStream().listen((stations) {
+      _stations = stations;
+      _isLoading = false;
+      notifyListeners();
+    });
+
+    _pricesSub = FirestoreService.currentPricesStream().listen((prices) {
+      _prices = prices;
+      notifyListeners();
+    });
   }
 
   void setFuelType(FuelType type) {
@@ -93,5 +105,12 @@ class StationProvider extends ChangeNotifier {
     }
 
     return filtered;
+  }
+
+  @override
+  void dispose() {
+    _stationsSub?.cancel();
+    _pricesSub?.cancel();
+    super.dispose();
   }
 }

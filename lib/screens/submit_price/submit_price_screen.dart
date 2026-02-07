@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/routes.dart';
 import '../../models/fuel_type.dart';
 import '../../models/station.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/cooldown_prefs_service.dart';
+import '../../widgets/brand_logo.dart';
 import 'widgets/fuel_type_selector.dart';
 import 'widgets/price_input_field.dart';
 
@@ -38,9 +41,47 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final userProvider = context.read<UserProvider>();
+
+    // Auth gate: require email account to submit prices
+    if (!userProvider.isAuthenticated) {
+      final result = await Navigator.pushNamed(context, AppRoutes.auth);
+      if (result != true || !mounted) return;
+    }
+
     final price = double.parse(_priceController.text);
     final userId = context.read<UserProvider>().user.id;
     final priceProvider = context.read<PriceProvider>();
+
+    // Cooldown check
+    final remaining = await priceProvider.getCooldownRemaining(
+      userId: userId,
+      stationId: widget.station.id,
+      fuelType: _selectedFuelType,
+    );
+
+    if (remaining != null) {
+      if (!mounted) return;
+      final minutes = remaining.inMinutes;
+      final seconds = remaining.inSeconds % 60;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'You already reported ${_selectedFuelType.displayName} at this station. '
+            'Please wait ${minutes}m ${seconds}s before submitting again.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Confirmation dialog (unless user opted out)
+    final skipConfirm = await CooldownPrefsService.shouldSkipConfirmation();
+    if (!skipConfirm) {
+      if (!mounted) return;
+      final confirmed = await _showConfirmationDialog();
+      if (confirmed != true) return;
+    }
 
     final success = await priceProvider.submitReport(
       stationId: widget.station.id,
@@ -50,9 +91,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     );
 
     if (success && mounted) {
-      context.read<UserProvider>().incrementReportCount();
-      // Reload station prices
-      await context.read<StationProvider>().loadStations();
+      await context.read<UserProvider>().incrementReportCount();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -61,6 +100,61 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         Navigator.pop(context);
       }
     }
+  }
+
+  Future<bool?> _showConfirmationDialog() {
+    bool doNotShowAgain = false;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Confirm Price Submission'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Please double-check your price. After submitting, '
+                    'you will not be able to update this fuel type at this '
+                    'station for 1 hour.',
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: doNotShowAgain,
+                        onChanged: (value) {
+                          setDialogState(() => doNotShowAgain = value ?? false);
+                        },
+                      ),
+                      const Flexible(child: Text('Do not show this again')),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    if (doNotShowAgain) {
+                      await CooldownPrefsService.setSkipConfirmation(true);
+                    }
+                    if (context.mounted) Navigator.pop(context, true);
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -80,9 +174,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      child: Text(widget.station.brand.substring(0, 1)),
-                    ),
+                    BrandLogo(brand: widget.station.brand),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

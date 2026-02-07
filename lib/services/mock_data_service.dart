@@ -13,25 +13,25 @@ class MockDataService {
 
   static List<Station> getStations() {
     return const [
-      // Oslo
-      Station(id: 's1', name: 'Circle K Majorstuen', brand: 'Circle K', address: 'Kirkeveien 45', city: 'Oslo', latitude: 59.9290, longitude: 10.7127),
-      Station(id: 's2', name: 'Shell Grønland', brand: 'Shell', address: 'Grønlandsleiret 12', city: 'Oslo', latitude: 59.9127, longitude: 10.7615),
-      Station(id: 's3', name: 'Esso Sinsen', brand: 'Esso', address: 'Trondheimsveien 100', city: 'Oslo', latitude: 59.9380, longitude: 10.7780),
-      Station(id: 's4', name: 'YX Bryn', brand: 'YX', address: 'Østensjøveien 52', city: 'Oslo', latitude: 59.9070, longitude: 10.8100),
-      Station(id: 's5', name: 'Uno-X Løren', brand: 'Uno-X', address: 'Økernveien 20', city: 'Oslo', latitude: 59.9330, longitude: 10.7920),
-      // Bergen
-      Station(id: 's6', name: 'Circle K Åsane', brand: 'Circle K', address: 'Åsane Senter 1', city: 'Bergen', latitude: 60.4650, longitude: 5.3250),
-      Station(id: 's7', name: 'Shell Nesttun', brand: 'Shell', address: 'Nesttunveien 88', city: 'Bergen', latitude: 60.3220, longitude: 5.3540),
-      Station(id: 's8', name: 'Best Laksevåg', brand: 'Best', address: 'Damsgårdsveien 110', city: 'Bergen', latitude: 60.3800, longitude: 5.2950),
-      // Trondheim
-      Station(id: 's9', name: 'Circle K Lade', brand: 'Circle K', address: 'Haakon VIIs gate 30', city: 'Trondheim', latitude: 63.4380, longitude: 10.4350),
-      Station(id: 's10', name: 'Esso Heimdal', brand: 'Esso', address: 'Heimdalsvegen 60', city: 'Trondheim', latitude: 63.3720, longitude: 10.3510),
-      Station(id: 's11', name: 'YX Byåsen', brand: 'YX', address: 'Byåsveien 120', city: 'Trondheim', latitude: 63.4120, longitude: 10.3480),
-      // Stavanger
-      Station(id: 's12', name: 'Shell Forus', brand: 'Shell', address: 'Forusbeen 35', city: 'Stavanger', latitude: 58.8940, longitude: 5.7340),
-      Station(id: 's13', name: 'Uno-X Hillevåg', brand: 'Uno-X', address: 'Hillevågsveien 70', city: 'Stavanger', latitude: 58.9550, longitude: 5.7180),
-      Station(id: 's14', name: 'Circle K Madla', brand: 'Circle K', address: 'Madlaveien 30', city: 'Stavanger', latitude: 58.9410, longitude: 5.6870),
-      Station(id: 's15', name: 'Best Sandnes', brand: 'Best', address: 'Langgata 100', city: 'Sandnes', latitude: 58.8520, longitude: 5.7350),
+      // Oslo (coordinates from OpenStreetMap)
+      Station(id: 's1', name: 'Circle K Kiellands plass', brand: 'Circle K', address: 'Kiellands plass', city: 'Oslo', latitude: 59.9288, longitude: 10.7500),
+      Station(id: 's2', name: 'Shell Fjøsanger', brand: 'Shell', address: 'Cecilie Thoresens vei 13', city: 'Oslo', latitude: 59.8753, longitude: 10.8105),
+      Station(id: 's3', name: 'Esso Trondheimsveien', brand: 'Esso', address: 'Trondheimsveien', city: 'Oslo', latitude: 59.9222, longitude: 10.7715),
+      Station(id: 's4', name: 'YX Tåsen', brand: 'YX', address: 'Tåsen', city: 'Oslo', latitude: 59.9498, longitude: 10.7507),
+      Station(id: 's5', name: 'Uno-X Fredensborg', brand: 'Uno-X', address: 'Fredensborgveien', city: 'Oslo', latitude: 59.9209, longitude: 10.7510),
+      // Bergen (coordinates from OpenStreetMap)
+      Station(id: 's6', name: 'Circle K Ulset', brand: 'Circle K', address: 'Ulset', city: 'Bergen', latitude: 60.4635, longitude: 5.3189),
+      Station(id: 's7', name: 'Shell Fjøsanger', brand: 'Shell', address: 'Fjøsangerveien', city: 'Bergen', latitude: 60.3418, longitude: 5.3302),
+      Station(id: 's8', name: 'Esso Nesttun', brand: 'Esso', address: 'Nesttun', city: 'Bergen', latitude: 60.3127, longitude: 5.3555),
+      // Trondheim (coordinates from OpenStreetMap)
+      Station(id: 's9', name: 'Circle K Tunga', brand: 'Circle K', address: 'Tungaveien', city: 'Trondheim', latitude: 63.4208, longitude: 10.4610),
+      Station(id: 's10', name: 'Esso Kolstad', brand: 'Esso', address: 'Kolstadveien', city: 'Trondheim', latitude: 63.3665, longitude: 10.3464),
+      Station(id: 's11', name: 'YX Lade', brand: 'YX', address: 'Lade', city: 'Trondheim', latitude: 63.4431, longitude: 10.4444),
+      // Stavanger (coordinates from OpenStreetMap)
+      Station(id: 's12', name: 'Circle K Forus', brand: 'Circle K', address: 'Forus', city: 'Stavanger', latitude: 58.8927, longitude: 5.7236),
+      Station(id: 's13', name: 'Uno-X Forussletta', brand: 'Uno-X', address: 'Forussletta', city: 'Stavanger', latitude: 58.8776, longitude: 5.7258),
+      Station(id: 's14', name: 'Circle K Mariero', brand: 'Circle K', address: 'Marieroveien', city: 'Stavanger', latitude: 58.9340, longitude: 5.7424),
+      Station(id: 's15', name: 'Esso Sandnes', brand: 'Esso', address: 'Sandnes sentrum', city: 'Sandnes', latitude: 58.8493, longitude: 5.7368),
     ];
   }
 

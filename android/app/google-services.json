@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "574053615024",
+    "project_id": "norskfuelpriceapp-firebase",
+    "storage_bucket": "norskfuelpriceapp-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574053615024:android:6f97c12579939bf4aac275",
+        "android_client_info": {
+          "package_name": "no.fueltracker.fuel_price_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqMn_WiFFsSNNXKCJqf1vKX2rJQnqJaYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
