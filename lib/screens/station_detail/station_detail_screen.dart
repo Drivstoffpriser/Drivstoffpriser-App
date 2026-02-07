@@ -61,10 +61,15 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                               widget.station.brand,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
-                            Text(
-                              '${widget.station.address}, ${widget.station.city}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
+                            if (widget.station.address.isNotEmpty ||
+                                widget.station.city.isNotEmpty)
+                              Text(
+                                [
+                                  widget.station.address,
+                                  widget.station.city,
+                                ].where((s) => s.isNotEmpty).join(', '),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                           ],
                         ),
                       ),

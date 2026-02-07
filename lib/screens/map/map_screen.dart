@@ -20,6 +20,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
+  bool _hasCenteredOnUser = false;
 
   @override
   void initState() {
@@ -44,6 +45,15 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
+
+    // Auto-center on user location once available
+    if (locationProvider.hasLocation && !_hasCenteredOnUser) {
+      _hasCenteredOnUser = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final pos = locationProvider.position!;
+        _mapController.move(LatLng(pos.latitude, pos.longitude), 13);
+      });
+    }
 
     return Scaffold(
       body: Stack(
@@ -113,7 +123,9 @@ class _MapScreenState extends State<MapScreen> {
             child: const FuelFilterBar(),
           ),
           // Bottom sheet
-          const StationBottomSheet(),
+          const Positioned.fill(
+            child: StationBottomSheet(),
+          ),
         ],
       ),
       floatingActionButton: Padding(

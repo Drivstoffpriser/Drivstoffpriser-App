@@ -3,10 +3,60 @@ import 'package:provider/provider.dart';
 
 import '../../config/constants.dart';
 import '../../config/routes.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/firestore_service.dart';
+import '../../services/overpass_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isRefreshing = false;
+
+  Future<void> _refreshStations() async {
+    setState(() => _isRefreshing = true);
+
+    final locationProvider = context.read<LocationProvider>();
+    if (!locationProvider.hasLocation) {
+      await locationProvider.fetchLocation();
+    }
+
+    final position = locationProvider.position;
+    final lat = position?.latitude ?? AppConstants.defaultMapCenter.latitude;
+    final lng = position?.longitude ?? AppConstants.defaultMapCenter.longitude;
+
+    final stations = await OverpassService.fetchNearbyStations(
+      lat: lat,
+      lng: lng,
+      radiusMeters: AppConstants.defaultSearchRadiusMeters,
+    );
+
+    if (!mounted) return;
+
+    if (stations.isNotEmpty) {
+      await FirestoreService.upsertStations(stations);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Updated ${stations.length} stations')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not fetch stations. Check your internet connection.',
+          ),
+        ),
+      );
+    }
+
+    if (mounted) setState(() => _isRefreshing = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +145,24 @@ class SettingsScreen extends StatelessWidget {
             ),
             value: userProvider.isDarkMode,
             onChanged: (_) => userProvider.toggleDarkMode(),
+          ),
+
+          const Divider(),
+
+          // Refresh stations
+          ListTile(
+            leading: _isRefreshing
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            title: const Text('Refresh Stations'),
+            subtitle:
+                const Text('Fetch nearby fuel stations from OpenStreetMap'),
+            enabled: !_isRefreshing,
+            onTap: _refreshStations,
           ),
 
           const Divider(),

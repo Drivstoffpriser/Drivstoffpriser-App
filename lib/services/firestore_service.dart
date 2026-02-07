@@ -51,6 +51,25 @@ class FirestoreService {
     await batch.commit();
   }
 
+  /// Returns true if the stations collection has at least one document.
+  static Future<bool> hasStations() async {
+    final snapshot = await _db.collection('stations').limit(1).get();
+    return snapshot.docs.isNotEmpty;
+  }
+
+  /// Upsert stations into Firestore. Existing stations are updated, not deleted.
+  /// This preserves any linked reports and currentPrices documents.
+  static Future<void> upsertStations(List<Station> stations) async {
+    if (stations.isEmpty) return;
+
+    final batch = _db.batch();
+    for (final station in stations) {
+      final ref = _db.collection('stations').doc(station.id);
+      batch.set(ref, station.toJson(), SetOptions(merge: true));
+    }
+    await batch.commit();
+  }
+
   // ── Stations ─────────────────────────────────────────────────────────
 
   /// Real-time stream of all stations.

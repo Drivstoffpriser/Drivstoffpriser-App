@@ -73,26 +73,24 @@ class StationProvider extends ChangeNotifier {
   }
 
   /// Stations sorted by the current sort mode.
+  /// Shows all stations; those with prices sort first.
   List<Station> sortedStations({double? userLat, double? userLng}) {
-    final filtered = _stations.where((s) {
-      return _prices.any(
-        (p) => p.stationId == s.id && p.fuelType == _selectedFuelType,
-      );
-    }).toList();
+    final all = List<Station>.from(_stations);
 
     switch (_sortMode) {
       case SortMode.cheapest:
-        filtered.sort((a, b) {
+        all.sort((a, b) {
           final pa = getPriceForStation(a.id);
           final pb = getPriceForStation(b.id);
-          if (pa == null && pb == null) return 0;
+          // Stations with prices come first
+          if (pa == null && pb == null) return a.name.compareTo(b.name);
           if (pa == null) return 1;
           if (pb == null) return -1;
           return pa.price.compareTo(pb.price);
         });
       case SortMode.nearest:
         if (userLat != null && userLng != null) {
-          filtered.sort((a, b) {
+          all.sort((a, b) {
             final da = DistanceService.distanceInMeters(
               userLat, userLng, a.latitude, a.longitude,
             );
@@ -101,10 +99,12 @@ class StationProvider extends ChangeNotifier {
             );
             return da.compareTo(db);
           });
+        } else {
+          all.sort((a, b) => a.name.compareTo(b.name));
         }
     }
 
-    return filtered;
+    return all;
   }
 
   @override

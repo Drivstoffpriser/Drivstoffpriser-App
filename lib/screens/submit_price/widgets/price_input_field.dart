@@ -7,11 +7,13 @@ import '../../../models/fuel_type.dart';
 class PriceInputField extends StatelessWidget {
   final TextEditingController controller;
   final FuelType fuelType;
+  final bool required;
 
   const PriceInputField({
     super.key,
     required this.controller,
     required this.fuelType,
+    this.required = false,
   });
 
   @override
@@ -23,13 +25,15 @@ class PriceInputField extends StatelessWidget {
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
       ],
       decoration: InputDecoration(
-        labelText: 'Price (${AppConstants.currencyCode}/${fuelType.unit})',
+        labelText: '${fuelType.displayName} (${AppConstants.currencyCode}/${fuelType.unit})',
         suffixText: 'kr/${fuelType.unit}',
         border: const OutlineInputBorder(),
         helperText: 'Range: ${AppConstants.minFuelPrice.toStringAsFixed(0)}-${AppConstants.maxFuelPrice.toStringAsFixed(0)} kr',
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'Enter a price';
+        if (value == null || value.isEmpty) {
+          return required ? 'Enter a price' : null;
+        }
         final price = double.tryParse(value);
         if (price == null) return 'Invalid number';
         if (price < AppConstants.minFuelPrice || price > AppConstants.maxFuelPrice) {

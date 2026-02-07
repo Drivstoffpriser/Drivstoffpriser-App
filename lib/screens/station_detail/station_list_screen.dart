@@ -76,7 +76,7 @@ class StationListScreen extends StatelessWidget {
                         title: Text(station.name),
                         subtitle: Text(
                           [
-                            station.city,
+                            if (station.city.isNotEmpty) station.city,
                             ?distanceStr,
                             if (price != null) timeago.format(price.updatedAt),
                           ].join(' · '),

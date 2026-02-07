@@ -23,9 +23,11 @@ class StationBottomSheet extends StatelessWidget {
     );
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.3,
-      minChildSize: 0.1,
+      initialChildSize: 0.25,
+      minChildSize: 0.08,
       maxChildSize: 0.7,
+      snap: true,
+      snapSizes: const [0.25, 0.5],
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -39,58 +41,70 @@ class StationBottomSheet extends StatelessWidget {
               ),
             ],
           ),
-          child: Column(
-            children: [
-              // Handle bar
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              // Sort toggle
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
+          child: CustomScrollView(
+            controller: scrollController,
+            slivers: [
+              // Handle bar + header
+              SliverToBoxAdapter(
+                child: Column(
                   children: [
-                    Text(
-                      '${stationProvider.selectedFuelType.displayName} Prices',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const Spacer(),
-                    SegmentedButton<SortMode>(
-                      segments: const [
-                        ButtonSegment(value: SortMode.cheapest, label: Text('Cheapest')),
-                        ButtonSegment(value: SortMode.nearest, label: Text('Nearest')),
-                      ],
-                      selected: {stationProvider.sortMode},
-                      onSelectionChanged: (s) => stationProvider.setSortMode(s.first),
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        textStyle: WidgetStatePropertyAll(Theme.of(context).textTheme.labelSmall),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${stationProvider.selectedFuelType.displayName} Prices',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const Spacer(),
+                          SegmentedButton<SortMode>(
+                            segments: const [
+                              ButtonSegment(value: SortMode.cheapest, label: Text('Cheapest')),
+                              ButtonSegment(value: SortMode.nearest, label: Text('Nearest')),
+                            ],
+                            selected: {stationProvider.sortMode},
+                            onSelectionChanged: (s) => stationProvider.setSortMode(s.first),
+                            style: ButtonStyle(
+                              visualDensity: VisualDensity.compact,
+                              textStyle: WidgetStatePropertyAll(Theme.of(context).textTheme.labelSmall),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
               // Station list
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: sorted.length,
-                  itemBuilder: (context, index) {
-                    final station = sorted[index];
-                    return _StationTile(station: station);
-                  },
+              if (sorted.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      'No prices reported yet',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _StationTile(station: sorted[index]),
+                    childCount: sorted.length,
+                  ),
                 ),
-              ),
             ],
           ),
         );
@@ -123,11 +137,12 @@ class _StationTile extends StatelessWidget {
 
     return ListTile(
       dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       leading: BrandLogo(brand: station.brand, radius: 18),
       title: Text(station.name, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         [
-          station.city,
+          if (station.city.isNotEmpty) station.city,
           ?distanceStr,
           if (price != null) timeago.format(price.updatedAt),
         ].join(' · '),
