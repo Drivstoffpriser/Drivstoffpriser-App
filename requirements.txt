@@ -1,0 +1,10 @@
+# Firebase tooling
+firebase-admin
+
+# Data seeding / scripting
+requests
+python-dotenv
+
+# Development utilities
+black
+flake8
