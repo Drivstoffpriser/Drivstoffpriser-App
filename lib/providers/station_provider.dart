@@ -13,8 +13,9 @@ enum SortMode { cheapest, nearest }
 class StationProvider extends ChangeNotifier {
   List<Station> _stations = [];
   List<CurrentPrice> _prices = [];
-  FuelType _selectedFuelType = FuelType.diesel;
+  FuelType _selectedFuelType = FuelType.petrol95;
   SortMode _sortMode = SortMode.cheapest;
+  Set<String> _selectedBrands = {};
   bool _isLoading = false;
 
   StreamSubscription? _stationsSub;
@@ -24,7 +25,36 @@ class StationProvider extends ChangeNotifier {
   List<CurrentPrice> get prices => _prices;
   FuelType get selectedFuelType => _selectedFuelType;
   SortMode get sortMode => _sortMode;
+  Set<String> get selectedBrands => _selectedBrands;
   bool get isLoading => _isLoading;
+
+  /// Sorted list of unique brand names from loaded stations.
+  List<String> get availableBrands {
+    final brands = _stations.map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
+    brands.sort();
+    return brands;
+  }
+
+  /// Stations filtered by selected brands (empty selection = show all).
+  List<Station> get filteredStations {
+    if (_selectedBrands.isEmpty) return _stations;
+    return _stations.where((s) => _selectedBrands.contains(s.brand)).toList();
+  }
+
+  void toggleBrand(String brand) {
+    _selectedBrands = Set.of(_selectedBrands);
+    if (_selectedBrands.contains(brand)) {
+      _selectedBrands.remove(brand);
+    } else {
+      _selectedBrands.add(brand);
+    }
+    notifyListeners();
+  }
+
+  void clearBrandFilter() {
+    _selectedBrands = {};
+    notifyListeners();
+  }
 
   Future<void> loadStations() async {
     _isLoading = true;
@@ -72,10 +102,10 @@ class StationProvider extends ChangeNotifier {
     return _prices.where((p) => p.stationId == stationId).toList();
   }
 
-  /// Stations sorted by the current sort mode.
+  /// Stations filtered by brand and sorted by the current sort mode.
   /// Shows all stations; those with prices sort first.
   List<Station> sortedStations({double? userLat, double? userLng}) {
-    final all = List<Station>.from(_stations);
+    final all = List<Station>.from(filteredStations);
 
     switch (_sortMode) {
       case SortMode.cheapest:

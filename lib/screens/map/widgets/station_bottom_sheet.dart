@@ -10,7 +10,9 @@ import '../../../services/distance_service.dart';
 import '../../../widgets/brand_logo.dart';
 
 class StationBottomSheet extends StatelessWidget {
-  const StationBottomSheet({super.key});
+  final DraggableScrollableController? sheetController;
+
+  const StationBottomSheet({super.key, this.sheetController});
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class StationBottomSheet extends StatelessWidget {
     );
 
     return DraggableScrollableSheet(
+      controller: sheetController,
       initialChildSize: 0.25,
       minChildSize: 0.08,
       maxChildSize: 0.7,

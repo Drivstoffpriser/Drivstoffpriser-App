@@ -7,7 +7,9 @@ import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
+import 'widgets/brand_filter_bar.dart';
 import 'widgets/fuel_filter_bar.dart';
+
 import 'widgets/station_bottom_sheet.dart';
 import 'widgets/station_marker.dart';
 
@@ -20,6 +22,8 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
   bool _hasCenteredOnUser = false;
 
   @override
@@ -32,6 +36,12 @@ class _MapScreenState extends State<MapScreen> {
       }
       context.read<LocationProvider>().fetchLocation();
     });
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
   }
 
   void _centerOnUser() {
@@ -54,6 +64,8 @@ class _MapScreenState extends State<MapScreen> {
         _mapController.move(LatLng(pos.latitude, pos.longitude), 13);
       });
     }
+
+    final filtered = stationProvider.filteredStations;
 
     return Scaffold(
       body: Stack(
@@ -91,9 +103,9 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ],
                 ),
-              // Station markers
+              // Station markers (filtered by brand)
               MarkerLayer(
-                markers: stationProvider.stations.map((station) {
+                markers: filtered.map((station) {
                   final price = stationProvider.getPriceForStation(station.id);
                   return Marker(
                     point: LatLng(station.latitude, station.longitude),
@@ -122,18 +134,41 @@ class _MapScreenState extends State<MapScreen> {
             right: 0,
             child: const FuelFilterBar(),
           ),
+          // Brand filter button — top right, below fuel filter bar
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 56,
+            right: 16,
+            child: const BrandFilterButton(),
+          ),
+          // Locate button — floats above the bottom sheet
+          ListenableBuilder(
+            listenable: _sheetController,
+            builder: (context, _) {
+              final screenHeight = MediaQuery.of(context).size.height;
+              double sheetPixels;
+              try {
+                sheetPixels = _sheetController.pixels;
+              } catch (_) {
+                sheetPixels = screenHeight * 0.25;
+              }
+              final bottomOffset = sheetPixels + 8;
+
+              return Positioned(
+                right: 16,
+                bottom: bottomOffset,
+                child: FloatingActionButton.small(
+                  heroTag: 'locateMe',
+                  onPressed: _centerOnUser,
+                  child: const Icon(Icons.my_location),
+                ),
+              );
+            },
+          ),
           // Bottom sheet
-          const Positioned.fill(
-            child: StationBottomSheet(),
+          Positioned.fill(
+            child: StationBottomSheet(sheetController: _sheetController),
           ),
         ],
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 200),
-        child: FloatingActionButton.small(
-          onPressed: _centerOnUser,
-          child: const Icon(Icons.my_location),
-        ),
       ),
     );
   }

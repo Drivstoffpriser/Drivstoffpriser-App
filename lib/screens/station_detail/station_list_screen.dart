@@ -8,6 +8,7 @@ import '../../providers/station_provider.dart';
 import '../../services/distance_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
+import '../map/widgets/brand_filter_bar.dart';
 import '../map/widgets/fuel_filter_bar.dart';
 
 class StationListScreen extends StatelessWidget {
@@ -24,7 +25,13 @@ class StationListScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Stations')),
+      appBar: AppBar(
+        title: const Text('Stations'),
+        actions: const [
+          BrandFilterButton(heroTag: 'brandFilterList'),
+          SizedBox(width: 8),
+        ],
+      ),
       body: Column(
         children: [
           const FuelFilterBar(),

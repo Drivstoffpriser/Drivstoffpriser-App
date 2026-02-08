@@ -1,7 +1,7 @@
 enum FuelType {
-  diesel,
   petrol95,
   petrol98,
+  diesel,
   electric;
 
   String get displayName {
