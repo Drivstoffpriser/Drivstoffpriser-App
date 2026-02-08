@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/user_profile.dart';
 import '../services/firestore_service.dart';
 
 class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   StreamSubscription<User?>? _authSub;
 
   UserProfile _user = const UserProfile(
@@ -22,12 +24,28 @@ class UserProvider extends ChangeNotifier {
   UserProfile get user => _user;
   bool get isDarkMode => _isDarkMode;
 
-  /// True only when the user has linked email/password credentials.
+  /// True when the user has linked email/password or Google credentials.
   bool get isAuthenticated {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return false;
-    return firebaseUser.providerData
-        .any((info) => info.providerId == 'password');
+    return firebaseUser.providerData.any(
+      (info) => info.providerId == 'password' || info.providerId == 'google.com',
+    );
+  }
+
+  /// Human-readable label for the account type shown in settings.
+  String get accountTypeLabel {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return 'Anonymous (browsing only)';
+
+    final providers = firebaseUser.providerData.map((i) => i.providerId).toSet();
+    final hasEmail = providers.contains('password');
+    final hasGoogle = providers.contains('google.com');
+
+    if (hasEmail && hasGoogle) return 'Google + Email account';
+    if (hasGoogle) return 'Google account';
+    if (hasEmail) return 'Email account';
+    return 'Anonymous (browsing only)';
   }
 
   /// Called once at app startup before runApp.
@@ -95,8 +113,50 @@ class UserProvider extends ChangeNotifier {
     await _loadProfile(_auth.currentUser!);
   }
 
+  /// Sign in with Google. Links to anonymous account when possible;
+  /// falls back to direct sign-in if the credential is already used.
+  Future<void> signInWithGoogle() async {
+    final googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) {
+      throw FirebaseAuthException(
+        code: 'sign-in-cancelled',
+        message: 'Google sign-in was cancelled.',
+      );
+    }
+
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    try {
+      // Try linking to the current anonymous account
+      await _auth.currentUser!.linkWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'credential-already-in-use') {
+        // Credential belongs to another account — sign in directly
+        await _auth.signInWithCredential(credential);
+      } else {
+        rethrow;
+      }
+    }
+
+    // Use Google display name if available
+    final displayName = _auth.currentUser!.displayName ?? googleUser.displayName ?? 'User';
+    _user = UserProfile(
+      id: _auth.currentUser!.uid,
+      displayName: displayName,
+      reportCount: _user.reportCount,
+      trustScore: _user.trustScore,
+    );
+    await FirestoreService.setUserProfile(_user);
+    notifyListeners();
+  }
+
   /// Sign out and re-create an anonymous session for browsing.
   Future<void> signOut() async {
+    await _googleSignIn.signOut();
     await _auth.signOut();
     await _auth.signInAnonymously();
     await _loadProfile(_auth.currentUser!);

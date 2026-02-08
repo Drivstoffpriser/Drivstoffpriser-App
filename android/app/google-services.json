@@ -12,7 +12,20 @@
           "package_name": "no.fueltracker.fuel_price_tracker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "574053615024-3mo1ga3jb9b16sg2vjnvn4odceoij9o6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "no.fueltracker.fuel_price_tracker",
+            "certificate_hash": "57c26ec419d8bd9ad5427d4540f0491c05fc3109"
+          }
+        },
+        {
+          "client_id": "574053615024-60uscq63d8b58kpi3l0ejdh1ajsqrrae.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAqMn_WiFFsSNNXKCJqf1vKX2rJQnqJaYE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "574053615024-60uscq63d8b58kpi3l0ejdh1ajsqrrae.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "574053615024-7of7ud6ukc19dr48lrnr387mi5t373dg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "no.fueltracker.fuelPriceTracker"
+              }
+            }
+          ]
         }
       }
     }

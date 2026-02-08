@@ -91,9 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Text(user.displayName,
                               style: Theme.of(context).textTheme.titleMedium),
                           Text(
-                            isAuth
-                                ? 'Email account'
-                                : 'Anonymous (browsing only)',
+                            userProvider.accountTypeLabel,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           const SizedBox(height: 4),

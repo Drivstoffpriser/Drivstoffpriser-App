@@ -31,6 +31,38 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final userProvider = context.read<UserProvider>();
+      await userProvider.signInWithGoogle();
+
+      if (mounted) {
+        if (widget.popOnSuccess) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pop(context);
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'sign-in-cancelled') {
+        // User tapped back — do nothing
+      } else {
+        setState(() => _error = _friendlyError(e.code));
+      }
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -119,6 +151,30 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 16),
             ],
+
+            OutlinedButton.icon(
+              icon: const Icon(Icons.g_mobiledata, size: 24),
+              label: const Text('Continue with Google'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: _isLoading ? null : _signInWithGoogle,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'OR',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 16),
 
             if (_isRegister) ...[
               TextFormField(

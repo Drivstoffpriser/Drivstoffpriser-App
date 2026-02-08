@@ -12,7 +12,7 @@ class AppConstants {
   static const double defaultMapZoom = 12.0;
 
   // Overpass API search radius (meters)
-  static const int defaultSearchRadiusMeters = 30000;
+  static const int defaultSearchRadiusMeters = 20000;
 
   // Max distance (meters) from station to submit a price report
   static const double maxReportDistanceMeters = 150;
