@@ -3,7 +3,7 @@ import 'package:latlong2/latlong.dart';
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'Fuel Price Tracker';
+  static const String appName = 'TankVenn';
   static const String currencyCode = 'NOK';
   static const String currencySymbol = 'kr';
 

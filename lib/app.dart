@@ -18,7 +18,7 @@ class App extends StatelessWidget {
     final isDark = context.watch<UserProvider>().isDarkMode;
 
     return MaterialApp(
-      title: 'Fuel Price Tracker',
+      title: 'TankVenn',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

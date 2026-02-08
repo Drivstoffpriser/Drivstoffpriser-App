@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/devtools_options.yaml
+/doctor_output.txt
+/install_flutter.sh
 
 # Symbolication related
 app.*.symbols
@@ -48,5 +51,10 @@ app.*.map.json
 android/key.properties
 *.jks
 
-#venv
+# venv
 venv/
+
+# Local/Temp files
+devtools_options.yaml
+doctor_output.txt
+install_flutter.sh
