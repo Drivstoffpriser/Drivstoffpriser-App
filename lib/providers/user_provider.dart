@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_profile.dart';
 import '../services/firestore_service.dart';
@@ -50,6 +51,10 @@ class UserProvider extends ChangeNotifier {
 
   /// Called once at app startup before runApp.
   Future<void> initialize() async {
+    // Load saved preferences
+    final prefs = await SharedPreferences.getInstance();
+    _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+
     // Sign in anonymously if no user exists
     if (_auth.currentUser == null) {
       await _auth.signInAnonymously();
@@ -177,6 +182,9 @@ class UserProvider extends ChangeNotifier {
   void toggleDarkMode() {
     _isDarkMode = !_isDarkMode;
     notifyListeners();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('isDarkMode', _isDarkMode);
+    });
   }
 
   @override

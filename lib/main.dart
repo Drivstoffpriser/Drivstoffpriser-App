@@ -17,10 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final hasStations = await FirestoreService.hasStations();
-  if (!hasStations) {
-    await _initializeStations();
-  }
+  await _initializeStations();
 
   final userProvider = UserProvider();
   await userProvider.initialize();
