@@ -44,5 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Signing keys
+android/key.properties
+*.jks
+
 #venv
 venv/

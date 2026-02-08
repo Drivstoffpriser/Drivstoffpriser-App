@@ -1,0 +1,62 @@
+name: Build & Release APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version name (e.g. 1.0.1)'
+        required: true
+        default: '1.0.0'
+      build_number:
+        description: 'Build number (e.g. 2)'
+        required: true
+        default: '1'
+
+jobs:
+  build:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=${{ github.workspace }}/android/app/upload-keystore.jks
+          EOF
+
+      - name: Create google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/google-services.json
+
+      - name: Build APK
+        run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}+${{ inputs.build_number }}
+          name: Release ${{ inputs.version }} (${{ inputs.build_number }})
+          files: build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true
