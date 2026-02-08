@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "574053615024-739koo3188lfj2bm2sm5icgmlcuq2khh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "no.fueltracker.fuel_price_tracker",
+            "certificate_hash": "c2f9cd09c0d13d741326b6a72f741391b68517cf"
+          }
+        },
+        {
           "client_id": "574053615024-60uscq63d8b58kpi3l0ejdh1ajsqrrae.apps.googleusercontent.com",
           "client_type": 3
         }
