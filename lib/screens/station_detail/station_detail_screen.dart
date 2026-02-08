@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/routes.dart';
 import '../../models/station.dart';
@@ -29,6 +33,30 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       provider.loadReports(widget.station.id);
       provider.loadHistory(widget.station.id);
     });
+  }
+
+  Future<void> _openDirections(BuildContext context) async {
+    final lat = widget.station.latitude;
+    final lng = widget.station.longitude;
+    final label = Uri.encodeComponent(widget.station.name);
+
+    // On iOS use Apple Maps, on Android use geo: URI (opens map chooser)
+    final Uri uri;
+    if (!kIsWeb && Platform.isIOS) {
+      uri = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&q=$label');
+    } else {
+      uri = Uri.parse('geo:$lat,$lng?q=$lat,$lng($label)');
+    }
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      // Fallback to Google Maps web URL
+      final fallback = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
+      );
+      await launchUrl(fallback, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -79,6 +107,30 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Directions button
+          FilledButton(
+            onPressed: () => _openDirections(context),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/button/directions.png',
+                  width: 24,
+                  height: 24,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                const Text('Directions'),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 16),
 
           // Prices

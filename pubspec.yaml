@@ -46,6 +46,7 @@ dependencies:
   fl_chart: ^0.70.2
   http: ^1.2.0
   google_sign_in: ^6.2.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
