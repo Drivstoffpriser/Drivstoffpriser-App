@@ -12,6 +12,9 @@ on:
         required: true
         default: '1'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Release APK
