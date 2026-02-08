@@ -1,4 +1,4 @@
-# fuel_price_tracker
+# Fuel price tracker
 
 A new Flutter project.
 
