@@ -168,20 +168,27 @@ class FirestoreService {
     required String stationId,
     required FuelType fuelType,
   }) async {
+    // Uses only equality filters to avoid requiring a Firestore
+    // composite index. Finds the most recent report client-side.
     final snapshot = await _db
         .collection('stations')
         .doc(stationId)
         .collection('reports')
         .where('userId', isEqualTo: userId)
         .where('fuelType', isEqualTo: fuelType.name)
-        .orderBy('reportedAt', descending: true)
-        .limit(1)
         .get();
 
     if (snapshot.docs.isEmpty) return null;
 
-    final data = _normalizeTimestamps(snapshot.docs.first.data());
-    return DateTime.parse(data['reportedAt'] as String);
+    DateTime? latest;
+    for (final doc in snapshot.docs) {
+      final data = _normalizeTimestamps(doc.data());
+      final dt = DateTime.parse(data['reportedAt'] as String);
+      if (latest == null || dt.isAfter(latest)) {
+        latest = dt;
+      }
+    }
+    return latest;
   }
 
   // ── Price History ────────────────────────────────────────────────────
