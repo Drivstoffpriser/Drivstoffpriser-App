@@ -47,6 +47,8 @@ dependencies:
   http: ^1.2.0
   google_sign_in: ^6.2.2
   url_launcher: ^6.3.2
+  device_info_plus: ^12.3.0
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:

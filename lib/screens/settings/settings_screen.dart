@@ -88,8 +88,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.displayName,
-                              style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            user.displayName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           Text(
                             userProvider.accountTypeLabel,
                             style: Theme.of(context).textTheme.bodySmall,
@@ -157,10 +159,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   )
                 : const Icon(Icons.refresh),
             title: const Text('Refresh Stations'),
-            subtitle:
-                const Text('Fetch nearby fuel stations from OpenStreetMap'),
+            subtitle: const Text(
+              'Fetch nearby fuel stations from OpenStreetMap',
+            ),
             enabled: !_isRefreshing,
             onTap: _refreshStations,
+          ),
+
+          const Divider(),
+
+          // Bug report
+          ListTile(
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Report a Bug'),
+            subtitle: const Text('Found an issue? Let us know'),
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.bugReport);
+            },
           ),
 
           const Divider(),

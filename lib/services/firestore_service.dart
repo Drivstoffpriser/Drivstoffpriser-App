@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/bug_report.dart';
 import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/price_history_point.dart';
@@ -146,13 +147,16 @@ class FirestoreService {
         ? (existingPrice.data()?['reportCount'] as num?)?.toInt() ?? 0
         : 0;
 
-    batch.set(priceRef, CurrentPrice(
-      stationId: stationId,
-      fuelType: fuelType,
-      price: price,
-      updatedAt: now,
-      reportCount: currentCount + 1,
-    ).toJson());
+    batch.set(
+      priceRef,
+      CurrentPrice(
+        stationId: stationId,
+        fuelType: fuelType,
+        price: price,
+        updatedAt: now,
+        reportCount: currentCount + 1,
+      ).toJson(),
+    );
 
     await batch.commit();
   }
@@ -204,8 +208,7 @@ class FirestoreService {
     final history = <FuelType, List<PriceHistoryPoint>>{};
 
     for (final fuelType in FuelType.values) {
-      final fuelReports =
-          reports.where((r) => r.fuelType == fuelType).toList();
+      final fuelReports = reports.where((r) => r.fuelType == fuelType).toList();
       if (fuelReports.isEmpty) continue;
 
       // Group by date (ignoring time)
@@ -225,8 +228,7 @@ class FirestoreService {
 
       final points = dayMap.entries.map((e) {
         return PriceHistoryPoint(date: e.key, price: e.value.price);
-      }).toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
+      }).toList()..sort((a, b) => a.date.compareTo(b.date));
 
       history[fuelType] = points;
     }
@@ -267,6 +269,13 @@ class FirestoreService {
     await _db.collection('users').doc(uid).update({
       'reportCount': FieldValue.increment(1),
     });
+  }
+
+  // ── Bug Reports ──────────────────────────────────────────────────────
+
+  /// Submit a bug report to the bug_reports collection.
+  static Future<void> submitBugReport(BugReport report) async {
+    await _db.collection('bug_reports').add(report.toMap());
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

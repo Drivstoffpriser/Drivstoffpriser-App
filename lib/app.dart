@@ -6,6 +6,7 @@ import 'config/theme.dart';
 import 'models/station.dart';
 import 'providers/user_provider.dart';
 import 'screens/auth/auth_screen.dart';
+import 'screens/settings/bug_report_screen.dart';
 import 'screens/station_detail/station_detail_screen.dart';
 import 'screens/submit_price/submit_price_screen.dart';
 import 'widgets/app_bottom_nav.dart';
@@ -40,6 +41,8 @@ class App extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => const AuthScreen(popOnSuccess: true),
             );
+          case AppRoutes.bugReport:
+            return MaterialPageRoute(builder: (_) => const BugReportScreen());
           default:
             return null;
         }
