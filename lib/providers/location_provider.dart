@@ -26,21 +26,22 @@ class LocationProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Get a quick initial fix using last known position
-      final lastKnown = await Geolocator.getLastKnownPosition();
-      if (lastKnown != null && _position == null) {
-        _position = lastKnown;
-        _isLoading = false;
-        notifyListeners();
-      }
-
-      // Check permissions before starting stream
+      // Check/request permissions FIRST — must happen before any
+      // Geolocator call that requires location access.
       final allowed = await _locationService.checkPermission();
       if (!allowed) {
         _error = 'Location permission denied or service disabled.';
         _isLoading = false;
         notifyListeners();
         return;
+      }
+
+      // Try last-known position for a quick initial fix
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null && _position == null) {
+        _position = lastKnown;
+        _isLoading = false;
+        notifyListeners();
       }
 
       // Get an immediate GPS fix so the map can center right away

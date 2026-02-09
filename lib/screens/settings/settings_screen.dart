@@ -4,9 +4,8 @@ import 'package:provider/provider.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../services/firestore_service.dart';
-import '../../services/overpass_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,6 +21,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isRefreshing = true);
 
     final locationProvider = context.read<LocationProvider>();
+    final stationProvider = context.read<StationProvider>();
+
     if (!locationProvider.hasLocation) {
       await locationProvider.fetchLocation();
     }
@@ -30,32 +31,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lat = position?.latitude ?? AppConstants.defaultMapCenter.latitude;
     final lng = position?.longitude ?? AppConstants.defaultMapCenter.longitude;
 
-    final stations = await OverpassService.fetchNearbyStations(
-      lat: lat,
-      lng: lng,
-      radiusMeters: AppConstants.defaultSearchRadiusMeters,
-    );
+    stationProvider.setUserLocation(lat, lng);
+    await stationProvider.fetchNearbyStations(lat, lng);
 
-    if (!mounted) return;
-
-    if (stations.isNotEmpty) {
-      await FirestoreService.upsertStations(stations);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Updated ${stations.length} stations')),
-        );
-      }
-    } else {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not fetch stations. Check your internet connection.',
-          ),
-        ),
+        const SnackBar(content: Text('Stations refreshed')),
       );
+      setState(() => _isRefreshing = false);
     }
-
-    if (mounted) setState(() => _isRefreshing = false);
   }
 
   @override

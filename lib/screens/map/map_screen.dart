@@ -25,15 +25,14 @@ class _MapScreenState extends State<MapScreen> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
   bool _hasCenteredOnUser = false;
+  bool _hasTriggeredStationFetch = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final stationProvider = context.read<StationProvider>();
-      if (stationProvider.stations.isEmpty) {
-        stationProvider.loadStations();
-      }
+      // Kick off location — station loading is triggered in build()
+      // once position is available.
       context.read<LocationProvider>().fetchLocation();
     });
   }
@@ -63,6 +62,36 @@ class _MapScreenState extends State<MapScreen> {
         final pos = locationProvider.position!;
         _mapController.move(LatLng(pos.latitude, pos.longitude), 13);
       });
+    }
+
+    // Once we know the user's position (or location failed), set the
+    // location on StationProvider, subscribe to Firestore, and fetch
+    // nearby stations from Overpass.
+    if (!_hasTriggeredStationFetch) {
+      if (locationProvider.hasLocation) {
+        _hasTriggeredStationFetch = true;
+        final pos = locationProvider.position!;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final sp = context.read<StationProvider>();
+          sp.setUserLocation(pos.latitude, pos.longitude);
+          sp.loadStations();
+          sp.fetchNearbyStations(pos.latitude, pos.longitude);
+        });
+      } else if (locationProvider.error != null) {
+        _hasTriggeredStationFetch = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final sp = context.read<StationProvider>();
+          sp.setUserLocation(
+            AppConstants.defaultMapCenter.latitude,
+            AppConstants.defaultMapCenter.longitude,
+          );
+          sp.loadStations();
+          sp.fetchNearbyStations(
+            AppConstants.defaultMapCenter.latitude,
+            AppConstants.defaultMapCenter.longitude,
+          );
+        });
+      }
     }
 
     final filtered = stationProvider.filteredStations;
@@ -158,9 +187,13 @@ class _MapScreenState extends State<MapScreen> {
                 bottom: bottomOffset,
                 child: FloatingActionButton.small(
                   heroTag: 'locateMe',
-                  onPressed: locationProvider.hasLocation
-                      ? _centerOnUser
-                      : null,
+                  onPressed: locationProvider.isLoading
+                      ? null
+                      : locationProvider.hasLocation
+                          ? _centerOnUser
+                          : () => context
+                              .read<LocationProvider>()
+                              .fetchLocation(),
                   child: locationProvider.isLoading
                       ? const SizedBox(
                           width: 18,
