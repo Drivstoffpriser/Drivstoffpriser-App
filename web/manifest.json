@@ -1,11 +1,11 @@
 {
-    "name": "fuel_price_tracker",
-    "short_name": "fuel_price_tracker",
+    "name": "TankVenn",
+    "short_name": "TankVenn",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
+    "background_color": "#ffffff",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Crowdsourced fuel price tracking in Norway",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

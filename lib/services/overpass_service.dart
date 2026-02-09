@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
 
@@ -42,16 +43,61 @@ class OverpassService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final elements = data['elements'] as List<dynamic>? ?? [];
 
-      return elements
+      final stations = elements
           .where((e) => (e as Map<String, dynamic>)['type'] == 'node')
           .map((e) => _parseNode(e as Map<String, dynamic>))
           .toList();
+
+      return _deduplicateByProximity(stations);
     } on TimeoutException {
       return [];
     } catch (_) {
       return [];
     }
   }
+
+  /// Removes duplicate stations:
+  /// - Same name within 500m → clearly the same place
+  /// - Same brand within 50m → co-located nodes (fuel + charging)
+  static List<Station> _deduplicateByProximity(List<Station> stations) {
+    final result = <Station>[];
+
+    for (final station in stations) {
+      final isDuplicate = result.any((existing) {
+        final dist = _distanceMeters(
+          existing.latitude,
+          existing.longitude,
+          station.latitude,
+          station.longitude,
+        );
+        // Same name within 500m
+        if (existing.name == station.name && dist < 500) return true;
+        // Same brand within 50m
+        if (existing.brand == station.brand && dist < 50) return true;
+        return false;
+      });
+
+      if (!isDuplicate) result.add(station);
+    }
+
+    return result;
+  }
+
+  /// Haversine distance in meters between two coordinates.
+  static double _distanceMeters(
+      double lat1, double lon1, double lat2, double lon2) {
+    const r = 6371000.0; // Earth radius in meters
+    final dLat = _toRad(lat2 - lat1);
+    final dLon = _toRad(lon2 - lon1);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRad(lat1)) *
+            math.cos(_toRad(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  }
+
+  static double _toRad(double deg) => deg * math.pi / 180;
 
   static Station _parseNode(Map<String, dynamic> node) {
     final tags = node['tags'] as Map<String, dynamic>? ?? {};

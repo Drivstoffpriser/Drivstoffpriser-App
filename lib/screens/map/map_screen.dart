@@ -83,9 +83,9 @@ class _MapScreenState extends State<MapScreen> {
                 userAgentPackageName: 'com.example.fuel_price_tracker',
               ),
               // User location marker
-              if (locationProvider.hasLocation)
-                MarkerLayer(
-                  markers: [
+              MarkerLayer(
+                markers: [
+                  if (locationProvider.hasLocation)
                     Marker(
                       point: LatLng(
                         locationProvider.position!.latitude,
@@ -101,8 +101,8 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                ],
+              ),
               // Station markers (filtered by brand)
               MarkerLayer(
                 markers: filtered.map((station) {
@@ -158,8 +158,18 @@ class _MapScreenState extends State<MapScreen> {
                 bottom: bottomOffset,
                 child: FloatingActionButton.small(
                   heroTag: 'locateMe',
-                  onPressed: _centerOnUser,
-                  child: const Icon(Icons.my_location),
+                  onPressed: locationProvider.hasLocation
+                      ? _centerOnUser
+                      : null,
+                  child: locationProvider.isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.my_location),
                 ),
               );
             },
