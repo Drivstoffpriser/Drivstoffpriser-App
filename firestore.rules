@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Stations ──────────────────────────────────────────────────
+    // Anyone can read stations. No client-side writes (seeded by admin/backend).
+    match /stations/{stationId} {
+      allow read: if true;
+      allow write: if false;
+
+      // ── Price Reports (subcollection) ───────────────────────────
+      // Anyone can read reports.
+      // Only authenticated (non-anonymous) users can create reports.
+      // Reports are immutable once created — no updates or deletes.
+      match /reports/{reportId} {
+        allow read: if true;
+        allow create: if request.auth != null
+                      && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+                      && request.resource.data.userId == request.auth.uid
+                      && request.resource.data.keys().hasAll(['stationId', 'fuelType', 'price', 'userId', 'reportedAt'])
+                      && request.resource.data.price is number
+                      && request.resource.data.price > 0
+                      && request.resource.data.price < 100;
+        allow update, delete: if false;
+      }
+    }
+
+    // ── Current Prices ────────────────────────────────────────────
+    // Anyone can read current prices.
+    // Only authenticated (non-anonymous) users can update (via submitReport).
+    match /currentPrices/{docId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+                            && !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+      allow delete: if false;
+    }
+
+    // ── User Profiles ─────────────────────────────────────────────
+    // Users can only read and write their own profile.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Bug Reports ───────────────────────────────────────────────
+    // Any authenticated user (including anonymous) can submit bug reports.
+    // No one can read or modify them from the client.
+    match /bug_reports/{reportId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
+
+    // ── Deny everything else ──────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/constants.dart';
@@ -169,11 +170,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.info_outline),
             title: const Text('About'),
             subtitle: Text(AppConstants.appName),
-            onTap: () {
+            onTap: () async {
+              final info = await PackageInfo.fromPlatform();
+              if (!context.mounted) return;
               showAboutDialog(
                 context: context,
                 applicationName: AppConstants.appName,
-                applicationVersion: '1.0.0',
+                applicationVersion: '${info.version}+${info.buildNumber}',
                 children: [
                   const Text(
                     'Community-driven fuel price tracker for Norway. '

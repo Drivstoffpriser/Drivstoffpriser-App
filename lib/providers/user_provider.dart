@@ -99,11 +99,17 @@ class UserProvider extends ChangeNotifier {
       password: password,
     );
 
-    await _auth.currentUser!.linkWithCredential(credential);
-    await _auth.currentUser!.updateDisplayName(displayName);
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      await currentUser.linkWithCredential(credential);
+      await currentUser.updateDisplayName(displayName);
+    } else {
+      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      await _auth.currentUser?.updateDisplayName(displayName);
+    }
 
     _user = UserProfile(
-      id: _user.id,
+      id: _auth.currentUser!.uid,
       displayName: displayName,
       reportCount: _user.reportCount,
       trustScore: _user.trustScore,
@@ -114,8 +120,8 @@ class UserProvider extends ChangeNotifier {
 
   /// Sign in with an existing email/password account.
   Future<void> signInWithEmail(String email, String password) async {
-    await _auth.signInWithEmailAndPassword(email: email, password: password);
-    await _loadProfile(_auth.currentUser!);
+    final result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    await _loadProfile(result.user!);
   }
 
   /// Sign in with Google. Links to anonymous account when possible;
@@ -135,22 +141,36 @@ class UserProvider extends ChangeNotifier {
       idToken: googleAuth.idToken,
     );
 
-    try {
-      // Try linking to the current anonymous account
-      await _auth.currentUser!.linkWithCredential(credential);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'credential-already-in-use') {
-        // Credential belongs to another account — sign in directly
-        await _auth.signInWithCredential(credential);
-      } else {
-        rethrow;
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      try {
+        // Try linking to the current anonymous account
+        await currentUser.linkWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'credential-already-in-use') {
+          // Credential belongs to another account — sign in directly
+          await _auth.signInWithCredential(credential);
+        } else {
+          rethrow;
+        }
       }
+    } else {
+      // No current user — sign in directly
+      await _auth.signInWithCredential(credential);
     }
 
     // Use Google display name if available
-    final displayName = _auth.currentUser!.displayName ?? googleUser.displayName ?? 'User';
+    final signedInUser = _auth.currentUser;
+    if (signedInUser == null) {
+      throw FirebaseAuthException(
+        code: 'sign-in-failed',
+        message: 'Google sign-in completed but no Firebase user found.',
+      );
+    }
+
+    final displayName = signedInUser.displayName ?? googleUser.displayName ?? 'User';
     _user = UserProfile(
-      id: _auth.currentUser!.uid,
+      id: signedInUser.uid,
       displayName: displayName,
       reportCount: _user.reportCount,
       trustScore: _user.trustScore,

@@ -53,6 +53,9 @@ jobs:
       - name: Create google-services.json
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/google-services.json
 
+      - name: Create firebase_options.dart
+        run: echo "${{ secrets.FIREBASE_OPTIONS_DART }}" | base64 --decode > lib/firebase_options.dart
+
       - name: Build APK
         run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }}
 
