@@ -25,7 +25,7 @@ class _MapScreenState extends State<MapScreen> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
   bool _hasCenteredOnUser = false;
-  bool _hasTriggeredStationFetch = false;
+  bool _hasSetUserLocation = false;
 
   @override
   void initState() {
@@ -65,31 +65,23 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     // Once we know the user's position (or location failed), set the
-    // location on StationProvider, subscribe to Firestore, and fetch
-    // nearby stations from Overpass.
-    if (!_hasTriggeredStationFetch) {
+    // user location on StationProvider so filteredStations can work.
+    // Station loading + Overpass fetch already started in main().
+    if (!_hasSetUserLocation) {
       if (locationProvider.hasLocation) {
-        _hasTriggeredStationFetch = true;
+        _hasSetUserLocation = true;
         final pos = locationProvider.position!;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          final sp = context.read<StationProvider>();
-          sp.setUserLocation(pos.latitude, pos.longitude);
-          sp.loadStations();
-          sp.fetchNearbyStations(pos.latitude, pos.longitude);
+          context.read<StationProvider>().setUserLocation(
+                pos.latitude, pos.longitude);
         });
       } else if (locationProvider.error != null) {
-        _hasTriggeredStationFetch = true;
+        _hasSetUserLocation = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          final sp = context.read<StationProvider>();
-          sp.setUserLocation(
-            AppConstants.defaultMapCenter.latitude,
-            AppConstants.defaultMapCenter.longitude,
-          );
-          sp.loadStations();
-          sp.fetchNearbyStations(
-            AppConstants.defaultMapCenter.latitude,
-            AppConstants.defaultMapCenter.longitude,
-          );
+          context.read<StationProvider>().setUserLocation(
+                AppConstants.defaultMapCenter.latitude,
+                AppConstants.defaultMapCenter.longitude,
+              );
         });
       }
     }

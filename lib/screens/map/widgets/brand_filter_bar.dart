@@ -12,7 +12,8 @@ class BrandFilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
-    final hasFilter = provider.selectedBrands.isNotEmpty;
+    final hasFilter =
+        provider.selectedBrands.isNotEmpty || provider.filterRadiusKm != null;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -59,10 +60,26 @@ class BrandFilterButton extends StatelessWidget {
 class _BrandFilterSheet extends StatelessWidget {
   const _BrandFilterSheet();
 
+  static String _radiusLabel(double? km) {
+    if (km == null) return 'All of Norway';
+    if (km < 1) return '${(km * 1000).round()} m';
+    return '${km.round()} km';
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
     final brands = provider.availableBrands;
+    final radiusKm = provider.filterRadiusKm;
+
+    // Slider: 0 = 5 km, 1 = All
+    // We use discrete steps for a better feel.
+    final steps = [5, 10, 20, 50, 100, 200, 500, null]; // null = All
+    final currentIndex = radiusKm == null
+        ? steps.length - 1
+        : steps.indexWhere((s) => s != null && (s as num) >= radiusKm.round());
+    final sliderValue =
+        (currentIndex == -1 ? steps.length - 1 : currentIndex).toDouble();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 28, 16, 52),
@@ -70,6 +87,39 @@ class _BrandFilterSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Radius slider ──
+          Row(
+            children: [
+              Text(
+                'Search Radius',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              Text(
+                _radiusLabel(radiusKm),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
+          Slider(
+            value: sliderValue,
+            min: 0,
+            max: (steps.length - 1).toDouble(),
+            divisions: steps.length - 1,
+            label: steps[sliderValue.round()] == null
+                ? 'All'
+                : '${steps[sliderValue.round()]} km',
+            onChanged: (v) {
+              final idx = v.round();
+              final km = steps[idx];
+              provider.setFilterRadius(km?.toDouble());
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // ── Brand filter ──
           Row(
             children: [
               Text(

@@ -15,7 +15,7 @@ class AppConstants {
   static const int defaultSearchRadiusMeters = 20000;
 
   // Max distance (meters) from station to submit a price report
-  static const double maxReportDistanceMeters = 150;
+  static const double maxReportDistanceMeters = 500;
 
   // Price validation range (NOK)
   static const double minFuelPrice = 5.0;

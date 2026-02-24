@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/station.dart';
@@ -31,14 +32,41 @@ class OverpassService {
         '(node["amenity"="fuel"]["brand"~"$brandRegex"]'
         '(around:$radiusMeters,$lat,$lng););out body;';
 
+    return _executeQuery(query);
+  }
+
+  /// Fetches ALL fuel stations in Norway from the OSM Overpass API.
+  ///
+  /// Uses an area query for Norway (ISO 3166-1 = NO) so it is not tied
+  /// to a specific coordinate.  The timeout is longer because the result
+  /// set is much larger.
+  static Future<List<Station>> fetchAllNorwayStations() async {
+    const timeout = 60;
+    final brandRegex = _supportedBrands.join('|');
+    final query = '[out:json][timeout:$timeout];'
+        'area["ISO3166-1"="NO"]->.norway;'
+        '(node["amenity"="fuel"]["brand"~"$brandRegex"](area.norway););'
+        'out body;';
+
+    return _executeQuery(query, timeoutSeconds: timeout);
+  }
+
+  /// Shared query execution logic.
+  static Future<List<Station>> _executeQuery(
+    String query, {
+    int timeoutSeconds = _timeoutSeconds,
+  }) async {
     final uri = Uri.parse(_baseUrl).replace(queryParameters: {'data': query});
 
     try {
       final response = await http
           .get(uri)
-          .timeout(Duration(seconds: _timeoutSeconds + 5));
+          .timeout(Duration(seconds: timeoutSeconds + 5));
 
-      if (response.statusCode != 200) return [];
+      if (response.statusCode != 200) {
+        debugPrint('Overpass returned HTTP ${response.statusCode}');
+        return [];
+      }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final elements = data['elements'] as List<dynamic>? ?? [];
@@ -50,8 +78,10 @@ class OverpassService {
 
       return _deduplicateByProximity(stations);
     } on TimeoutException {
+      debugPrint('Overpass request timed out');
       return [];
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Overpass request failed: $e');
       return [];
     }
   }

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../config/constants.dart';
 import '../../config/routes.dart';
-import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 
@@ -21,19 +20,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _refreshStations() async {
     setState(() => _isRefreshing = true);
 
-    final locationProvider = context.read<LocationProvider>();
     final stationProvider = context.read<StationProvider>();
-
-    if (!locationProvider.hasLocation) {
-      await locationProvider.fetchLocation();
-    }
-
-    final position = locationProvider.position;
-    final lat = position?.latitude ?? AppConstants.defaultMapCenter.latitude;
-    final lng = position?.longitude ?? AppConstants.defaultMapCenter.longitude;
-
-    stationProvider.setUserLocation(lat, lng);
-    await stationProvider.fetchNearbyStations(lat, lng);
+    await stationProvider.fetchAllNorwayStations();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
