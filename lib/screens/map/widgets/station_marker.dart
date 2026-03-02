@@ -40,7 +40,7 @@ class StationMarker extends StatelessWidget {
               ),
               child: Text(
                 price != null
-                    ? '${price!.price.toStringAsFixed(1)} kr'
+                    ? '${price!.price.toStringAsFixed(2)} kr'
                     : station.brand,
                 style: TextStyle(
                   fontSize: 11,
