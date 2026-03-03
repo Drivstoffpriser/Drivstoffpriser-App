@@ -10,8 +10,10 @@ import '../../providers/price_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/cooldown_prefs_service.dart';
 import '../../services/distance_service.dart';
+import '../../services/price_sign_scanner_service.dart';
 import '../../widgets/brand_logo.dart';
 import 'widgets/price_input_field.dart';
+import 'widgets/scan_price_button.dart';
 
 class SubmitPriceScreen extends StatefulWidget {
   final Station station;
@@ -35,6 +37,31 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  void _handleScanResult(ScanResult result) {
+    if (result.prices.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not recognize any fuel prices')),
+      );
+      return;
+    }
+
+    int filled = 0;
+    for (final entry in result.prices.entries) {
+      _controllers[entry.key]?.text = entry.value.toStringAsFixed(2);
+      filled++;
+    }
+
+    final suffix = switch (result.cropMethod) {
+      CropMethod.autoCrop => ' (auto-detected)',
+      CropMethod.manualCrop => ' (manual selection)',
+      CropMethod.none => '',
+    };
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Filled $filled price${filled > 1 ? 's' : ''} from scan$suffix')),
+    );
   }
 
   /// Collect fuel types that have a price entered.
@@ -290,6 +317,8 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
             // Price inputs — one per fuel type
             Text('Enter prices (fill in any you know)',
                 style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 12),
+            ScanPriceButton(onScanned: _handleScanResult),
             const SizedBox(height: 12),
             for (final type in FuelType.values) ...[
               PriceInputField(
