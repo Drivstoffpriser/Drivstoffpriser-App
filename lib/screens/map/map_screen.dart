@@ -136,16 +136,14 @@ class _MapScreenState extends State<MapScreen> {
               // Station markers (filtered by brand and clustered)
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 110, // Grouping stations on zoom out
+                  maxClusterRadius: 150, // Increased further to ensure grouping is visible
                   size: const Size(40, 40),
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(50),
-                  maxZoom: 15,
                   markers: filtered.map((station) {
-                    final price = stationProvider.getPriceForStation(
-                      station.id,
-                    );
+                    final price = stationProvider.getPriceForStation(station.id);
                     return Marker(
+                      key: ValueKey('station_${station.id}'), // Use Key for state consistency
                       point: LatLng(station.latitude, station.longitude),
                       width: 80,
                       height: 55,
