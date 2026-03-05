@@ -1,0 +1,5 @@
+{
+    "java.import.gradle.version": "8.14",
+    "java.import.gradle.wrapper.enabled": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

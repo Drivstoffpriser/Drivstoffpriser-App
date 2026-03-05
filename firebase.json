@@ -1,17 +1,1 @@
-{
-  "firestore": {
-    "rules": "firestore.rules"
-  },
-  "emulators": {
-    "singleProjectMode": true,
-    "auth": {
-      "port": 9099
-    },
-    "firestore": {
-      "port": 8080
-    },
-    "ui": {
-      "enabled": true
-    }
-  }
-}
+{"flutter":{"platforms":{"android":{"default":{"projectId":"norskfuelpriceapp-firebase","appId":"1:574053615024:android:6f97c12579939bf4aac275","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"norskfuelpriceapp-firebase","configurations":{"android":"1:574053615024:android:6f97c12579939bf4aac275","ios":"1:574053615024:ios:c7cae6f07fb364b1aac275","macos":"1:574053615024:ios:c7cae6f07fb364b1aac275","web":"1:574053615024:web:5a786799dc1ebf0baac275","windows":"1:574053615024:web:9ae8a1676765c09caac275"}}}}}}
