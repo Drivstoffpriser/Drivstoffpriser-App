@@ -10,7 +10,7 @@ import '../services/distance_service.dart';
 import '../services/firestore_service.dart';
 import '../services/overpass_service.dart';
 
-enum SortMode { cheapest, nearest }
+enum SortMode { cheapest, nearest, latest }
 
 class StationProvider extends ChangeNotifier {
   List<Station> _stations = [];
@@ -211,6 +211,15 @@ class StationProvider extends ChangeNotifier {
         } else {
           all.sort((a, b) => a.name.compareTo(b.name));
         }
+      case SortMode.latest:
+        all.sort((a, b) {
+          final pa = getPriceForStation(a.id);
+          final pb = getPriceForStation(b.id);
+          if (pa == null && pb == null) return a.name.compareTo(b.name);
+          if (pa == null) return 1;
+          if (pb == null) return -1;
+          return pb.updatedAt.compareTo(pa.updatedAt);
+        });
     }
 
     return all;

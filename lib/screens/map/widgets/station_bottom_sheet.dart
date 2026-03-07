@@ -71,16 +71,23 @@ class StationBottomSheet extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const Spacer(),
-                          SegmentedButton<SortMode>(
-                            segments: const [
-                              ButtonSegment(value: SortMode.cheapest, label: Text('Cheapest')),
-                              ButtonSegment(value: SortMode.nearest, label: Text('Nearest')),
+                          PopupMenuButton<SortMode>(
+                            initialValue: stationProvider.sortMode,
+                            onSelected: stationProvider.setSortMode,
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(value: SortMode.cheapest, child: Text('Cheapest')),
+                              PopupMenuItem(value: SortMode.nearest, child: Text('Nearest')),
+                              PopupMenuItem(value: SortMode.latest, child: Text('Latest')),
                             ],
-                            selected: {stationProvider.sortMode},
-                            onSelectionChanged: (s) => stationProvider.setSortMode(s.first),
-                            style: ButtonStyle(
-                              visualDensity: VisualDensity.compact,
-                              textStyle: WidgetStatePropertyAll(Theme.of(context).textTheme.labelSmall),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Sort: ${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}',
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                                const Icon(Icons.arrow_drop_down, size: 18),
+                              ],
                             ),
                           ),
                         ],
