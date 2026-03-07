@@ -11,7 +11,6 @@ void main() {
       expect(result[FuelType.diesel], 19.79);
       expect(result[FuelType.petrol95], 20.47);
       expect(result.containsKey(FuelType.petrol98), isFalse);
-      expect(result.containsKey(FuelType.electric), isFalse);
     });
 
     test('Norwegian comma decimals are normalized to dots', () {

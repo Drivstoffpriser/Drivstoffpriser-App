@@ -1,8 +1,7 @@
 enum FuelType {
   petrol95,
   petrol98,
-  diesel,
-  electric;
+  diesel;
 
   String get displayName {
     switch (this) {
@@ -12,17 +11,8 @@ enum FuelType {
         return 'Bensin 95';
       case FuelType.petrol98:
         return 'Bensin 98';
-      case FuelType.electric:
-        return 'Elektrisk';
     }
   }
 
-  String get unit {
-    switch (this) {
-      case FuelType.electric:
-        return 'kWh';
-      default:
-        return 'L';
-    }
-  }
+  String get unit => 'L';
 }

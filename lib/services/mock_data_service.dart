@@ -42,7 +42,6 @@ class MockDataService {
       CurrentPrice(stationId: 's1', fuelType: FuelType.diesel, price: 20.49, updatedAt: now.subtract(const Duration(minutes: 15)), reportCount: 5),
       CurrentPrice(stationId: 's1', fuelType: FuelType.petrol95, price: 21.89, updatedAt: now.subtract(const Duration(minutes: 15)), reportCount: 4),
       CurrentPrice(stationId: 's1', fuelType: FuelType.petrol98, price: 23.19, updatedAt: now.subtract(const Duration(minutes: 30)), reportCount: 3),
-      CurrentPrice(stationId: 's1', fuelType: FuelType.electric, price: 5.90, updatedAt: now.subtract(const Duration(hours: 1)), reportCount: 2),
 
       CurrentPrice(stationId: 's2', fuelType: FuelType.diesel, price: 21.09, updatedAt: now.subtract(const Duration(minutes: 45)), reportCount: 3),
       CurrentPrice(stationId: 's2', fuelType: FuelType.petrol95, price: 22.39, updatedAt: now.subtract(const Duration(minutes: 45)), reportCount: 3),
@@ -51,7 +50,6 @@ class MockDataService {
       CurrentPrice(stationId: 's3', fuelType: FuelType.diesel, price: 20.19, updatedAt: now.subtract(const Duration(minutes: 10)), reportCount: 6),
       CurrentPrice(stationId: 's3', fuelType: FuelType.petrol95, price: 21.49, updatedAt: now.subtract(const Duration(minutes: 10)), reportCount: 5),
       CurrentPrice(stationId: 's3', fuelType: FuelType.petrol98, price: 22.79, updatedAt: now.subtract(const Duration(minutes: 20)), reportCount: 4),
-      CurrentPrice(stationId: 's3', fuelType: FuelType.electric, price: 6.20, updatedAt: now.subtract(const Duration(hours: 3)), reportCount: 1),
 
       CurrentPrice(stationId: 's4', fuelType: FuelType.diesel, price: 20.79, updatedAt: now.subtract(const Duration(hours: 1)), reportCount: 2),
       CurrentPrice(stationId: 's4', fuelType: FuelType.petrol95, price: 22.09, updatedAt: now.subtract(const Duration(hours: 1)), reportCount: 2),
@@ -60,7 +58,6 @@ class MockDataService {
       CurrentPrice(stationId: 's5', fuelType: FuelType.diesel, price: 19.99, updatedAt: now.subtract(const Duration(minutes: 5)), reportCount: 8),
       CurrentPrice(stationId: 's5', fuelType: FuelType.petrol95, price: 21.29, updatedAt: now.subtract(const Duration(minutes: 5)), reportCount: 7),
       CurrentPrice(stationId: 's5', fuelType: FuelType.petrol98, price: 22.59, updatedAt: now.subtract(const Duration(minutes: 5)), reportCount: 5),
-      CurrentPrice(stationId: 's5', fuelType: FuelType.electric, price: 5.50, updatedAt: now.subtract(const Duration(minutes: 30)), reportCount: 3),
 
       // Bergen
       CurrentPrice(stationId: 's6', fuelType: FuelType.diesel, price: 21.29, updatedAt: now.subtract(const Duration(minutes: 20)), reportCount: 4),
@@ -70,7 +67,6 @@ class MockDataService {
       CurrentPrice(stationId: 's7', fuelType: FuelType.diesel, price: 20.89, updatedAt: now.subtract(const Duration(hours: 2)), reportCount: 2),
       CurrentPrice(stationId: 's7', fuelType: FuelType.petrol95, price: 22.19, updatedAt: now.subtract(const Duration(hours: 2)), reportCount: 2),
       CurrentPrice(stationId: 's7', fuelType: FuelType.petrol98, price: 23.49, updatedAt: now.subtract(const Duration(hours: 2)), reportCount: 1),
-      CurrentPrice(stationId: 's7', fuelType: FuelType.electric, price: 6.40, updatedAt: now.subtract(const Duration(hours: 4)), reportCount: 1),
 
       CurrentPrice(stationId: 's8', fuelType: FuelType.diesel, price: 20.59, updatedAt: now.subtract(const Duration(hours: 3)), reportCount: 1),
       CurrentPrice(stationId: 's8', fuelType: FuelType.petrol95, price: 21.89, updatedAt: now.subtract(const Duration(hours: 3)), reportCount: 1),
@@ -79,7 +75,6 @@ class MockDataService {
       CurrentPrice(stationId: 's9', fuelType: FuelType.diesel, price: 20.99, updatedAt: now.subtract(const Duration(minutes: 35)), reportCount: 3),
       CurrentPrice(stationId: 's9', fuelType: FuelType.petrol95, price: 22.29, updatedAt: now.subtract(const Duration(minutes: 35)), reportCount: 3),
       CurrentPrice(stationId: 's9', fuelType: FuelType.petrol98, price: 23.59, updatedAt: now.subtract(const Duration(minutes: 35)), reportCount: 2),
-      CurrentPrice(stationId: 's9', fuelType: FuelType.electric, price: 5.80, updatedAt: now.subtract(const Duration(hours: 1)), reportCount: 2),
 
       CurrentPrice(stationId: 's10', fuelType: FuelType.diesel, price: 20.39, updatedAt: now.subtract(const Duration(hours: 5)), reportCount: 1),
       CurrentPrice(stationId: 's10', fuelType: FuelType.petrol95, price: 21.69, updatedAt: now.subtract(const Duration(hours: 5)), reportCount: 1),
@@ -92,7 +87,6 @@ class MockDataService {
       CurrentPrice(stationId: 's12', fuelType: FuelType.diesel, price: 20.69, updatedAt: now.subtract(const Duration(minutes: 50)), reportCount: 3),
       CurrentPrice(stationId: 's12', fuelType: FuelType.petrol95, price: 21.99, updatedAt: now.subtract(const Duration(minutes: 50)), reportCount: 2),
       CurrentPrice(stationId: 's12', fuelType: FuelType.petrol98, price: 23.29, updatedAt: now.subtract(const Duration(minutes: 50)), reportCount: 2),
-      CurrentPrice(stationId: 's12', fuelType: FuelType.electric, price: 7.10, updatedAt: now.subtract(const Duration(hours: 6)), reportCount: 1),
 
       CurrentPrice(stationId: 's13', fuelType: FuelType.diesel, price: 20.29, updatedAt: now.subtract(const Duration(minutes: 15)), reportCount: 4),
       CurrentPrice(stationId: 's13', fuelType: FuelType.petrol95, price: 21.59, updatedAt: now.subtract(const Duration(minutes: 15)), reportCount: 4),
@@ -164,11 +158,7 @@ class MockDataService {
         price = price - wave - noise;
 
         // Clamp to realistic bounds
-        if (current.fuelType == FuelType.electric) {
-          price = price.clamp(4.0, 9.0);
-        } else {
-          price = price.clamp(18.0, 26.0);
-        }
+        price = price.clamp(18.0, 26.0);
       }
 
       // Reverse so oldest date comes first
