@@ -140,7 +140,7 @@ class _MapScreenState extends State<MapScreen> {
                     return Marker(
                       point: LatLng(station.latitude, station.longitude),
                       width: 80,
-                      height: 55,
+                      height: 70,
                       child: StationMarker(
                         station: station,
                         price: price,
