@@ -20,6 +20,9 @@ class StationProvider extends ChangeNotifier {
   Set<String> _selectedBrands = {};
   bool _isLoading = false;
 
+  /// Filter radius in km. null means show all stations (no distance filter).
+  double? _filterRadiusKm = 20;
+
   double? _userLat;
   double? _userLng;
 
@@ -33,6 +36,13 @@ class StationProvider extends ChangeNotifier {
   Set<String> get selectedBrands => _selectedBrands;
   bool get isLoading => _isLoading;
   bool get hasUserLocation => _userLat != null && _userLng != null;
+  double? get filterRadiusKm => _filterRadiusKm;
+
+  /// Set the filter radius in km. Pass null to show all stations.
+  void setFilterRadius(double? km) {
+    _filterRadiusKm = km;
+    notifyListeners();
+  }
 
   /// Set the user's location for distance-based filtering.
   void setUserLocation(double lat, double lng) {
@@ -48,18 +58,19 @@ class StationProvider extends ChangeNotifier {
     return brands;
   }
 
-  /// Stations filtered by distance (20 km radius) and selected brands.
-  /// Returns nothing until user location is set.
+  /// Stations filtered by radius (if set) and selected brands.
   List<Station> get filteredStations {
-    // Don't show any stations until we know the user's position.
-    if (_userLat == null || _userLng == null) return [];
+    Iterable<Station> result = _stations;
 
-    var result = _stations.where((s) {
-      final d = DistanceService.distanceInMeters(
-        _userLat!, _userLng!, s.latitude, s.longitude,
-      );
-      return d <= AppConstants.defaultSearchRadiusMeters;
-    });
+    if (_filterRadiusKm != null && _userLat != null && _userLng != null) {
+      final radiusMeters = _filterRadiusKm! * 1000;
+      result = result.where((s) {
+        final d = DistanceService.distanceInMeters(
+          _userLat!, _userLng!, s.latitude, s.longitude,
+        );
+        return d <= radiusMeters;
+      });
+    }
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));
@@ -121,6 +132,26 @@ class StationProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Failed to fetch nearby stations: $e');
       await FirestoreService.seedIfEmpty();
+    }
+  }
+
+  /// Fetch ALL fuel stations in Norway from Overpass and upsert into Firestore.
+  Future<void> fetchAllNorwayStations() async {
+    try {
+      final stations = await OverpassService.fetchAllNorwayStations();
+      debugPrint('Overpass returned ${stations.length} Norway stations');
+      if (stations.isNotEmpty) {
+        await FirestoreService.upsertStations(stations);
+      } else {
+        await FirestoreService.seedIfEmpty();
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch/save Norway stations: $e');
+      try {
+        await FirestoreService.seedIfEmpty();
+      } catch (e2) {
+        debugPrint('Seed fallback also failed: $e2');
+      }
     }
   }
 

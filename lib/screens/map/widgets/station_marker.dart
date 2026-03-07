@@ -15,6 +15,25 @@ class StationMarker extends StatelessWidget {
     required this.onTap,
   });
 
+  static ({String label, Color color}) _formatAge(Duration age) {
+    final minutes = age.inMinutes;
+    final hours = age.inHours;
+
+    if (minutes < 60) {
+      return (label: '${minutes}m', color: Colors.green);
+    }
+    if (hours <= 5) {
+      return (label: '${hours}hr', color: Colors.green);
+    }
+    if (hours <= 12) {
+      return (label: '${hours}hr', color: Colors.orange);
+    }
+    if (hours <= 23) {
+      return (label: '${hours}hr', color: Colors.red);
+    }
+    return (label: '>1d', color: Colors.grey);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -24,6 +43,27 @@ class StationMarker extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (price != null) ...[
+            () {
+              final age = DateTime.now().difference(price!.updatedAt);
+              final (:label, :color) = _formatAge(age);
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            }(),
+          ],
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -40,7 +80,7 @@ class StationMarker extends StatelessWidget {
               ),
               child: Text(
                 price != null
-                    ? '${price!.price.toStringAsFixed(1)} kr'
+                    ? '${price!.price.toStringAsFixed(2)} kr'
                     : station.brand,
                 style: TextStyle(
                   fontSize: 11,

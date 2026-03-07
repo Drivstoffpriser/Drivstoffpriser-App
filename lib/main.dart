@@ -12,7 +12,11 @@ import 'providers/user_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (_) {
+    // Already initialized (e.g. after hot restart)
+  }
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: false,
   );
@@ -22,10 +26,18 @@ void main() async {
   final userProvider = UserProvider();
   userProvider.initialize();
 
+  // Start station loading immediately so data is ready by the time
+  // the map screen renders.  The Firestore streams deliver whatever
+  // is already cached, and the Overpass fetch populates / refreshes
+  // the full Norway dataset in the background.
+  final stationProvider = StationProvider();
+  stationProvider.loadStations();
+  stationProvider.fetchAllNorwayStations();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => StationProvider()),
+        ChangeNotifierProvider.value(value: stationProvider),
         ChangeNotifierProvider(create: (_) => PriceProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider.value(value: userProvider),
