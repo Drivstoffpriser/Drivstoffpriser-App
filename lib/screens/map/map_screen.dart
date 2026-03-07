@@ -12,6 +12,7 @@ import 'widgets/fuel_filter_bar.dart';
 
 import 'widgets/station_bottom_sheet.dart';
 import 'widgets/station_marker.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -124,27 +125,62 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                 ],
               ),
-              // Station markers (filtered by brand)
-              MarkerLayer(
-                markers: filtered.map((station) {
-                  final price = stationProvider.getPriceForStation(station.id);
-                  return Marker(
-                    point: LatLng(station.latitude, station.longitude),
-                    width: 80,
-                    height: 70,
-                    child: StationMarker(
-                      station: station,
-                      price: price,
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.stationDetail,
-                          arguments: station,
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
+              // Station markers (filtered by brand and clustered)
+              MarkerClusterLayerWidget(
+                options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 110, // Grouping stations on zoom out
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  maxZoom: 15,
+                  markers: filtered.map((station) {
+                    final price = stationProvider.getPriceForStation(
+                      station.id,
+                    );
+                    return Marker(
+                      point: LatLng(station.latitude, station.longitude),
+                      width: 80,
+                      height: 70,
+                      child: StationMarker(
+                        station: station,
+                        price: price,
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.stationDetail,
+                            arguments: station,
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
+                  builder: (context, markers) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.blue,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          markers.length.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -182,17 +218,13 @@ class _MapScreenState extends State<MapScreen> {
                   onPressed: locationProvider.isLoading
                       ? null
                       : locationProvider.hasLocation
-                          ? _centerOnUser
-                          : () => context
-                              .read<LocationProvider>()
-                              .fetchLocation(),
+                      ? _centerOnUser
+                      : () => context.read<LocationProvider>().fetchLocation(),
                   child: locationProvider.isLoading
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.my_location),
                 ),
