@@ -49,6 +49,22 @@ class FirestoreService {
       }
     }
 
+    // Build aggregate docs
+    batch.set(
+      _db.collection('aggregates').doc('stations'),
+      {
+        'stations': stations.map((s) => s.toJson()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+    );
+    batch.set(
+      _db.collection('aggregates').doc('prices'),
+      {
+        'prices': prices.map((p) => p.toJson()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+    );
+
     await batch.commit();
   }
 
@@ -60,6 +76,7 @@ class FirestoreService {
 
   /// Upsert stations into Firestore. Existing stations are updated, not deleted.
   /// This preserves any linked reports and currentPrices documents.
+  /// Also rebuilds the stations aggregate doc.
   static Future<void> upsertStations(List<Station> stations) async {
     if (stations.isEmpty) return;
 
@@ -69,28 +86,70 @@ class FirestoreService {
       batch.set(ref, station.toJson(), SetOptions(merge: true));
     }
     await batch.commit();
+
+    // Rebuild aggregate from the full collection (1 read of all docs,
+    // but only happens on upsert which is a rare admin/refresh action).
+    await _rebuildStationsAggregate();
   }
 
-  // ── Stations ─────────────────────────────────────────────────────────
+  /// Rebuild the stations aggregate doc from the full collection.
+  static Future<void> _rebuildStationsAggregate() async {
+    final snapshot = await _db.collection('stations').get();
+    final allStations = snapshot.docs.map((doc) {
+      return Station.fromJson(_normalizeTimestamps(doc.data()));
+    }).toList();
 
-  /// Real-time stream of all stations.
-  static Stream<List<Station>> stationsStream() {
-    return _db.collection('stations').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return Station.fromJson(_normalizeTimestamps(doc.data()));
-      }).toList();
+    await _db.collection('aggregates').doc('stations').set({
+      'stations': allStations.map((s) => s.toJson()).toList(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // ── Current Prices ───────────────────────────────────────────────────
+  /// Rebuild the prices aggregate doc from the full collection.
+  static Future<void> _rebuildPricesAggregate() async {
+    final snapshot = await _db.collection('currentPrices').get();
+    final allPrices = snapshot.docs.map((doc) {
+      return CurrentPrice.fromJson(_normalizeTimestamps(doc.data()));
+    }).toList();
 
-  /// Real-time stream of all current prices.
-  static Stream<List<CurrentPrice>> currentPricesStream() {
-    return _db.collection('currentPrices').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return CurrentPrice.fromJson(_normalizeTimestamps(doc.data()));
-      }).toList();
+    await _db.collection('aggregates').doc('prices').set({
+      'prices': allPrices.map((p) => p.toJson()).toList(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // ── Stations (aggregate reads) ─────────────────────────────────────
+
+  /// One-time read of all stations from the aggregate doc (1 read).
+  static Future<List<Station>> getStations() async {
+    final doc = await _db.collection('aggregates').doc('stations').get();
+    if (!doc.exists) {
+      // Fallback: read individual docs and build aggregate
+      await _rebuildStationsAggregate();
+      return getStations();
+    }
+    final data = doc.data()!;
+    final list = (data['stations'] as List<dynamic>?) ?? [];
+    return list.map((e) {
+      return Station.fromJson(_normalizeTimestamps(Map<String, dynamic>.from(e as Map)));
+    }).toList();
+  }
+
+  // ── Current Prices (aggregate reads) ───────────────────────────────
+
+  /// One-time read of all current prices from the aggregate doc (1 read).
+  static Future<List<CurrentPrice>> getPrices() async {
+    final doc = await _db.collection('aggregates').doc('prices').get();
+    if (!doc.exists) {
+      // Fallback: read individual docs and build aggregate
+      await _rebuildPricesAggregate();
+      return getPrices();
+    }
+    final data = doc.data()!;
+    final list = (data['prices'] as List<dynamic>?) ?? [];
+    return list.map((e) {
+      return CurrentPrice.fromJson(_normalizeTimestamps(Map<String, dynamic>.from(e as Map)));
+    }).toList();
   }
 
   // ── Reports ──────────────────────────────────────────────────────────
@@ -110,6 +169,7 @@ class FirestoreService {
   }
 
   /// Submit a new price report and update the denormalized current price.
+  /// Also rebuilds the prices aggregate doc.
   static Future<void> submitReport({
     required String stationId,
     required FuelType fuelType,
@@ -159,6 +219,9 @@ class FirestoreService {
     );
 
     await batch.commit();
+
+    // Rebuild prices aggregate so other users see updated prices
+    await _rebuildPricesAggregate();
   }
 
   /// Returns the most recent report time for a user+station+fuelType combo,
