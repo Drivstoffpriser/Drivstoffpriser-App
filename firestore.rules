@@ -49,6 +49,14 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── Aggregates ─────────────────────────────────────────────────
+    // Anyone can read aggregate docs (stations + prices in single docs).
+    // Writes happen from client after upsert/submit — allow for authed users.
+    match /aggregates/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
     // ── Deny everything else ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

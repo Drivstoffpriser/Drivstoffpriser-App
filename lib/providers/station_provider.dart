@@ -1,16 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../config/constants.dart';
 import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/station.dart';
+import '../services/cache_service.dart';
 import '../services/distance_service.dart';
 import '../services/firestore_service.dart';
 import '../services/overpass_service.dart';
 
-enum SortMode { cheapest, nearest }
+enum SortMode { cheapest, nearest, latest }
 
 class StationProvider extends ChangeNotifier {
   List<Station> _stations = [];
@@ -25,9 +24,6 @@ class StationProvider extends ChangeNotifier {
 
   double? _userLat;
   double? _userLng;
-
-  StreamSubscription? _stationsSub;
-  StreamSubscription? _pricesSub;
 
   List<Station> get stations => _stations;
   List<CurrentPrice> get prices => _prices;
@@ -94,29 +90,64 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Load stations and prices. Reads from local cache first; falls back
+  /// to Firestore aggregate docs (2 reads) if cache is stale or empty.
   Future<void> loadStations() async {
     _isLoading = true;
     notifyListeners();
 
-    // Cancel any existing subscriptions
-    await _stationsSub?.cancel();
-    await _pricesSub?.cancel();
+    try {
+      // Try local cache first (0 Firestore reads)
+      final cachedStations = await CacheService.getCachedStations();
+      final cachedPrices = await CacheService.getCachedPrices();
 
-    _stationsSub = FirestoreService.stationsStream().listen((stations) {
-      _stations = stations;
+      if (cachedStations != null && cachedPrices != null) {
+        _stations = cachedStations;
+        _prices = cachedPrices;
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      // Cache miss — read from Firestore aggregate docs (2 reads)
+      await _fetchFromFirestore();
+    } catch (e) {
+      debugPrint('Failed to load stations: $e');
+    } finally {
       _isLoading = false;
       notifyListeners();
-    });
+    }
+  }
 
-    _pricesSub = FirestoreService.currentPricesStream().listen((prices) {
-      _prices = prices;
+  /// Force-refresh from Firestore aggregate docs, bypassing cache.
+  Future<void> refreshFromFirestore() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _fetchFromFirestore();
+    } catch (e) {
+      debugPrint('Failed to refresh from Firestore: $e');
+    } finally {
+      _isLoading = false;
       notifyListeners();
-    });
+    }
+  }
+
+  Future<void> _fetchFromFirestore() async {
+    final stations = await FirestoreService.getStations();
+    final prices = await FirestoreService.getPrices();
+
+    _stations = stations;
+    _prices = prices;
+
+    // Update local cache
+    await CacheService.cacheStations(stations);
+    await CacheService.cachePrices(prices);
   }
 
   /// Fetch stations from Overpass near [lat],[lng] and upsert into Firestore.
-  /// The Firestore stream subscription (from [loadStations]) will
-  /// automatically pick up the new data.
+  /// Then refresh local data from Firestore.
   Future<void> fetchNearbyStations(double lat, double lng) async {
     try {
       final stations = await OverpassService.fetchNearbyStations(
@@ -133,9 +164,11 @@ class StationProvider extends ChangeNotifier {
       debugPrint('Failed to fetch nearby stations: $e');
       await FirestoreService.seedIfEmpty();
     }
+    await refreshFromFirestore();
   }
 
   /// Fetch ALL fuel stations in Norway from Overpass and upsert into Firestore.
+  /// Then refresh local data from Firestore.
   Future<void> fetchAllNorwayStations() async {
     try {
       final stations = await OverpassService.fetchAllNorwayStations();
@@ -153,6 +186,7 @@ class StationProvider extends ChangeNotifier {
         debugPrint('Seed fallback also failed: $e2');
       }
     }
+    await refreshFromFirestore();
   }
 
   void setFuelType(FuelType type) {
@@ -211,15 +245,17 @@ class StationProvider extends ChangeNotifier {
         } else {
           all.sort((a, b) => a.name.compareTo(b.name));
         }
+      case SortMode.latest:
+        all.sort((a, b) {
+          final pa = getPriceForStation(a.id);
+          final pb = getPriceForStation(b.id);
+          if (pa == null && pb == null) return a.name.compareTo(b.name);
+          if (pa == null) return 1;
+          if (pb == null) return -1;
+          return pb.updatedAt.compareTo(pa.updatedAt);
+        });
     }
 
     return all;
-  }
-
-  @override
-  void dispose() {
-    _stationsSub?.cancel();
-    _pricesSub?.cancel();
-    super.dispose();
   }
 }

@@ -7,6 +7,7 @@ import '../../models/fuel_type.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/price_provider.dart';
+import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/cooldown_prefs_service.dart';
 import '../../services/distance_service.dart';
@@ -193,6 +194,8 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
     if (successCount > 0) {
       await context.read<UserProvider>().incrementReportCount();
+      // Refresh cached prices so the list/map reflect the new submission
+      context.read<StationProvider>().refreshFromFirestore();
     }
 
     if (!mounted) return;
