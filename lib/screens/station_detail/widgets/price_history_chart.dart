@@ -23,7 +23,6 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     FuelType.diesel: Colors.amber,
     FuelType.petrol95: Colors.blue,
     FuelType.petrol98: Colors.green,
-    FuelType.electric: Colors.purple,
   };
 
   @override
