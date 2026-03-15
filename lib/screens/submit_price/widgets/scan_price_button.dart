@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../services/price_sign_scanner_service.dart';
+import 'confirm_prices_screen.dart';
 import 'manual_crop_screen.dart';
 
 const _tag = 'ScanPriceButton';
@@ -43,71 +45,54 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     }
 
     debugPrint('[$_tag] Image picked: ${picked.path}');
+
+    // Always ask user to crop first
+    final file = File(picked.path);
+    if (!mounted) return;
+
+    final croppedBytes = await Navigator.push<dynamic>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ManualCropScreen(imageFile: file),
+      ),
+    );
+
+    if (croppedBytes == null || !mounted) {
+      debugPrint('[$_tag] Crop cancelled');
+      return;
+    }
+
+    // Process the cropped image via Claude API
     setState(() => _isProcessing = true);
 
     try {
-      final file = File(picked.path);
-      debugPrint('[$_tag] File exists: ${file.existsSync()}, size: ${file.existsSync() ? file.lengthSync() : "N/A"} bytes');
       final scanner = PriceSignScannerService();
-      final result = await scanner.scanImage(file);
-
+      final result = await scanner.scanCroppedImage(croppedBytes);
       if (!mounted) return;
-
-      // If few/no prices found, pre-fill what we have and offer manual crop
-      if (result.shouldOfferManualCrop) {
-        debugPrint('[$_tag] Offering manual crop (${result.prices.length} price(s) so far)');
-        setState(() => _isProcessing = false);
-
-        // Pre-fill any prices we already found
-        if (result.prices.isNotEmpty) {
-          widget.onScanned(result);
-        }
-
-        final croppedBytes = await Navigator.push<dynamic>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ManualCropScreen(imageFile: file),
-          ),
-        );
-
-        if (croppedBytes == null || !mounted) {
-          debugPrint('[$_tag] Manual crop cancelled');
-          return;
-        }
-
-        setState(() => _isProcessing = true);
-        final croppedResult = await scanner.scanCroppedImage(croppedBytes);
-        if (!mounted) return;
-        setState(() => _isProcessing = false);
-
-        debugPrint('[$_tag] Manual crop scan complete — prices found: ${croppedResult.prices.length}');
-
-        if (croppedResult.rawText.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No text found in cropped area')),
-          );
-          return;
-        }
-
-        widget.onScanned(croppedResult);
-        return;
-      }
-
       setState(() => _isProcessing = false);
 
-      debugPrint('[$_tag] Scan complete — rawText length: ${result.rawText.length}, prices found: ${result.prices.length}');
+      debugPrint('[$_tag] Scan complete — prices found: ${result.prices.length}');
 
-      if (result.rawText.isEmpty) {
-        debugPrint('[$_tag] No text found in image');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No text found in image')),
-        );
+      // Show confirmation screen with cropped image and editable prices
+      if (!mounted) return;
+      final confirmedResult = await Navigator.push<ScanResult>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ConfirmPricesScreen(
+            imageBytes: croppedBytes as Uint8List,
+            scanResult: result,
+          ),
+        ),
+      );
+
+      if (confirmedResult == null || !mounted) {
+        debugPrint('[$_tag] User did not confirm prices');
         return;
       }
 
-      widget.onScanned(result);
+      widget.onScanned(confirmedResult);
     } catch (e, stack) {
-      debugPrint('[$_tag] scanImage() failed: $e\n$stack');
+      debugPrint('[$_tag] scanCroppedImage() failed: $e\n$stack');
       if (!mounted) return;
       setState(() => _isProcessing = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +135,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.camera_alt),
-      label: Text(_isProcessing ? 'Processing...' : 'Scan price sign'),
+      label: Text(_isProcessing ? 'Analyzing...' : 'Scan price sign'),
     );
   }
 }
