@@ -10,6 +10,7 @@ import 'screens/settings/bug_report_screen.dart';
 import 'screens/station_detail/station_detail_screen.dart';
 import 'screens/submit_price/submit_price_screen.dart';
 import 'widgets/app_bottom_nav.dart';
+import 'widgets/connectivity_gate.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -24,6 +25,7 @@ class App extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) => ConnectivityGate(child: child!),
       home: const AppBottomNav(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
