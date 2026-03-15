@@ -54,6 +54,7 @@ dependencies:
   image: ^4.7.2
   crop_your_image: ^2.0.0
   exif: ^3.3.0
+  connectivity_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:
