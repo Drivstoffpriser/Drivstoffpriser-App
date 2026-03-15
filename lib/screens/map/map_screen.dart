@@ -184,18 +184,14 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ],
           ),
-          // Fuel filter bar at top
+          // Fuel filter bar + brand filter at top
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             left: 0,
             right: 0,
-            child: const FuelFilterBar(),
-          ),
-          // Brand filter button — top right, below fuel filter bar
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 56,
-            right: 16,
-            child: const BrandFilterButton(),
+            child: const FuelFilterBar(
+              trailing: BrandFilterButton(),
+            ),
           ),
           // Locate button — floats above the bottom sheet
           ListenableBuilder(

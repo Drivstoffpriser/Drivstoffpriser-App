@@ -60,6 +60,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
       prices: prices,
       rawText: widget.scanResult.rawText,
       cropMethod: widget.scanResult.cropMethod,
+      imageMetadata: widget.scanResult.imageMetadata,
     );
   }
 

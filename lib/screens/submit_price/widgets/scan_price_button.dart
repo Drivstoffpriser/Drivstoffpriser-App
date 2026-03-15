@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../services/image_metadata_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
 import 'confirm_prices_screen.dart';
 import 'manual_crop_screen.dart';
@@ -19,8 +21,92 @@ class ScanPriceButton extends StatefulWidget {
   State<ScanPriceButton> createState() => _ScanPriceButtonState();
 }
 
+const _skipCropTipKey = 'skip_crop_tip';
+
 class _ScanPriceButtonState extends State<ScanPriceButton> {
   bool _isProcessing = false;
+
+  /// Show a one-time tip explaining how to crop the image.
+  /// Returns true if the user acknowledged or already dismissed it.
+  Future<bool> _showCropTipIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_skipCropTipKey) ?? false) return true;
+    if (!mounted) return false;
+
+    bool dontShowAgain = false;
+
+    final acknowledged = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Crop Tip'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'After taking or selecting a photo, you will be asked '
+                      'to crop it. The cropped image should ideally contain '
+                      'only the fuel station price sign with the logo and '
+                      'prices visible.',
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/tips/crop_before.jpeg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Icon(Icons.arrow_downward, size: 32),
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/tips/crop_after.jpeg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Row(
+                  children: [
+                    Checkbox(
+                      value: dontShowAgain,
+                      onChanged: (value) {
+                        setDialogState(
+                            () => dontShowAgain = value ?? false);
+                      },
+                    ),
+                    const Flexible(
+                        child: Text("Don't show again")),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Got it'),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (dontShowAgain) {
+      await prefs.setBool(_skipCropTipKey, true);
+    }
+
+    return acknowledged == true;
+  }
 
   Future<void> _pickAndScan(ImageSource source) async {
     Navigator.pop(context); // close bottom sheet
@@ -46,6 +132,12 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
 
     debugPrint('[$_tag] Image picked: ${picked.path}');
 
+    // Extract EXIF metadata from the original image (before crop strips it)
+    final originalBytes = await picked.readAsBytes();
+    final metadata = await ImageMetadataService.extractMetadata(originalBytes);
+    debugPrint('[$_tag] EXIF metadata: hasLocation=${metadata.hasLocation}, '
+        'hasDateTime=${metadata.hasDateTime}, within24h=${metadata.isTakenWithin24Hours}');
+
     // Always ask user to crop first
     final file = File(picked.path);
     if (!mounted) return;
@@ -67,7 +159,9 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
 
     try {
       final scanner = PriceSignScannerService();
-      final result = await scanner.scanCroppedImage(croppedBytes);
+      var result = await scanner.scanCroppedImage(croppedBytes);
+      // Attach EXIF metadata from original image
+      result = result.copyWithMetadata(metadata);
       if (!mounted) return;
       setState(() => _isProcessing = false);
 
@@ -101,7 +195,10 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     }
   }
 
-  void _showSourcePicker() {
+  Future<void> _showSourcePicker() async {
+    final proceed = await _showCropTipIfNeeded();
+    if (!proceed || !mounted) return;
+
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
