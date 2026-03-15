@@ -11,6 +11,7 @@ import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/cooldown_prefs_service.dart';
 import '../../services/distance_service.dart';
+import '../../services/image_metadata_service.dart';
 import '../../services/price_sign_scanner_service.dart';
 import '../../widgets/brand_logo.dart';
 import 'widgets/price_input_field.dart';
@@ -31,6 +32,8 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     for (final type in FuelType.values) type: TextEditingController(),
   };
   bool _isSubmitting = false;
+  ImageMetadata? _scanMetadata;
+  bool _scanParsedPrices = false;
 
   @override
   void dispose() {
@@ -48,6 +51,14 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       return;
     }
 
+    // Store photo metadata for location bypass — require at least diesel or 95
+    final hasCorePrice = result.prices.containsKey(FuelType.diesel) ||
+        result.prices.containsKey(FuelType.petrol95);
+    setState(() {
+      _scanMetadata = result.imageMetadata;
+      _scanParsedPrices = hasCorePrice;
+    });
+
     int filled = 0;
     for (final entry in result.prices.entries) {
       _controllers[entry.key]?.text = entry.value.toStringAsFixed(2);
@@ -60,8 +71,26 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       CropMethod.none => '',
     };
 
+    final metadataNote = _hasValidPhotoMetadata
+        ? ' (photo location verified)'
+        : '';
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Filled $filled price${filled > 1 ? 's' : ''} from scan$suffix')),
+      SnackBar(content: Text('Filled $filled price${filled > 1 ? 's' : ''} from scan$suffix$metadataNote')),
+    );
+  }
+
+  /// Whether the scanned photo qualifies for remote submission:
+  /// EXIF GPS within 1km of station + taken in last 24h + OCR parsed at least
+  /// one core price (diesel or petrol 95).
+  bool get _hasValidPhotoMetadata {
+    if (!_scanParsedPrices) return false;
+    final meta = _scanMetadata;
+    if (meta == null) return false;
+    return meta.isValidForStation(
+      widget.station.latitude,
+      widget.station.longitude,
+      maxMeters: AppConstants.maxReportDistanceMeters,
     );
   }
 
@@ -81,32 +110,40 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Proximity check
-    final locationProvider = context.read<LocationProvider>();
-    if (!locationProvider.hasLocation) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location unavailable. Enable location services to report prices.'),
-        ),
-      );
-      return;
-    }
-    final pos = locationProvider.position!;
-    final distance = DistanceService.distanceInMeters(
-      pos.latitude, pos.longitude,
-      widget.station.latitude, widget.station.longitude,
-    );
-    if (distance > AppConstants.maxReportDistanceMeters) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'You must be within ${AppConstants.maxReportDistanceMeters.round()}m of the station. '
-            'You are ${DistanceService.formatDistance(distance)} away.',
+    // Proximity check — bypassed when photo EXIF metadata proves the user
+    // was at the station today (GPS within 1km + photo taken same day).
+    if (_hasValidPhotoMetadata) {
+      debugPrint('[SubmitPrice] Location check bypassed — photo metadata valid '
+          '(lat=${_scanMetadata!.latitude}, lng=${_scanMetadata!.longitude}, '
+          'date=${_scanMetadata!.dateTime})');
+    } else {
+      final locationProvider = context.read<LocationProvider>();
+      if (!locationProvider.hasLocation) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location unavailable. Enable location services or scan a photo taken at the station today.'),
           ),
-        ),
+        );
+        return;
+      }
+      final pos = locationProvider.position!;
+      final distance = DistanceService.distanceInMeters(
+        pos.latitude, pos.longitude,
+        widget.station.latitude, widget.station.longitude,
       );
-      return;
+      if (distance > AppConstants.maxReportDistanceMeters) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'You must be within ${AppConstants.maxReportDistanceMeters.round()}m of the station. '
+              'You are ${DistanceService.formatDistance(distance)} away. '
+              'Tip: Scan a photo taken at the station today to submit remotely.',
+            ),
+          ),
+        );
+        return;
+      }
     }
 
     final prices = _filledPrices();
@@ -134,6 +171,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     // Check cooldowns for each fuel type
     final skipped = <FuelType>[];
     final toSubmit = <FuelType, double>{};
+    Duration maxRemaining = Duration.zero;
 
     for (final entry in prices.entries) {
       final remaining = await priceProvider.getCooldownRemaining(
@@ -143,6 +181,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       );
       if (remaining != null) {
         skipped.add(entry.key);
+        if (remaining > maxRemaining) maxRemaining = remaining;
       } else {
         toSubmit[entry.key] = entry.value;
       }
@@ -150,12 +189,13 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
     if (toSubmit.isEmpty) {
       if (!mounted) return;
+      final minutesLeft = maxRemaining.inMinutes + 1; // round up
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'All selected fuel types are on cooldown: '
             '${skipped.map((t) => t.displayName).join(", ")}. '
-            'Please wait before submitting again.',
+            'Please wait $minutesLeft minute${minutesLeft != 1 ? 's' : ''} before submitting again.',
           ),
         ),
       );

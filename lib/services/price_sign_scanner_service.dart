@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/fuel_type.dart';
 import 'claude_vision_service.dart';
+import 'image_metadata_service.dart';
 
 const _tag = 'PriceSignScanner';
 
@@ -14,13 +15,23 @@ class ScanResult {
   final String rawText;
   final CropMethod cropMethod;
   final bool shouldOfferManualCrop;
+  final ImageMetadata? imageMetadata;
 
   const ScanResult({
     required this.prices,
     required this.rawText,
     this.cropMethod = CropMethod.none,
     this.shouldOfferManualCrop = false,
+    this.imageMetadata,
   });
+
+  ScanResult copyWithMetadata(ImageMetadata? metadata) => ScanResult(
+        prices: prices,
+        rawText: rawText,
+        cropMethod: cropMethod,
+        shouldOfferManualCrop: shouldOfferManualCrop,
+        imageMetadata: metadata,
+      );
 }
 
 class PriceSignScannerService {
