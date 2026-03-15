@@ -50,7 +50,6 @@ dependencies:
   device_info_plus: ^12.3.0
   package_info_plus: ^9.0.0
   flutter_map_marker_cluster: ^1.4.0
-  google_mlkit_text_recognition: ^0.15.1
   image_picker: ^1.2.1
   image: ^4.7.2
   crop_your_image: ^2.0.0

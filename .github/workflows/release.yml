@@ -57,7 +57,7 @@ jobs:
         run: echo "${{ secrets.FIREBASE_OPTIONS_DART }}" | base64 --decode > lib/firebase_options.dart
 
       - name: Build APK
-        run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }}
+        run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
