@@ -53,7 +53,7 @@ class UserProvider extends ChangeNotifier {
   Future<void> initialize() async {
     // Load saved preferences
     final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    _isDarkMode = prefs.getBool('isDarkMode') ?? true;
 
     // Sign in anonymously if no user exists
     if (_auth.currentUser == null) {

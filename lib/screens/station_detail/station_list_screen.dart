@@ -27,14 +27,12 @@ class StationListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stations'),
-        actions: const [
-          BrandFilterButton(heroTag: 'brandFilterList'),
-          SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [
-          const FuelFilterBar(),
+          const FuelFilterBar(
+            trailing: BrandFilterButton(heroTag: 'brandFilterList'),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
