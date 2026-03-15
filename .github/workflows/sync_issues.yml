@@ -2,7 +2,7 @@ name: Sync Bug Reports to GitHub Issues
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Every 30 minutes
+    - cron: '0 8 * * *'  # Every 24 hours at 08:00 UTC
   workflow_dispatch:      # Allow manual trigger
 
 jobs:
