@@ -1,0 +1,40 @@
+name: PR Build Check
+
+on:
+  pull_request:
+    types: [ready_for_review]
+
+jobs:
+  build:
+    name: Flutter Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/google-services.json
+
+      - name: Create firebase_options.dart
+        run: echo "${{ secrets.FIREBASE_OPTIONS_DART }}" | base64 --decode > lib/firebase_options.dart
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build APK (debug)
+        run: flutter build apk --debug --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
