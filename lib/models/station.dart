@@ -6,7 +6,6 @@ class Station {
   final String city;
   final double latitude;
   final double longitude;
-  final String? logoUrl;
 
   const Station({
     required this.id,
@@ -16,7 +15,6 @@ class Station {
     required this.city,
     required this.latitude,
     required this.longitude,
-    this.logoUrl,
   });
 
   factory Station.fromJson(Map<String, dynamic> json) {
@@ -28,7 +26,6 @@ class Station {
       city: json['city'] as String,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
-      logoUrl: json['logoUrl'] as String?,
     );
   }
 
@@ -41,19 +38,6 @@ class Station {
       'city': city,
       'latitude': latitude,
       'longitude': longitude,
-      'logoUrl': logoUrl,
     };
-  }
-
-  factory Station.empty() {
-    return const Station(
-      id: '',
-      name: 'Loading...',
-      brand: 'Unknown',
-      address: '',
-      city: '',
-      latitude: 0,
-      longitude: 0,
-    );
   }
 }
