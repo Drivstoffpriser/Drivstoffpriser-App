@@ -55,9 +55,6 @@ dependencies:
   crop_your_image: ^2.0.0
   exif: ^3.3.0
   connectivity_plus: ^7.0.0
-  google_fonts: ^6.2.1
-  skeletonizer: ^2.1.3
-  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:

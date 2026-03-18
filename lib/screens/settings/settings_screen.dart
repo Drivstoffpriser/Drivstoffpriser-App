@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/app_colors.dart';
-import '../../config/app_text_styles.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../providers/station_provider.dart';
@@ -27,16 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Stations refreshed',
-            style: AppTextStyles.label(
-              context.read<UserProvider>().isDarkMode,
-            ).copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppColors.accent,
-          behavior: SnackBarBehavior.floating,
-        ),
+        const SnackBar(content: Text('Stations refreshed')),
       );
       setState(() => _isRefreshing = false);
     }
@@ -45,56 +34,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
-    final isDark = userProvider.isDarkMode;
     final user = userProvider.user;
     final isAuth = userProvider.isAuthenticated;
 
     return Scaffold(
-      backgroundColor: AppColors.background(isDark),
-      appBar: AppBar(
-        title: Text('Settings', style: AppTextStyles.heading(isDark)),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-        ).copyWith(bottom: 100),
         children: [
-          const SizedBox(height: 8),
-          // User Profile Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceElevated(isDark),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border(isDark)),
-            ),
-            child: Column(
-              children: [
-                Row(
+          // User info
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.accent.withOpacity(0.2),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          user.displayName.isNotEmpty
-                              ? user.displayName.substring(0, 1).toUpperCase()
-                              : '?',
-                          style: AppTextStyles.heading(
-                            isDark,
-                          ).copyWith(color: AppColors.accent, fontSize: 24),
-                        ),
+                    CircleAvatar(
+                      radius: 28,
+                      child: Text(
+                        user.displayName.substring(0, 1).toUpperCase(),
+                        style: const TextStyle(fontSize: 24),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -103,268 +62,120 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user.displayName.isNotEmpty
-                                ? user.displayName
-                                : 'Guest User',
-                            style: AppTextStyles.heading(
-                              isDark,
-                            ).copyWith(fontSize: 18),
+                            user.displayName,
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(
-                            isAuth
-                                ? userProvider.accountTypeLabel
-                                : 'Not signed in',
-                            style: AppTextStyles.label(
-                              isDark,
-                            ).copyWith(color: AppColors.textMuted(isDark)),
+                            userProvider.accountTypeLabel,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${user.reportCount} reports · Trust: ${(user.trustScore * 100).toStringAsFixed(0)}%',
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                if (isAuth) ...[
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _StatItem(
-                        label: 'Reports',
-                        value: user.reportCount.toString(),
-                      ),
-                      _StatItem(
-                        label: 'Trust',
-                        value: '${(user.trustScore * 100).toStringAsFixed(0)}%',
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: isAuth
-                      ? OutlinedButton(
-                          onPressed: () => userProvider.signOut(),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: Colors.red.withOpacity(0.3),
-                            ),
-                            foregroundColor: Colors.red,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text(
-                            'Sign Out',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      : ElevatedButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, AppRoutes.auth),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Sign In / Register',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                ),
-              ],
+              ),
             ),
           ),
 
-          const SizedBox(height: 32),
-          _SettingsGroup(
-            title: 'Appearance',
-            children: [
-              _SettingsTile(
-                icon: isDark
-                    ? Icons.dark_mode_rounded
-                    : Icons.light_mode_rounded,
-                title: 'Dark Mode',
-                trailing: Switch.adaptive(
-                  value: isDark,
-                  activeColor: AppColors.accent,
-                  onChanged: (_) => userProvider.toggleDarkMode(),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-          _SettingsGroup(
-            title: 'General',
-            children: [
-              _SettingsTile(
-                icon: Icons.refresh_rounded,
-                title: 'Refresh Stations',
-                subtitle: 'Update local data from OSM',
-                isLoading: _isRefreshing,
-                onTap: _refreshStations,
-              ),
-              _SettingsTile(
-                icon: Icons.bug_report_rounded,
-                title: 'Report a Bug',
-                onTap: () => Navigator.pushNamed(context, AppRoutes.bugReport),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-          _SettingsGroup(
-            title: 'About',
-            children: [
-              _SettingsTile(
-                icon: Icons.info_rounded,
-                title: 'Version',
-                subtitle: 'FuelPrice v1.0.0',
-                onTap: () async {
-                  final info = await PackageInfo.fromPlatform();
-                  if (!context.mounted) return;
-                  showAboutDialog(
-                    context: context,
-                    applicationName: AppConstants.appName,
-                    applicationVersion: '${info.version}+${info.buildNumber}',
-                    children: [
-                      const Text(
-                        'Community-driven fuel price tracker for Norway.',
-                      ),
-                    ],
-                  );
+          // Auth actions
+          if (!isAuth)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: FilledButton.icon(
+                icon: const Icon(Icons.person_add),
+                label: const Text('Create Account / Sign In'),
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.auth);
                 },
               ),
-            ],
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.logout),
+                label: const Text('Sign Out'),
+                onPressed: () async {
+                  await userProvider.signOut();
+                },
+              ),
+            ),
+
+          const Divider(height: 32),
+
+          // Theme toggle
+          SwitchListTile(
+            title: const Text('Dark Mode'),
+            subtitle: const Text('Toggle between light and dark theme'),
+            secondary: Icon(
+              userProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+            ),
+            value: userProvider.isDarkMode,
+            onChanged: (_) => userProvider.toggleDarkMode(),
           ),
-          const SizedBox(height: 40),
+
+          const Divider(),
+
+          // Refresh stations
+          ListTile(
+            leading: _isRefreshing
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            title: const Text('Refresh Stations'),
+            subtitle: const Text(
+              'Fetch nearby fuel stations from OpenStreetMap',
+            ),
+            enabled: !_isRefreshing,
+            onTap: _refreshStations,
+          ),
+
+          const Divider(),
+
+          // Bug report
+          ListTile(
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Report a Bug'),
+            subtitle: const Text('Found an issue? Let us know'),
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.bugReport);
+            },
+          ),
+
+          const Divider(),
+
+          // About section
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('About'),
+            subtitle: Text(AppConstants.appName),
+            onTap: () async {
+              final info = await PackageInfo.fromPlatform();
+              if (!context.mounted) return;
+              showAboutDialog(
+                context: context,
+                applicationName: AppConstants.appName,
+                applicationVersion: '${info.version}+${info.buildNumber}',
+                children: [
+                  const Text(
+                    'Community-driven fuel price tracker for Norway. '
+                    'Report and find the cheapest fuel prices near you.',
+                  ),
+                ],
+              );
+            },
+          ),
         ],
       ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatItem({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.watch<UserProvider>().isDarkMode;
-    return Column(
-      children: [
-        Text(
-          value,
-          style: AppTextStyles.heading(isDark).copyWith(fontSize: 20),
-        ),
-        Text(
-          label,
-          style: AppTextStyles.label(
-            isDark,
-          ).copyWith(color: AppColors.textMuted(isDark)),
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsGroup extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SettingsGroup({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.watch<UserProvider>().isDarkMode;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            title.toUpperCase(),
-            style: AppTextStyles.label(isDark).copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              color: AppColors.textMuted(isDark),
-            ),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface(isDark),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border(isDark)),
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final bool isLoading;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-    this.onTap,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.watch<UserProvider>().isDarkMode;
-    return ListTile(
-      onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.background(isDark),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(icon, color: AppColors.accent, size: 20),
-      ),
-      title: Text(
-        title,
-        style: AppTextStyles.body(isDark).copyWith(fontWeight: FontWeight.w600),
-      ),
-      subtitle: subtitle != null
-          ? Text(subtitle!, style: AppTextStyles.label(isDark))
-          : null,
-      trailing:
-          trailing ??
-          (onTap != null
-              ? Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted(isDark),
-                )
-              : null),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 }
