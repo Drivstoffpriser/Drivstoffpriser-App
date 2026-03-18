@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../config/app_colors.dart';
+import '../config/app_text_styles.dart';
+
 class BrandLogo extends StatelessWidget {
   final String brand;
   final double radius;
 
-  const BrandLogo({
-    super.key,
-    required this.brand,
-    this.radius = 20,
-  });
+  const BrandLogo({super.key, required this.brand, this.radius = 20});
 
   static const _brandAssets = {
     'Circle K': 'assets/logos/circle-k.png',
@@ -22,9 +21,14 @@ class BrandLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = _brandAssets[brand];
 
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        color: AppColors.surface(context),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.border(context), width: 0.5),
+      ),
       child: path != null
           ? ClipOval(
               child: Image.asset(
@@ -32,7 +36,7 @@ class BrandLogo extends StatelessWidget {
                 width: radius * 2,
                 height: radius * 2,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _fallbackInitial(context),
+                errorBuilder: (_, __, ___) => _fallbackInitial(context),
               ),
             )
           : _fallbackInitial(context),
@@ -40,12 +44,12 @@ class BrandLogo extends StatelessWidget {
   }
 
   Widget _fallbackInitial(BuildContext context) {
-    return Text(
-      brand.isNotEmpty ? brand.substring(0, 1) : '?',
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: radius * 0.8,
-        color: Theme.of(context).colorScheme.onPrimaryContainer,
+    return Center(
+      child: Text(
+        brand.isNotEmpty ? brand.substring(0, 1).toUpperCase() : '?',
+        style: AppTextStyles.bodyMedium(
+          context,
+        ).copyWith(fontSize: radius * 0.8, color: AppColors.textMuted(context)),
       ),
     );
   }

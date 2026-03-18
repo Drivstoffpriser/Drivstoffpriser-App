@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/app_colors.dart';
+import '../../config/app_text_styles.dart';
 import '../../providers/user_provider.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -50,7 +52,6 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'sign-in-cancelled') {
-        // User tapped back — do nothing
       } else {
         setState(() => _error = _friendlyError(e.code));
       }
@@ -128,8 +129,14 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
-        title: Text(_isRegister ? 'Create Account' : 'Sign In'),
+        backgroundColor: AppColors.background(context),
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          _isRegister ? 'Create Account' : 'Sign In',
+          style: AppTextStyles.title(context),
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -137,54 +144,77 @@ class _AuthScreenState extends State<AuthScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (_error != null) ...[
-              Card(
-                color: Theme.of(context).colorScheme.errorContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                    ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _error!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
             ],
-
-            OutlinedButton.icon(
-              icon: const Icon(Icons.g_mobiledata, size: 24),
-              label: const Text('Continue with Google'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: _isLoading ? null : _signInWithGoogle,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Expanded(child: Divider()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'OR',
-                    style: Theme.of(context).textTheme.bodySmall,
+            _PressableButton(
+              onPressed: _isLoading ? () {} : _signInWithGoogle,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface(context),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.border(context),
+                    width: 0.5,
                   ),
                 ),
-                const Expanded(child: Divider()),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isLoading)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else ...[
+                      const Text(
+                        'G',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Continue with Google',
+                        style: AppTextStyles.bodyMedium(context),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(child: Divider(color: AppColors.border(context))),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('OR', style: AppTextStyles.label(context)),
+                ),
+                Expanded(child: Divider(color: AppColors.border(context))),
               ],
             ),
-            const SizedBox(height: 16),
-
+            const SizedBox(height: 24),
             if (_isRegister) ...[
-              TextFormField(
+              _buildTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Display Name',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
-                ),
-                textCapitalization: TextCapitalization.words,
+                label: 'Display Name',
+                icon: Icons.person_outline,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
                     return 'Please enter your name';
@@ -194,14 +224,10 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 16),
             ],
-
-            TextFormField(
+            _buildTextField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
-              ),
+              label: 'Email',
+              icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
               validator: (v) {
@@ -215,14 +241,10 @@ class _AuthScreenState extends State<AuthScreen> {
               },
             ),
             const SizedBox(height: 16),
-
-            TextFormField(
+            _buildTextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-              ),
+              label: 'Password',
+              icon: Icons.lock_outline,
               obscureText: true,
               validator: (v) {
                 if (v == null || v.isEmpty) {
@@ -235,35 +257,114 @@ class _AuthScreenState extends State<AuthScreen> {
               },
             ),
             const SizedBox(height: 24),
-
-            FilledButton(
-              onPressed: _isLoading ? null : _submit,
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(_isRegister ? 'Create Account' : 'Sign In'),
+            _PressableButton(
+              onPressed: _isLoading ? () {} : _submit,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _isRegister ? 'Create Account' : 'Sign In',
+                          style: AppTextStyles.bodyMedium(
+                            context,
+                          ).copyWith(color: Colors.white),
+                        ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
-
-            TextButton(
-              onPressed: _isLoading
-                  ? null
-                  : () {
-                      setState(() {
-                        _isRegister = !_isRegister;
-                        _error = null;
-                      });
-                    },
-              child: Text(
-                _isRegister
-                    ? 'Already have an account? Sign in'
-                    : 'Need an account? Create one',
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  if (!_isLoading) {
+                    setState(() {
+                      _isRegister = !_isRegister;
+                      _error = null;
+                    });
+                  }
+                },
+                child: Text(
+                  _isRegister
+                      ? 'Already have an account? Sign in'
+                      : 'Need an account? Create one',
+                  style: AppTextStyles.label(
+                    context,
+                  ).copyWith(color: const Color(0xFF2563EB)),
+                ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool autocorrect = true,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      autocorrect: autocorrect,
+      obscureText: obscureText,
+      style: AppTextStyles.body(context),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20),
+      ),
+      validator: validator,
+    );
+  }
+}
+
+class _PressableButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _PressableButton({required this.onPressed, required this.child});
+
+  @override
+  State<_PressableButton> createState() => _PressableButtonState();
+}
+
+class _PressableButtonState extends State<_PressableButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onPressed();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOutCubic,
+        child: AnimatedOpacity(
+          opacity: _isPressed ? 0.85 : 1.0,
+          duration: const Duration(milliseconds: 80),
+          child: widget.child,
         ),
       ),
     );

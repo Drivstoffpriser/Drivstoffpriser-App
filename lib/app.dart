@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'config/routes.dart';
-import 'config/theme.dart';
+import 'config/app_theme.dart';
 import 'models/station.dart';
 import 'providers/user_provider.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/settings/bug_report_screen.dart';
 import 'screens/station_detail/station_detail_screen.dart';
 import 'screens/submit_price/submit_price_screen.dart';
-import 'widgets/app_bottom_nav.dart';
 import 'widgets/connectivity_gate.dart';
+import 'widgets/floating_pill_nav.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -26,7 +26,7 @@ class App extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
       builder: (context, child) => ConnectivityGate(child: child!),
-      home: const AppBottomNav(),
+      home: const FloatingPillNav(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case AppRoutes.stationDetail:
