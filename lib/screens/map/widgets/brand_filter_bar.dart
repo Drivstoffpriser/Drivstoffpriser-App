@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../config/app_colors.dart';
+import '../../../config/app_text_styles.dart';
 import '../../../providers/station_provider.dart';
+import '../../../providers/user_provider.dart';
 
-/// A small FAB-like button that opens a brand filter bottom sheet.
 class BrandFilterButton extends StatelessWidget {
   final String heroTag;
 
@@ -11,6 +13,7 @@ class BrandFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<UserProvider>().isDarkMode;
     final provider = context.watch<StationProvider>();
     final hasFilter =
         provider.selectedBrands.isNotEmpty || provider.filterRadiusKm != null;
@@ -18,30 +21,33 @@ class BrandFilterButton extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        FloatingActionButton.small(
-          heroTag: heroTag,
-          onPressed: () => _showBrandFilterSheet(context),
-          child: ImageIcon(
-            const AssetImage('assets/button/filtering.png'),
-            size: 20,
-            color: Theme.of(context).colorScheme.onSurface,
+        GestureDetector(
+          onTap: () => _showBrandFilterSheet(context),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated(isDark),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border(isDark)),
+            ),
+            child: Icon(
+              Icons.filter_list_rounded,
+              size: 20,
+              color: AppColors.textPrimary(isDark),
+            ),
           ),
         ),
-        // Active filter indicator dot
         if (hasFilter)
           Positioned(
-            top: -2,
-            right: -2,
+            top: -4,
+            right: -4,
             child: Container(
-              width: 12,
-              height: 12,
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.accent,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.surface,
-                  width: 2,
-                ),
+                border: Border.all(color: AppColors.background(isDark), width: 2),
               ),
             ),
           ),
@@ -52,6 +58,7 @@ class BrandFilterButton extends StatelessWidget {
   void _showBrandFilterSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) => const _BrandFilterSheet(),
     );
   }
@@ -68,6 +75,7 @@ class _BrandFilterSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<UserProvider>().isDarkMode;
     final provider = context.watch<StationProvider>();
     final brands = provider.availableBrands;
     final radiusKm = provider.filterRadiusKm;
@@ -81,69 +89,63 @@ class _BrandFilterSheet extends StatelessWidget {
     final sliderValue =
         (currentIndex == -1 ? steps.length - 1 : currentIndex).toDouble();
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 28, 16, 52),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background(isDark),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Radius slider ──
           Row(
-            children: [
-              Text(
-                'Search Radius',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const Spacer(),
-              Text(
-                _radiusLabel(radiusKm),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
-          ),
-          Slider(
-            value: sliderValue,
-            min: 0,
-            max: (steps.length - 1).toDouble(),
-            divisions: steps.length - 1,
-            label: steps[sliderValue.round()] == null
-                ? 'All'
-                : '${steps[sliderValue.round()]} km',
-            onChanged: (v) {
-              final idx = v.round();
-              final km = steps[idx];
-              provider.setFilterRadius(km?.toDouble());
-            },
-          ),
-          const SizedBox(height: 8),
-
-          // ── Brand filter ──
-          Row(
-            children: [
+            children: [ 
               Text(
                 'Filter by Brand',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: AppTextStyles.heading(isDark),
               ),
               const Spacer(),
               if (provider.selectedBrands.isNotEmpty)
                 TextButton(
                   onPressed: () => provider.clearBrandFilter(),
-                  child: const Text('Clear all'),
+                  child: Text(
+                    'Clear all',
+                    style: AppTextStyles.label(isDark).copyWith(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: brands.map((brand) {
               final selected = provider.selectedBrands.contains(brand);
-              return FilterChip(
-                label: Text(brand),
-                selected: selected,
-                onSelected: (_) => provider.toggleBrand(brand),
+              return GestureDetector(
+                onTap: () => provider.toggleBrand(brand),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.accent : AppColors.surface(isDark),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: selected ? AppColors.accent : AppColors.border(isDark),
+                      width: selected ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Text(
+                    brand,
+                    style: AppTextStyles.label(isDark).copyWith(
+                      color: selected ? Colors.white : AppColors.textPrimary(isDark),
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ),
               );
             }).toList(),
           ),

@@ -1,15 +1,18 @@
 import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../config/app_colors.dart';
+import '../../config/app_text_styles.dart';
 import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
 import 'widgets/price_card.dart';
@@ -40,7 +43,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final lng = widget.station.longitude;
     final label = Uri.encodeComponent(widget.station.name);
 
-    // On iOS use Apple Maps, on Android use geo: URI (opens map chooser)
     final Uri uri;
     if (!kIsWeb && Platform.isIOS) {
       uri = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&q=$label');
@@ -51,7 +53,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      // Fallback to Google Maps web URL
       final fallback = Uri.parse(
         'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
       );
@@ -61,6 +62,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<UserProvider>().isDarkMode;
     final stationProvider = context.watch<StationProvider>();
     final priceProvider = context.watch<PriceProvider>();
     final prices = stationProvider.getPricesForStation(widget.station.id);
@@ -68,130 +70,161 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.station.name)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         children: [
-          // Station info
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      BrandLogo(brand: widget.station.brand),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.station.brand,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            if (widget.station.address.isNotEmpty ||
-                                widget.station.city.isNotEmpty)
-                              Text(
-                                [
-                                  widget.station.address,
-                                  widget.station.city,
-                                ].where((s) => s.isNotEmpty).join(', '),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                          ],
+          // Station header info
+          Row(
+            children: [
+              BrandLogo(brand: widget.station.brand, size: 56),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.station.brand,
+                      style: AppTextStyles.heading(isDark),
+                    ),
+                    if (widget.station.address.isNotEmpty || widget.station.city.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          [widget.station.address, widget.station.city]
+                              .where((s) => s.isNotEmpty)
+                              .join(', '),
+                          style: AppTextStyles.label(isDark),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Directions button
-          FilledButton(
-            onPressed: () => _openDirections(context),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/button/directions.png',
-                  width: 24,
-                  height: 24,
-                  color: Colors.white,
+                  ],
                 ),
-                const SizedBox(width: 8),
-                const Text('Directions'),
-              ],
-            ),
+              ),
+            ],
           ),
+          const SizedBox(height: 24),
 
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _openDirections(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.directions_outlined, size: 20),
+                  label: const Text('Directions'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.submitPrice,
+                      arguments: widget.station,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: const Text('Report Price'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          // Current Prices section
+          Text('Current Prices', style: AppTextStyles.heading(isDark)),
           const SizedBox(height: 16),
-
-          // Prices
-          Text('Current Prices', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
           if (prices.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('No prices reported yet.'),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.surface(isDark),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border(isDark)),
+              ),
+              child: Text(
+                'No prices reported yet.',
+                style: AppTextStyles.muted(isDark),
+                textAlign: TextAlign.center,
               ),
             )
           else
-            ...prices.map((p) => PriceCard(price: p)),
+            ...prices.map((p) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: PriceCard(price: p),
+                )),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // Price history chart
-          Text('Price History (30 days)', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          if (priceProvider.isLoadingHistory)
-            const SizedBox(height: 220, child: LoadingIndicator())
-          else if (priceProvider.history.isNotEmpty)
-            PriceHistoryChart(history: priceProvider.history),
-
-          const SizedBox(height: 24),
-
-          // Report button
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                AppRoutes.submitPrice,
-                arguments: widget.station,
-              );
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Report a Price'),
+          // Price History
+          Text('Price History (30 days)', style: AppTextStyles.heading(isDark)),
+          const SizedBox(height: 16),
+          Skeletonizer(
+            enabled: priceProvider.isLoadingHistory,
+            child: priceProvider.isLoadingHistory
+                ? Container(height: 220, color: Colors.white)
+                : priceProvider.history.isNotEmpty
+                    ? PriceHistoryChart(history: priceProvider.history)
+                    : Container(
+                        padding: const EdgeInsets.all(24),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface(isDark),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border(isDark)),
+                        ),
+                        child: Text(
+                          'No history available.',
+                          style: AppTextStyles.muted(isDark),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // Recent reports
-          Text('Recent Reports', style: Theme.of(context).textTheme.titleMedium),
+          // Recent Reports
+          Text('Recent Reports', style: AppTextStyles.heading(isDark)),
           const SizedBox(height: 8),
-          if (priceProvider.isLoading)
-            const LoadingIndicator()
-          else if (priceProvider.reports.isEmpty)
-            const Text('No reports yet.')
-          else
-            ...priceProvider.reports.take(10).map((report) {
-              return ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.receipt_long, size: 20),
-                title: Text(
-                  '${report.fuelType.displayName}: ${report.price.toStringAsFixed(2)} kr',
-                ),
-                subtitle: Text(timeago.format(report.reportedAt)),
-              );
-            }),
+          Skeletonizer(
+            enabled: priceProvider.isLoading,
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: priceProvider.isLoading ? 5 : priceProvider.reports.length.clamp(0, 10),
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                if (priceProvider.isLoading) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Container(height: 14, width: 100, color: Colors.white),
+                    subtitle: Container(height: 10, width: 60, color: Colors.white),
+                  );
+                }
+
+                final report = priceProvider.reports[index];
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    '${report.fuelType.displayName}: ${report.price.toStringAsFixed(2)} kr',
+                    style: AppTextStyles.body(isDark).copyWith(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    timeago.format(report.reportedAt),
+                    style: AppTextStyles.label(isDark),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

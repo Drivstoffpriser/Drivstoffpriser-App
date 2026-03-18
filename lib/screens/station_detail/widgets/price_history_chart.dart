@@ -1,11 +1,14 @@
 import 'dart:math';
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '../../../config/app_colors.dart';
+import '../../../config/app_text_styles.dart';
 import '../../../models/fuel_type.dart';
 import '../../../models/price_history_point.dart';
+import '../../../providers/user_provider.dart';
 
 class PriceHistoryChart extends StatefulWidget {
   final Map<FuelType, List<PriceHistoryPoint>> history;
@@ -34,7 +37,6 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   @override
   void didUpdateWidget(PriceHistoryChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If new fuel types appeared, show them
     for (final type in widget.history.keys) {
       if (!oldWidget.history.containsKey(type)) {
         _visible.add(type);
@@ -44,11 +46,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.history.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (widget.history.isEmpty) return const SizedBox.shrink();
+    final isDark = context.watch<UserProvider>().isDarkMode;
 
-    // Compute the date range from the data
     DateTime? earliest;
     DateTime? latest;
     double minPrice = double.infinity;
@@ -64,14 +64,11 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       }
     }
 
-    if (earliest == null || latest == null) {
-      return const SizedBox.shrink();
-    }
+    if (earliest == null || latest == null) return const SizedBox.shrink();
 
     final dateRange = latest.difference(earliest).inDays.toDouble();
     if (dateRange == 0) return const SizedBox.shrink();
 
-    // Add some padding to the Y axis
     final yPad = (maxPrice - minPrice) * 0.15;
     final yMin = (minPrice - yPad).floorToDouble();
     final yMax = (maxPrice + yPad).ceilToDouble();
@@ -81,9 +78,14 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Chart
-        SizedBox(
-          height: 220,
+        Container(
+          height: 240,
+          padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+          decoration: BoxDecoration(
+            color: AppColors.surface(isDark),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border(isDark)),
+          ),
           child: LineChart(
             LineChartData(
               minY: yMin,
@@ -91,7 +93,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               minX: 0,
               maxX: dateRange,
               gridData: FlGridData(
-                horizontalInterval: ((yMax - yMin) / 4).ceilToDouble().clamp(1, 10),
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: max(1, (yMax - yMin) / 4),
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: AppColors.border(isDark),
+                  strokeWidth: 1,
+                ),
               ),
               titlesData: FlTitlesData(
                 topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -99,14 +107,14 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    interval: 7,
+                    interval: max(1, dateRange / 3),
                     getTitlesWidget: (value, _) {
                       final date = earliest!.add(Duration(days: value.toInt()));
                       return Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           dateFormat.format(date),
-                          style: const TextStyle(fontSize: 10),
+                          style: AppTextStyles.label(isDark).copyWith(fontSize: 10),
                         ),
                       );
                     },
@@ -115,11 +123,11 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 44,
+                    reservedSize: 40,
                     getTitlesWidget: (value, _) {
                       return Text(
-                        '${value.toStringAsFixed(1)} kr',
-                        style: const TextStyle(fontSize: 10),
+                        '${value.toStringAsFixed(1)}',
+                        style: AppTextStyles.label(isDark).copyWith(fontSize: 10),
                       );
                     },
                   ),
@@ -128,18 +136,17 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               borderData: FlBorderData(show: false),
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
+                  tooltipRoundedRadius: 8,
+                  getTooltipColor: (_) => AppColors.surfaceElevated(isDark),
                   getTooltipItems: (spots) {
                     return spots.map((spot) {
-                      final fuelType = widget.history.keys.where(
-                        (k) => _visible.contains(k),
-                      ).elementAt(spot.barIndex);
-                      final date = earliest!.add(Duration(days: spot.x.toInt()));
+                      final fuelType = widget.history.keys
+                          .where((k) => _visible.contains(k))
+                          .elementAt(spot.barIndex);
                       return LineTooltipItem(
-                        '${fuelType.displayName}\n${dateFormat.format(date)}: ${spot.y.toStringAsFixed(2)} kr',
-                        TextStyle(
-                          color: _fuelColors[fuelType] ?? Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        '${fuelType.displayName}: ${spot.y.toStringAsFixed(2)}',
+                        AppTextStyles.label(isDark).copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       );
                     }).toList();
@@ -149,66 +156,83 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               lineBarsData: widget.history.entries
                   .where((e) => _visible.contains(e.key))
                   .map((entry) {
-                final color = _fuelColors[entry.key] ?? Colors.grey;
                 return LineChartBarData(
                   spots: entry.value.map((pt) {
                     final x = pt.date.difference(earliest!).inDays.toDouble();
-                    return FlSpot(x, double.parse(pt.price.toStringAsFixed(2)));
+                    return FlSpot(x, pt.price);
                   }).toList(),
                   isCurved: true,
                   curveSmoothness: 0.2,
-                  color: color,
-                  barWidth: 2.5,
+                  color: AppColors.accent,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: color.withAlpha(25),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.accent.withOpacity(0.15),
+                        AppColors.accent.withOpacity(0.0),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
                 );
               }).toList(),
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        // Legend
+        const SizedBox(height: 16),
         Wrap(
-          spacing: 16,
+          spacing: 12,
           runSpacing: 8,
           children: widget.history.keys.map((type) {
-            final color = _fuelColors[type] ?? Colors.grey;
             final active = _visible.contains(type);
             return GestureDetector(
               onTap: () {
                 setState(() {
                   if (active) {
-                    // Don't allow hiding all lines
                     if (_visible.length > 1) _visible.remove(type);
                   } else {
                     _visible.add(type);
                   }
                 });
               },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: active ? color : color.withAlpha(60),
-                      shape: BoxShape.circle,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: active ? 1.0 : 0.4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.accent.withOpacity(0.1) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: active ? AppColors.accent.withOpacity(0.2) : AppColors.border(isDark),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    type.displayName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: active ? null : Theme.of(context).colorScheme.outline,
-                      decoration: active ? null : TextDecoration.lineThrough,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.accent : AppColors.textMuted(isDark),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        type.displayName,
+                        style: AppTextStyles.label(isDark).copyWith(
+                          color: active ? AppColors.textPrimary(isDark) : AppColors.textMuted(isDark),
+                          fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             );
           }).toList(),
