@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'config/app_colors.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
 import 'models/station.dart';
@@ -27,7 +26,6 @@ class App extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
       builder: (context, child) => ConnectivityGate(child: child!),
-      color: AppColors.accent,
       home: const AppBottomNav(),
       onGenerateRoute: (settings) {
         switch (settings.name) {

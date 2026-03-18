@@ -5,8 +5,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../config/app_colors.dart';
-import '../../config/app_text_styles.dart';
 import '../../models/bug_report.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
@@ -34,7 +32,6 @@ class _BugReportScreenState extends State<BugReportScreen> {
   Future<void> _submitReport() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final isDark = context.read<UserProvider>().isDarkMode;
     setState(() => _isSubmitting = true);
 
     try {
@@ -43,6 +40,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
           ? userProvider.user.id
           : 'anonymous';
 
+      // Gather device info
       final deviceInfo = DeviceInfoPlugin();
       String deviceName = 'unknown';
       String osVersion = 'unknown';
@@ -87,22 +85,15 @@ class _BugReportScreenState extends State<BugReportScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Report submitted. Thanks!', style: AppTextStyles.label(isDark).copyWith(color: Colors.white)),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
+          const SnackBar(content: Text('Bug report submitted. Thank you!')),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Submission failed: $e', style: AppTextStyles.label(isDark).copyWith(color: Colors.white)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to submit report: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -111,163 +102,72 @@ class _BugReportScreenState extends State<BugReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.watch<UserProvider>().isDarkMode;
-
     return Scaffold(
-      backgroundColor: AppColors.background(isDark),
-      appBar: AppBar(
-        title: Text('Report a Bug', style: AppTextStyles.heading(isDark)),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            children: [
-              Text(
-                'Found an issue?',
-                style: AppTextStyles.heading(isDark).copyWith(fontSize: 24),
-                textAlign: TextAlign.center,
+      appBar: AppBar(title: const Text('Report a Bug')),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Text(
+              'Found an issue? Let us know the details and we will look into it.',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                hintText: 'Brief summary of the issue',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Help us improve by providing details about the problem.',
-                style: AppTextStyles.body(isDark).copyWith(color: AppColors.textMuted(isDark)),
-                textAlign: TextAlign.center,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a title';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                hintText: 'What happened? How can we reproduce it?',
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
               ),
-              const SizedBox(height: 40),
-              _ReportTextField(
-                controller: _titleController,
-                label: 'Title',
-                hint: 'Brief summary',
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter a title' : null,
-              ),
-              const SizedBox(height: 24),
-              _ReportTextField(
-                controller: _descriptionController,
-                label: 'Description',
-                hint: 'What happened? How can we reproduce it?',
-                maxLines: 6,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter a description' : null,
-              ),
-              const SizedBox(height: 48),
-              SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitReport,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(
-                          'Submit Report',
-                          style: AppTextStyles.body(isDark).copyWith(fontWeight: FontWeight.w600, color: Colors.white),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface(isDark),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border(isDark)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded, size: 20, color: AppColors.textMuted(isDark)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Technical info about your device will be included automatically.',
-                        style: AppTextStyles.label(isDark).copyWith(color: AppColors.textMuted(isDark)),
+              maxLines: 5,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a description';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 32),
+            FilledButton(
+              onPressed: _isSubmitting ? null : _submitReport,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
+                    )
+                  : const Text('Submit Report'),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Technical information about your device and app version will be included automatically to help us debug.',
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _ReportTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final int maxLines;
-  final String? Function(String?)? validator;
-
-  const _ReportTextField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    this.maxLines = 1,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.watch<UserProvider>().isDarkMode;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            label,
-            style: AppTextStyles.label(isDark).copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary(isDark).withOpacity(0.8),
-            ),
-          ),
-        ),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          validator: validator,
-          style: AppTextStyles.body(isDark),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.body(isDark).copyWith(color: AppColors.textMuted(isDark)),
-            filled: true,
-            fillColor: AppColors.surface(isDark),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border(isDark)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border(isDark)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.accent, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
-            contentPadding: const EdgeInsets.all(16),
-          ),
-        ),
-      ],
     );
   }
 }
