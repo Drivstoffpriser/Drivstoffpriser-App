@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../config/constants.dart';
+import '../../../config/app_text_styles.dart';
 import '../../../models/fuel_type.dart';
 
 class PriceInputField extends StatelessWidget {
@@ -24,11 +24,11 @@ class PriceInputField extends StatelessWidget {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
       ],
+      style: AppTextStyles.body(context),
       decoration: InputDecoration(
-        labelText: '${fuelType.displayName} (${AppConstants.currencyCode}/${fuelType.unit})',
+        labelText: '${fuelType.displayName} (${fuelType.unit})',
         suffixText: 'kr/${fuelType.unit}',
-        border: const OutlineInputBorder(),
-        helperText: 'Range: ${AppConstants.minFuelPrice.toStringAsFixed(0)}-${AppConstants.maxFuelPrice.toStringAsFixed(0)} kr',
+        helperText: 'Range: 5-50 kr',
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -36,8 +36,8 @@ class PriceInputField extends StatelessWidget {
         }
         final price = double.tryParse(value);
         if (price == null) return 'Invalid number';
-        if (price < AppConstants.minFuelPrice || price > AppConstants.maxFuelPrice) {
-          return 'Price must be between ${AppConstants.minFuelPrice.toStringAsFixed(0)} and ${AppConstants.maxFuelPrice.toStringAsFixed(0)} kr';
+        if (price < 5.0 || price > 50.0) {
+          return 'Price must be between 5 and 50 kr';
         }
         return null;
       },

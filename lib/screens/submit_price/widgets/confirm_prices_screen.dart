@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../config/app_colors.dart';
+import '../../../config/app_text_styles.dart';
 import '../../../models/fuel_type.dart';
 import '../../../services/price_sign_scanner_service.dart';
 
-/// Screen that shows the cropped image alongside parsed prices
-/// so the user can verify and correct them before confirming.
-///
-/// Returns a [ScanResult] with the (possibly edited) prices on confirm,
-/// or `null` on retake/back.
 class ConfirmPricesScreen extends StatefulWidget {
   final Uint8List imageBytes;
   final ScanResult scanResult;
@@ -77,25 +74,24 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify Prices')),
+      backgroundColor: AppColors.background(context),
+      appBar: AppBar(
+        backgroundColor: AppColors.background(context),
+        surfaceTintColor: Colors.transparent,
+        title: Text('Verify Prices', style: AppTextStyles.title(context)),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Cropped image
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.memory(
-                    widget.imageBytes,
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.memory(widget.imageBytes, fit: BoxFit.contain),
                 ),
               ),
             ),
-
-            // Editable prices
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
@@ -103,7 +99,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                 children: [
                   Text(
                     'Please double check the prices',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: AppTextStyles.bodyMedium(context),
                   ),
                   const SizedBox(height: 12),
                   for (final type in FuelType.values)
@@ -115,7 +111,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                             width: 80,
                             child: Text(
                               type.displayName,
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: AppTextStyles.body(context),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -124,18 +120,22 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                               controller: _controllers[type],
                               keyboardType:
                                   const TextInputType.numberWithOptions(
-                                      decimal: true),
+                                    decimal: true,
+                                  ),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d*\.?\d{0,2}')),
+                                  RegExp(r'^\d*\.?\d{0,2}'),
+                                ),
                               ],
-                              decoration: InputDecoration(
+                              style: AppTextStyles.body(context),
+                              decoration: const InputDecoration(
                                 isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
                                 hintText: '-',
                                 suffixText: 'kr/L',
-                                border: const OutlineInputBorder(),
                               ),
                               onChanged: (_) => setState(() {}),
                             ),
@@ -146,25 +146,57 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                 ],
               ),
             ),
-
-            // Action buttons
             Padding(
               padding: EdgeInsets.fromLTRB(16, 16, 16, 12 + bottomPadding),
               child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, null),
-                      child: const Text('Retake'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface(context),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.border(context),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, null),
+                        child: Center(
+                          child: Text(
+                            'Retake',
+                            style: AppTextStyles.bodyMedium(context),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: FilledButton(
-                      onPressed: _hasAnyPrice
+                    child: GestureDetector(
+                      onTap: _hasAnyPrice
                           ? () => Navigator.pop(context, _buildResult())
                           : null,
-                      child: const Text('Confirm'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: _hasAnyPrice
+                              ? const Color(0xFF2563EB)
+                              : AppColors.surface(context),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Confirm',
+                            style: AppTextStyles.bodyMedium(context).copyWith(
+                              color: _hasAnyPrice
+                                  ? Colors.white
+                                  : AppColors.textMuted(context),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],

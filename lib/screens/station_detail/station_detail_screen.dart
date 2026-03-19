@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../config/app_colors.dart';
+import '../../config/app_text_styles.dart';
 import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/price_provider.dart';
@@ -40,7 +42,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final lng = widget.station.longitude;
     final label = Uri.encodeComponent(widget.station.name);
 
-    // On iOS use Apple Maps, on Android use geo: URI (opens map chooser)
     final Uri uri;
     if (!kIsWeb && Platform.isIOS) {
       uri = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&q=$label');
@@ -51,7 +52,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      // Fallback to Google Maps web URL
       final fallback = Uri.parse(
         'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
       );
@@ -66,100 +66,109 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final prices = stationProvider.getPricesForStation(widget.station.id);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.station.name)),
+      backgroundColor: AppColors.background(context),
+      appBar: AppBar(
+        backgroundColor: AppColors.background(context),
+        surfaceTintColor: Colors.transparent,
+        title: Text(widget.station.name, style: AppTextStyles.title(context)),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Station info
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                BrandLogo(brand: widget.station.brand, radius: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      BrandLogo(brand: widget.station.brand),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.station.brand,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            if (widget.station.address.isNotEmpty ||
-                                widget.station.city.isNotEmpty)
-                              Text(
-                                [
-                                  widget.station.address,
-                                  widget.station.city,
-                                ].where((s) => s.isNotEmpty).join(', '),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                          ],
-                        ),
+                      Text(
+                        widget.station.brand,
+                        style: AppTextStyles.bodyMedium(context),
                       ),
+                      if (widget.station.address.isNotEmpty ||
+                          widget.station.city.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          [
+                            widget.station.address,
+                            widget.station.city,
+                          ].where((s) => s.isNotEmpty).join(', '),
+                          style: AppTextStyles.meta(context),
+                        ),
+                      ],
                     ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _PressableButton(
+            onPressed: () => _openDirections(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2563EB),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.directions_outlined,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Directions',
+                    style: AppTextStyles.bodyMedium(
+                      context,
+                    ).copyWith(color: Colors.white),
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          Text('Current Prices', style: AppTextStyles.title(context)),
           const SizedBox(height: 12),
-
-          // Directions button
-          FilledButton(
-            onPressed: () => _openDirections(context),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/button/directions.png',
-                  width: 24,
-                  height: 24,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 8),
-                const Text('Directions'),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Prices
-          Text('Current Prices', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
           if (prices.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('No prices reported yet.'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'No prices reported yet.',
+                style: AppTextStyles.label(context),
               ),
             )
           else
-            ...prices.map((p) => PriceCard(price: p)),
-
+            ...prices.map(
+              (p) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: PriceCard(price: p),
+              ),
+            ),
           const SizedBox(height: 24),
-
-          // Price history chart
-          Text('Price History (30 days)', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          Text('Price History (30 days)', style: AppTextStyles.title(context)),
+          const SizedBox(height: 12),
           if (priceProvider.isLoadingHistory)
             const SizedBox(height: 220, child: LoadingIndicator())
           else if (priceProvider.history.isNotEmpty)
             PriceHistoryChart(history: priceProvider.history),
-
           const SizedBox(height: 24),
-
-          // Report button
-          FilledButton.icon(
+          _PressableButton(
             onPressed: () {
               Navigator.pushNamed(
                 context,
@@ -167,32 +176,115 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 arguments: widget.station,
               );
             },
-            icon: const Icon(Icons.add),
-            label: const Text('Report a Price'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.border(context),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add, size: 20, color: Color(0xFF2563EB)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Report a Price',
+                    style: AppTextStyles.bodyMedium(
+                      context,
+                    ).copyWith(color: const Color(0xFF2563EB)),
+                  ),
+                ],
+              ),
+            ),
           ),
-
           const SizedBox(height: 24),
-
-          // Recent reports
-          Text('Recent Reports', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          Text('Recent Reports', style: AppTextStyles.title(context)),
+          const SizedBox(height: 12),
           if (priceProvider.isLoading)
             const LoadingIndicator()
           else if (priceProvider.reports.isEmpty)
-            const Text('No reports yet.')
+            Text('No reports yet.', style: AppTextStyles.label(context))
           else
             ...priceProvider.reports.take(10).map((report) {
-              return ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.receipt_long, size: 20),
-                title: Text(
-                  '${report.fuelType.displayName}: ${report.price.toStringAsFixed(2)} kr',
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppColors.border(context),
+                      width: 0.5,
+                    ),
+                  ),
                 ),
-                subtitle: Text(timeago.format(report.reportedAt)),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: 18,
+                      color: AppColors.textMuted(context),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${report.fuelType.displayName}: ${report.price.toStringAsFixed(2)} kr',
+                            style: AppTextStyles.bodyMedium(context),
+                          ),
+                          Text(
+                            timeago.format(report.reportedAt),
+                            style: AppTextStyles.meta(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               );
             }),
+          const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+}
+
+class _PressableButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _PressableButton({required this.onPressed, required this.child});
+
+  @override
+  State<_PressableButton> createState() => _PressableButtonState();
+}
+
+class _PressableButtonState extends State<_PressableButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onPressed();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOutCubic,
+        child: AnimatedOpacity(
+          opacity: _isPressed ? 0.85 : 1.0,
+          duration: const Duration(milliseconds: 80),
+          child: widget.child,
+        ),
       ),
     );
   }

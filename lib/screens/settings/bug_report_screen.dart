@@ -5,6 +5,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../config/app_colors.dart';
+import '../../config/app_text_styles.dart';
 import '../../models/bug_report.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
@@ -40,7 +42,6 @@ class _BugReportScreenState extends State<BugReportScreen> {
           ? userProvider.user.id
           : 'anonymous';
 
-      // Gather device info
       final deviceInfo = DeviceInfoPlugin();
       String deviceName = 'unknown';
       String osVersion = 'unknown';
@@ -103,23 +104,28 @@ class _BugReportScreenState extends State<BugReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Report a Bug')),
+      backgroundColor: AppColors.background(context),
+      appBar: AppBar(
+        backgroundColor: AppColors.background(context),
+        surfaceTintColor: Colors.transparent,
+        title: Text('Report a Bug', style: AppTextStyles.title(context)),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
+            Text(
               'Found an issue? Let us know the details and we will look into it.',
-              style: TextStyle(fontSize: 16),
+              style: AppTextStyles.body(context),
             ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _titleController,
+              style: AppTextStyles.body(context),
               decoration: const InputDecoration(
                 labelText: 'Title',
                 hintText: 'Brief summary of the issue',
-                border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -131,10 +137,10 @@ class _BugReportScreenState extends State<BugReportScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
+              style: AppTextStyles.body(context),
               decoration: const InputDecoration(
                 labelText: 'Description',
                 hintText: 'What happened? How can we reproduce it?',
-                border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
               maxLines: 5,
@@ -146,23 +152,37 @@ class _BugReportScreenState extends State<BugReportScreen> {
               },
             ),
             const SizedBox(height: 32),
-            FilledButton(
-              onPressed: _isSubmitting ? null : _submitReport,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Submit Report'),
+            GestureDetector(
+              onTap: _isSubmitting ? null : _submitReport,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Submit Report',
+                          style: AppTextStyles.bodyMedium(
+                            context,
+                          ).copyWith(color: Colors.white),
+                        ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'Technical information about your device and app version will be included automatically to help us debug.',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: AppTextStyles.meta(context),
               textAlign: TextAlign.center,
             ),
           ],

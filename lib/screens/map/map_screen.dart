@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/app_colors.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../providers/location_provider.dart';
@@ -32,8 +33,6 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Kick off location — station loading is triggered in build()
-      // once position is available.
       context.read<LocationProvider>().fetchLocation();
     });
   }
@@ -56,7 +55,6 @@ class _MapScreenState extends State<MapScreen> {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
 
-    // Auto-center on user location once available
     if (locationProvider.hasLocation && !_hasCenteredOnUser) {
       _hasCenteredOnUser = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -65,24 +63,23 @@ class _MapScreenState extends State<MapScreen> {
       });
     }
 
-    // Once we know the user's position (or location failed), set the
-    // user location on StationProvider so filteredStations can work.
-    // Station loading + Overpass fetch already started in main().
     if (!_hasSetUserLocation) {
       if (locationProvider.hasLocation) {
         _hasSetUserLocation = true;
         final pos = locationProvider.position!;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           context.read<StationProvider>().setUserLocation(
-                pos.latitude, pos.longitude);
+            pos.latitude,
+            pos.longitude,
+          );
         });
       } else if (locationProvider.error != null) {
         _hasSetUserLocation = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           context.read<StationProvider>().setUserLocation(
-                AppConstants.defaultMapCenter.latitude,
-                AppConstants.defaultMapCenter.longitude,
-              );
+            AppConstants.defaultMapCenter.latitude,
+            AppConstants.defaultMapCenter.longitude,
+          );
         });
       }
     }
@@ -92,7 +89,6 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Map
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -104,7 +100,6 @@ class _MapScreenState extends State<MapScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.fuel_price_tracker',
               ),
-              // User location marker
               MarkerLayer(
                 markers: [
                   if (locationProvider.hasLocation)
@@ -117,7 +112,7 @@ class _MapScreenState extends State<MapScreen> {
                       height: 20,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: const Color(0xFF2563EB),
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
@@ -125,10 +120,9 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                 ],
               ),
-              // Station markers (filtered by brand and clustered)
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 110, // Grouping stations on zoom out
+                  maxClusterRadius: 110,
                   size: const Size(40, 40),
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(50),
@@ -139,8 +133,8 @@ class _MapScreenState extends State<MapScreen> {
                     );
                     return Marker(
                       point: LatLng(station.latitude, station.longitude),
-                      width: 80,
-                      height: 70,
+                      width: 48,
+                      height: 48,
                       child: StationMarker(
                         station: station,
                         price: price,
@@ -158,15 +152,8 @@ class _MapScreenState extends State<MapScreen> {
                     return Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: Colors.blue,
+                        color: const Color(0xFF2563EB),
                         border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
                       ),
                       child: Center(
                         child: Text(
@@ -184,16 +171,12 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ],
           ),
-          // Fuel filter bar + brand filter at top
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             left: 0,
             right: 0,
-            child: const FuelFilterBar(
-              trailing: BrandFilterButton(),
-            ),
+            child: FuelFilterBar(trailing: const BrandFilterButton()),
           ),
-          // Locate button — floats above the bottom sheet
           ListenableBuilder(
             listenable: _sheetController,
             builder: (context, _) {
@@ -209,29 +192,91 @@ class _MapScreenState extends State<MapScreen> {
               return Positioned(
                 right: 16,
                 bottom: bottomOffset,
-                child: FloatingActionButton.small(
-                  heroTag: 'locateMe',
+                child: _LocateButton(
+                  isLoading: locationProvider.isLoading,
+                  hasLocation: locationProvider.hasLocation,
                   onPressed: locationProvider.isLoading
                       ? null
                       : locationProvider.hasLocation
                       ? _centerOnUser
                       : () => context.read<LocationProvider>().fetchLocation(),
-                  child: locationProvider.isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.my_location),
                 ),
               );
             },
           ),
-          // Bottom sheet
           Positioned.fill(
             child: StationBottomSheet(sheetController: _sheetController),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LocateButton extends StatefulWidget {
+  final bool isLoading;
+  final bool hasLocation;
+  final VoidCallback? onPressed;
+
+  const _LocateButton({
+    required this.isLoading,
+    required this.hasLocation,
+    this.onPressed,
+  });
+
+  @override
+  State<_LocateButton> createState() => _LocateButtonState();
+}
+
+class _LocateButtonState extends State<_LocateButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onPressed != null
+          ? (_) => setState(() => _isPressed = true)
+          : null,
+      onTapUp: widget.onPressed != null
+          ? (_) {
+              setState(() => _isPressed = false);
+              widget.onPressed?.call();
+            }
+          : null,
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated(context),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border(context), width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: widget.isLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    Icons.my_location_outlined,
+                    size: 20,
+                    color: AppColors.textPrimary(context),
+                  ),
+          ),
+        ),
       ),
     );
   }
