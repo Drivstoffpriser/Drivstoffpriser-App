@@ -5,12 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../config/app_colors.dart';
+import '../../../config/app_text_styles.dart';
 import '../../../services/image_metadata_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
 import 'confirm_prices_screen.dart';
 import 'manual_crop_screen.dart';
 
 const _tag = 'ScanPriceButton';
+
+const _skipCropTipKey = 'skip_crop_tip';
 
 class ScanPriceButton extends StatefulWidget {
   final ValueChanged<ScanResult> onScanned;
@@ -21,13 +25,9 @@ class ScanPriceButton extends StatefulWidget {
   State<ScanPriceButton> createState() => _ScanPriceButtonState();
 }
 
-const _skipCropTipKey = 'skip_crop_tip';
-
 class _ScanPriceButtonState extends State<ScanPriceButton> {
   bool _isProcessing = false;
 
-  /// Show a one-time tip explaining how to crop the image.
-  /// Returns true if the user acknowledged or already dismissed it.
   Future<bool> _showCropTipIfNeeded() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_skipCropTipKey) ?? false) return true;
@@ -81,12 +81,10 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                     Checkbox(
                       value: dontShowAgain,
                       onChanged: (value) {
-                        setDialogState(
-                            () => dontShowAgain = value ?? false);
+                        setDialogState(() => dontShowAgain = value ?? false);
                       },
                     ),
-                    const Flexible(
-                        child: Text("Don't show again")),
+                    const Flexible(child: Text("Don't show again")),
                     const Spacer(),
                     FilledButton(
                       onPressed: () => Navigator.pop(context, true),
@@ -109,8 +107,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
   }
 
   Future<void> _pickAndScan(ImageSource source) async {
-    Navigator.pop(context); // close bottom sheet
-    debugPrint('[$_tag] Image source selected: ${source.name}');
+    Navigator.pop(context);
 
     final picker = ImagePicker();
     final XFile? picked;
@@ -132,21 +129,19 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
 
     debugPrint('[$_tag] Image picked: ${picked.path}');
 
-    // Extract EXIF metadata from the original image (before crop strips it)
     final originalBytes = await picked.readAsBytes();
     final metadata = await ImageMetadataService.extractMetadata(originalBytes);
-    debugPrint('[$_tag] EXIF metadata: hasLocation=${metadata.hasLocation}, '
-        'hasDateTime=${metadata.hasDateTime}, within24h=${metadata.isTakenWithin24Hours}');
+    debugPrint(
+      '[$_tag] EXIF metadata: hasLocation=${metadata.hasLocation}, '
+      'hasDateTime=${metadata.hasDateTime}, within24h=${metadata.isTakenWithin24Hours}',
+    );
 
-    // Always ask user to crop first
     final file = File(picked.path);
     if (!mounted) return;
 
     final croppedBytes = await Navigator.push<dynamic>(
       context,
-      MaterialPageRoute(
-        builder: (_) => ManualCropScreen(imageFile: file),
-      ),
+      MaterialPageRoute(builder: (_) => ManualCropScreen(imageFile: file)),
     );
 
     if (croppedBytes == null || !mounted) {
@@ -154,20 +149,19 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       return;
     }
 
-    // Process the cropped image via Claude API
     setState(() => _isProcessing = true);
 
     try {
       final scanner = PriceSignScannerService();
       var result = await scanner.scanCroppedImage(croppedBytes);
-      // Attach EXIF metadata from original image
       result = result.copyWithMetadata(metadata);
       if (!mounted) return;
       setState(() => _isProcessing = false);
 
-      debugPrint('[$_tag] Scan complete — prices found: ${result.prices.length}');
+      debugPrint(
+        '[$_tag] Scan complete — prices found: ${result.prices.length}',
+      );
 
-      // Show confirmation screen with cropped image and editable prices
       if (!mounted) return;
       final confirmedResult = await Navigator.push<ScanResult>(
         context,
@@ -189,9 +183,9 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       debugPrint('[$_tag] scanCroppedImage() failed: $e\n$stack');
       if (!mounted) return;
       setState(() => _isProcessing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to process image')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to process image')));
     }
   }
 
@@ -201,21 +195,37 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
 
     showModalBottomSheet(
       context: context,
+      backgroundColor: AppColors.surface(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take photo'),
-              onTap: () => _pickAndScan(ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from gallery'),
-              onTap: () => _pickAndScan(ImageSource.gallery),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.camera_alt_outlined,
+                  color: AppColors.textPrimary(context),
+                ),
+                title: Text('Take photo', style: AppTextStyles.body(context)),
+                onTap: () => _pickAndScan(ImageSource.camera),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.photo_library_outlined,
+                  color: AppColors.textPrimary(context),
+                ),
+                title: Text(
+                  'Choose from gallery',
+                  style: AppTextStyles.body(context),
+                ),
+                onTap: () => _pickAndScan(ImageSource.gallery),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -223,16 +233,38 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: _isProcessing ? null : _showSourcePicker,
-      icon: _isProcessing
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.camera_alt),
-      label: Text(_isProcessing ? 'Analyzing...' : 'Scan price sign'),
+    return GestureDetector(
+      onTap: _isProcessing ? null : _showSourcePicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface(context),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border(context), width: 0.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isProcessing)
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(
+                Icons.camera_alt_outlined,
+                size: 20,
+                color: AppColors.textPrimary(context),
+              ),
+            const SizedBox(width: 8),
+            Text(
+              _isProcessing ? 'Analyzing...' : 'Scan price sign',
+              style: AppTextStyles.bodyMedium(context),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

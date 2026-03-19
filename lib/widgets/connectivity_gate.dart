@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
-/// Wraps the app and shows a full-screen overlay when there is no
-/// cellular or wifi connection.
+import '../config/app_colors.dart';
+import '../config/app_text_styles.dart';
+
 class ConnectivityGate extends StatefulWidget {
   final Widget child;
 
@@ -51,10 +52,7 @@ class _ConnectivityGateState extends State<ConnectivityGate> {
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: [
-        widget.child,
-        if (!_isConnected) const _NoConnectionOverlay(),
-      ],
+      children: [widget.child, if (!_isConnected) const _NoConnectionOverlay()],
     );
   }
 }
@@ -64,12 +62,10 @@ class _NoConnectionOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Material(
-        color: theme.scaffoldBackgroundColor,
+        color: AppColors.background(context),
         child: SafeArea(
           child: Center(
             child: Padding(
@@ -80,28 +76,26 @@ class _NoConnectionOverlay extends StatelessWidget {
                   Icon(
                     Icons.wifi_off_rounded,
                     size: 80,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: AppColors.textMuted(context),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     'Ingen internettilkobling',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTextStyles.heading(context),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'TankVenn krever en aktiv Wi-Fi- eller mobildata\u00ADtilkobling for å fungere. '
                     'Vennligst aktiver Wi-Fi eller mobildata i innstillingene og prøv igjen.',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                    style: AppTextStyles.body(
+                      context,
+                    ).copyWith(color: AppColors.textMuted(context)),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-                  FilledButton.icon(
-                    onPressed: () async {
+                  GestureDetector(
+                    onTap: () async {
                       final results = await Connectivity().checkConnectivity();
                       final connected = results.any(
                         (r) =>
@@ -118,8 +112,22 @@ class _NoConnectionOverlay extends StatelessWidget {
                         );
                       }
                     },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Prøv igjen'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'Prøv igjen',
+                        style: AppTextStyles.bodyMedium(
+                          context,
+                        ).copyWith(color: Colors.white),
+                      ),
+                    ),
                   ),
                 ],
               ),
