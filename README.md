@@ -4,29 +4,33 @@
   <img src="assets/logos/Logo.png" alt="TankVenn Logo" width="200"/>
 </p>
 
+A community-driven Flutter application for tracking and comparing fuel prices across Norway. Find nearby stations, view real-time crowd-sourced prices, report updates, and set price alerts.
 
-A Flutter application to track and compare fuel prices in real-time. This app allows users to find nearby fuel stations, view current prices, and contribute by reporting new prices.
+## Features
 
-## 🚀 Features
+*   **Station Discovery**: Find fuel stations across Norway using OpenStreetMap (Overpass API).
+*   **Interactive Map**: Dark/light themed map with station markers showing live prices, brand logos, and freshness indicators.
+*   **Station Search**: Search stations by name, brand, city, or address directly from the map.
+*   **Real-time Prices**: View crowd-sourced prices for Bensin 95, Bensin 98, and Diesel.
+*   **Price History**: 30-day price trend charts with interactive touch tooltips.
+*   **Price Submission**: Report prices manually or scan price signs with AI-powered OCR (Claude Vision).
+*   **Price Alerts**: Set target price alerts with configurable distance radius and fuel type.
+*   **Authentication**: Anonymous browsing, email/password registration, and Google Sign-In.
+*   **Dark Mode**: Full dark/light theme support with cyberpunk-inspired dark palette.
+*   **Offline Caching**: Local caching of stations and prices for faster startup.
 
-*   **Station Discovery**: Find nearby fuel stations using OpenStreetMap (Overpass API).
-*   **Real-time Prices**: View crowd-sourced fuel prices for different fuel types (Petrol, Diesel, etc.).
-*   **Interactive Map**: Visualize stations on an interactive map powered by `flutter_map`.
-*   **Price History**: Track price trends over time with visual charts.
-*   **User Contributions**: Report updated prices to help the community.
-*   **Authentication**: Secure user accounts via Firebase Authentication.
+## Tech Stack
 
-## 🛠️ Tech Stack
-
-*   **Frontend**: Flutter (Dart)
+*   **Frontend**: Flutter (Dart) with Material 3
 *   **Backend**: Firebase (Firestore, Auth)
-*   **Maps**: `flutter_map`, `latlong2`
+*   **Maps**: `flutter_map` + `latlong2` (OSM tiles, CartoDB dark tiles)
 *   **State Management**: `provider`
-*   **Data Source**: OpenStreetMap (Overpass API) used for initial station data.
+*   **Charts**: `fl_chart`
+*   **Typography**: Space Grotesk (headlines) + Inter (body) via `google_fonts`
+*   **OCR**: Claude Vision API for price sign scanning
+*   **Data Source**: OpenStreetMap (Overpass API) for station discovery
 
-## 🏁 Getting Started
-
-Follow these instructions to get a copy of the project up and running on your local machine.
+## Getting Started
 
 ### Prerequisites
 
@@ -37,8 +41,8 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/your-username/fuel-price-tracker.git
-    cd fuelpriceapp/fuelpriceapp
+    git clone https://github.com/tsotnek/fuelpriceapp.git
+    cd fuelpriceapp
     ```
 
 2.  **Install dependencies**
@@ -58,18 +62,24 @@ Follow these instructions to get a copy of the project up and running on your lo
     flutter run
     ```
 
-## 📂 Project Structure
+## Project Structure
 
 The project code is located in `lib/`:
 
-*   `main.dart`: Entry point of the application.
-*   `models/`: Data models for Stations, Prices, Users, etc.
-*   `screens/`: UI screens (Map, Station Details, Settings, etc.).
-*   `providers/`: State management using Provider.
-*   `services/`: External services (Firestore, Location, Overpass API).
-*   `widgets/`: Reusable UI components.
-*   `config/`: App constants and theme configuration.
+*   `main.dart`: Entry point with Firebase init and MultiProvider setup.
+*   `app.dart`: MaterialApp with theme configuration and route definitions.
+*   `config/`: Theme, colors, text styles, constants, and route definitions.
+*   `models/`: Data models (Station, CurrentPrice, PriceReport, UserProfile, PriceAlert, FuelType).
+*   `screens/`: UI screens organized by feature:
+    *   `map/`: Map view with station markers, search, fuel/brand filters.
+    *   `station_detail/`: Station detail, station list, price cards, and price history chart.
+    *   `submit_price/`: Price submission with manual entry and photo scanning.
+    *   `settings/`: Profile screen with user stats, preferences, and account management.
+    *   `auth/`: Registration and sign-in screen.
+*   `providers/`: State management (Station, Price, Location, User, Alert providers).
+*   `services/`: Backend services (Firestore, Overpass API, location, caching, OCR, notifications).
+*   `widgets/`: Reusable components (navigation bar, brand logos, connectivity gate, loading indicators).
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
