@@ -204,7 +204,7 @@ class _StationListTileState extends State<_StationListTile> {
                     '${widget.price!.toStringAsFixed(2)} kr',
                     style: AppTextStyles.priceLarge(
                       context,
-                    ).copyWith(color: const Color(0xFF2563EB)),
+                    ).copyWith(color: AppColors.primaryContainer(context)),
                   ),
                 ],
               ],

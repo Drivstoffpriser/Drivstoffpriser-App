@@ -4,6 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../config/app_colors.dart';
+import '../../../config/app_text_styles.dart';
 import '../../../models/fuel_type.dart';
 import '../../../models/price_history_point.dart';
 
@@ -18,12 +20,7 @@ class PriceHistoryChart extends StatefulWidget {
 
 class _PriceHistoryChartState extends State<PriceHistoryChart> {
   final Set<FuelType> _visible = {};
-
-  static const _fuelColors = {
-    FuelType.diesel: Colors.amber,
-    FuelType.petrol95: Colors.blue,
-    FuelType.petrol98: Colors.green,
-  };
+  List<LineBarSpot>? _touchedSpots;
 
   @override
   void initState() {
@@ -34,11 +31,22 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   @override
   void didUpdateWidget(PriceHistoryChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If new fuel types appeared, show them
     for (final type in widget.history.keys) {
       if (!oldWidget.history.containsKey(type)) {
         _visible.add(type);
       }
+    }
+  }
+
+  Color _fuelColor(FuelType type, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    switch (type) {
+      case FuelType.diesel:
+        return isDark ? const Color(0xFFffd166) : Colors.amber;
+      case FuelType.petrol95:
+        return isDark ? const Color(0xFF00d1ff) : const Color(0xFF0056b3);
+      case FuelType.petrol98:
+        return isDark ? const Color(0xFF6fddaa) : const Color(0xFF006e25);
     }
   }
 
@@ -48,7 +56,6 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       return const SizedBox.shrink();
     }
 
-    // Compute the date range from the data
     DateTime? earliest;
     DateTime? latest;
     double minPrice = double.infinity;
@@ -71,42 +78,61 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     final dateRange = latest.difference(earliest).inDays.toDouble();
     if (dateRange == 0) return const SizedBox.shrink();
 
-    // Add some padding to the Y axis
     final yPad = (maxPrice - minPrice) * 0.15;
     final yMin = (minPrice - yPad).floorToDouble();
     final yMax = (maxPrice + yPad).ceilToDouble();
 
     final dateFormat = DateFormat('d/M');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gridColor = AppColors.border(context).withValues(alpha: 0.3);
+    final labelColor = AppColors.textMuted(context);
+
+    final visibleFuelTypes = widget.history.keys
+        .where((k) => _visible.contains(k))
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Chart
         SizedBox(
           height: 220,
-          child: LineChart(
+          child: Stack(
+            children: [
+              LineChart(
             LineChartData(
               minY: yMin,
               maxY: yMax,
               minX: 0,
               maxX: dateRange,
               gridData: FlGridData(
-                horizontalInterval: ((yMax - yMin) / 4).ceilToDouble().clamp(1, 10),
+                horizontalInterval:
+                    ((yMax - yMin) / 4).ceilToDouble().clamp(1, 10),
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: gridColor,
+                  strokeWidth: 0.5,
+                ),
+                getDrawingVerticalLine: (value) => FlLine(
+                  color: gridColor,
+                  strokeWidth: 0.5,
+                ),
               ),
               titlesData: FlTitlesData(
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     interval: 7,
                     getTitlesWidget: (value, _) {
-                      final date = earliest!.add(Duration(days: value.toInt()));
+                      final date =
+                          earliest!.add(Duration(days: value.toInt()));
                       return Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Text(
                           dateFormat.format(date),
-                          style: const TextStyle(fontSize: 10),
+                          style: TextStyle(fontSize: 10, color: labelColor),
                         ),
                       );
                     },
@@ -119,7 +145,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                     getTitlesWidget: (value, _) {
                       return Text(
                         '${value.toStringAsFixed(1)} kr',
-                        style: const TextStyle(fontSize: 10),
+                        style: TextStyle(fontSize: 10, color: labelColor),
                       );
                     },
                   ),
@@ -127,39 +153,57 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               ),
               borderData: FlBorderData(show: false),
               lineTouchData: LineTouchData(
+                handleBuiltInTouches: true,
+                touchCallback: (event, response) {
+                  setState(() {
+                    if (response?.lineBarSpots != null &&
+                        response!.lineBarSpots!.isNotEmpty) {
+                      _touchedSpots = response.lineBarSpots;
+                    } else if (event is FlLongPressEnd ||
+                        event is FlPanEndEvent ||
+                        event is FlTapUpEvent) {
+                      _touchedSpots = null;
+                    }
+                  });
+                },
                 touchTooltipData: LineTouchTooltipData(
-                  getTooltipItems: (spots) {
-                    return spots.map((spot) {
-                      final fuelType = widget.history.keys.where(
-                        (k) => _visible.contains(k),
-                      ).elementAt(spot.barIndex);
-                      final date = earliest!.add(Duration(days: spot.x.toInt()));
-                      return LineTooltipItem(
-                        '${fuelType.displayName}\n${dateFormat.format(date)}: ${spot.y.toStringAsFixed(2)} kr',
-                        TextStyle(
-                          color: _fuelColors[fuelType] ?? Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    }).toList();
-                  },
+                  // Hide the built-in tooltip — we draw our own
+                  getTooltipColor: (_) => Colors.transparent,
+                  getTooltipItems: (spots) =>
+                      spots.map((_) => null).toList(),
                 ),
               ),
               lineBarsData: widget.history.entries
                   .where((e) => _visible.contains(e.key))
                   .map((entry) {
-                final color = _fuelColors[entry.key] ?? Colors.grey;
+                final color = _fuelColor(entry.key, context);
                 return LineChartBarData(
                   spots: entry.value.map((pt) {
-                    final x = pt.date.difference(earliest!).inDays.toDouble();
-                    return FlSpot(x, double.parse(pt.price.toStringAsFixed(2)));
+                    final x =
+                        pt.date.difference(earliest!).inDays.toDouble();
+                    return FlSpot(
+                        x, double.parse(pt.price.toStringAsFixed(2)));
                   }).toList(),
                   isCurved: true,
                   curveSmoothness: 0.2,
                   color: color,
                   barWidth: 2.5,
-                  dotData: const FlDotData(show: false),
+                  dotData: FlDotData(
+                    show: true,
+                    getDotPainter: (spot, percent, bar, index) {
+                      final isTouched = _touchedSpots?.any(
+                              (s) => s.x == spot.x && s.y == spot.y) ??
+                          false;
+                      return FlDotCirclePainter(
+                        radius: isTouched ? 5 : 0,
+                        color: color,
+                        strokeWidth: isTouched ? 2 : 0,
+                        strokeColor: isDark
+                            ? AppColors.darkBackground
+                            : Colors.white,
+                      );
+                    },
+                  ),
                   belowBarData: BarAreaData(
                     show: true,
                     color: color.withAlpha(25),
@@ -168,6 +212,16 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               }).toList(),
             ),
           ),
+          // Static tooltip overlay — top-left inside chart
+          if (_touchedSpots != null && _touchedSpots!.isNotEmpty)
+            Positioned(
+              top: 0,
+              left: 44, // right of the y-axis labels
+              child: _buildStaticTooltip(
+                  earliest, dateFormat, isDark, visibleFuelTypes),
+            ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         // Legend
@@ -175,13 +229,12 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           spacing: 16,
           runSpacing: 8,
           children: widget.history.keys.map((type) {
-            final color = _fuelColors[type] ?? Colors.grey;
+            final color = _fuelColor(type, context);
             final active = _visible.contains(type);
             return GestureDetector(
               onTap: () {
                 setState(() {
                   if (active) {
-                    // Don't allow hiding all lines
                     if (_visible.length > 1) _visible.remove(type);
                   } else {
                     _visible.add(type);
@@ -204,7 +257,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                     type.displayName,
                     style: TextStyle(
                       fontSize: 12,
-                      color: active ? null : Theme.of(context).colorScheme.outline,
+                      color: active
+                          ? AppColors.textPrimary(context)
+                          : AppColors.textMuted(context),
                       decoration: active ? null : TextDecoration.lineThrough,
                     ),
                   ),
@@ -214,6 +269,78 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildStaticTooltip(
+    DateTime earliest,
+    DateFormat dateFormat,
+    bool isDark,
+    List<FuelType> visibleFuelTypes,
+  ) {
+    final spots = _touchedSpots!;
+    final date = earliest.add(Duration(days: spots.first.x.toInt()));
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceHighest : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.border(context),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            dateFormat.format(date),
+            style: AppTextStyles.meta(context).copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          for (final spot in spots)
+            if (spot.barIndex < visibleFuelTypes.length)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _fuelColor(
+                            visibleFuelTypes[spot.barIndex], context),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${visibleFuelTypes[spot.barIndex].displayName}: ${spot.y.toStringAsFixed(2)} kr',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _fuelColor(
+                            visibleFuelTypes[spot.barIndex], context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
     );
   }
 }

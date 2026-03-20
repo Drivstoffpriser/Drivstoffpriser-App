@@ -4,8 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTextStyles {
   AppTextStyles._();
 
+  // Headlines use Space Grotesk
   static TextStyle heading(BuildContext context) {
-    return GoogleFonts.inter(
+    return GoogleFonts.spaceGrotesk(
       fontSize: 24,
       fontWeight: FontWeight.w600,
       letterSpacing: -0.5,
@@ -14,7 +15,7 @@ class AppTextStyles {
   }
 
   static TextStyle title(BuildContext context) {
-    return GoogleFonts.inter(
+    return GoogleFonts.spaceGrotesk(
       fontSize: 18,
       fontWeight: FontWeight.w600,
       letterSpacing: -0.5,
@@ -22,6 +23,7 @@ class AppTextStyles {
     );
   }
 
+  // Body/label styles use Inter
   static TextStyle body(BuildContext context) {
     return GoogleFonts.inter(
       fontSize: 15,
@@ -63,7 +65,7 @@ class AppTextStyles {
   }
 
   static TextStyle priceLarge(BuildContext context) {
-    return GoogleFonts.inter(
+    return GoogleFonts.spaceGrotesk(
       fontSize: 20,
       fontWeight: FontWeight.w700,
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -72,7 +74,7 @@ class AppTextStyles {
   }
 
   static TextStyle priceMedium(BuildContext context) {
-    return GoogleFonts.inter(
+    return GoogleFonts.spaceGrotesk(
       fontSize: 17,
       fontWeight: FontWeight.w700,
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -81,7 +83,7 @@ class AppTextStyles {
   }
 
   static TextStyle priceSmall(BuildContext context) {
-    return GoogleFonts.inter(
+    return GoogleFonts.spaceGrotesk(
       fontSize: 15,
       fontWeight: FontWeight.w700,
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -117,7 +119,17 @@ class AppTextStyles {
     return GoogleFonts.inter(
       fontSize: 10,
       fontWeight: FontWeight.w400,
-      color: const Color(0xFF2563EB),
+      color: const Color(0xFF00d1ff),
+    );
+  }
+
+  // Section header style for uppercase labels
+  static TextStyle sectionHeader(BuildContext context) {
+    return GoogleFonts.spaceGrotesk(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.5,
+      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
     );
   }
 }

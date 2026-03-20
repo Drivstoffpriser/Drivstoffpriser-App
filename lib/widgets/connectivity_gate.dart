@@ -118,7 +118,7 @@ class _NoConnectionOverlay extends StatelessWidget {
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2563EB),
+                        color: AppColors.primaryContainer(context),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(

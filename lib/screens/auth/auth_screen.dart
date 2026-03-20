@@ -262,7 +262,7 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
+                  color: AppColors.primaryContainer(context),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
@@ -301,7 +301,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       : 'Need an account? Create one',
                   style: AppTextStyles.label(
                     context,
-                  ).copyWith(color: const Color(0xFF2563EB)),
+                  ).copyWith(color: AppColors.primaryContainer(context)),
                 ),
               ),
             ),

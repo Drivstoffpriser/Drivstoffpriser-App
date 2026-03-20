@@ -7,12 +7,14 @@ import '../../../models/station.dart';
 class StationMarker extends StatefulWidget {
   final Station station;
   final CurrentPrice? price;
+  final bool isBestPrice;
   final VoidCallback onTap;
 
   const StationMarker({
     super.key,
     required this.station,
     this.price,
+    this.isBestPrice = false,
     required this.onTap,
   });
 
@@ -37,10 +39,33 @@ class _StationMarkerState extends State<StationMarker> {
     return _brandLogoAssets[brand];
   }
 
+  /// Format age label and pick color:
+  /// - <1hr → "3m", "25m" etc. green
+  /// - 1–5hr → "1hr", "2hr" etc. green
+  /// - 6–12hr → yellow/orange
+  /// - 13–23hr → red
+  /// - 24hr+ → ">1d" gray
+  static ({String label, Color color}) _formatAge(Duration age) {
+    final minutes = age.inMinutes;
+    final hours = age.inHours;
+
+    if (minutes < 60) {
+      return (label: '${minutes}m', color: Colors.green);
+    }
+    if (hours <= 5) {
+      return (label: '${hours}hr', color: Colors.green);
+    }
+    if (hours <= 12) {
+      return (label: '${hours}hr', color: Colors.orange);
+    }
+    if (hours <= 23) {
+      return (label: '${hours}hr', color: Colors.red);
+    }
+    return (label: '>1d', color: Colors.grey);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final logoAsset = _getLogoAsset();
-
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -49,57 +74,181 @@ class _StationMarkerState extends State<StationMarker> {
       },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
-        scale: _isPressed ? 0.95 : 1.0,
+        scale: _isPressed ? 0.93 : 1.0,
         duration: const Duration(milliseconds: 80),
-        curve: Curves.easeOutCubic,
-        child: AnimatedOpacity(
-          opacity: _isPressed ? 0.85 : 1.0,
-          duration: const Duration(milliseconds: 80),
-          curve: Curves.easeOutCubic,
-          child: SizedBox(
-            width: 52,
-            height: 52,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated(context),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.border(context),
-                      width: 0.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+        child: widget.price != null
+            ? _buildLogoWithPrice(context)
+            : _buildCircleMarker(context),
+      ),
+    );
+  }
+
+  /// Logo circle with freshness-colored border, time badge, and price tag.
+  Widget _buildLogoWithPrice(BuildContext context) {
+    final price = widget.price!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final logoAsset = _getLogoAsset();
+    final age = DateTime.now().difference(price.updatedAt);
+    final (:label, :color) = _formatAge(age);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Logo circle with freshness-colored border
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated(context),
+                shape: BoxShape.circle,
+                border: Border.all(color: color, width: 2.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: logoAsset != null
+                  ? ClipOval(
+                      child: Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: Image.asset(
+                          logoAsset,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) =>
+                              _buildFallbackLogo(context),
+                        ),
                       ),
-                    ],
+                    )
+                  : _buildFallbackLogo(context),
+            ),
+            // Time badge — top right
+            Positioned(
+              top: -4,
+              right: -8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
-                if (logoAsset != null)
-                  ClipOval(
-                    child: SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: Image.asset(
-                        logoAsset,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) =>
-                            _buildFallbackLogo(context),
-                      ),
-                    ),
-                  )
-                else
-                  _buildFallbackLogo(context),
-                if (widget.price != null) _buildPriceBadge(context),
-              ],
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        // Price tag
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: widget.isBestPrice
+                ? AppColors.primaryContainer(context)
+                : (isDark ? AppColors.darkSurfaceHigh : Colors.white),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: widget.isBestPrice
+                  ? AppColors.primaryContainer(context)
+                  : AppColors.border(context),
+              width: widget.isBestPrice ? 1 : 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.isBestPrice
+                    ? AppColors.primaryContainer(context)
+                        .withValues(alpha: 0.35)
+                    : Colors.black.withValues(alpha: 0.1),
+                blurRadius: widget.isBestPrice ? 8 : 4,
+              ),
+            ],
           ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.isBestPrice)
+                Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: Icon(
+                    Icons.star_rounded,
+                    size: 10,
+                    color: isDark ? AppColors.darkBackground : Colors.white,
+                  ),
+                ),
+              Text(
+                price.price.toStringAsFixed(2),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: widget.isBestPrice
+                      ? (isDark ? AppColors.darkBackground : Colors.white)
+                      : AppColors.textPrimary(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// No price — plain circle with logo or initials.
+  Widget _buildCircleMarker(BuildContext context) {
+    final logoAsset = _getLogoAsset();
+
+    return AnimatedOpacity(
+      opacity: _isPressed ? 0.85 : 1.0,
+      duration: const Duration(milliseconds: 80),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated(context),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.border(context),
+                  width: 0.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+            if (logoAsset != null)
+              ClipOval(
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Image.asset(
+                    logoAsset,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => _buildFallbackLogo(context),
+                  ),
+                ),
+              )
+            else
+              _buildFallbackLogo(context),
+          ],
         ),
       ),
     );
@@ -110,17 +259,18 @@ class _StationMarkerState extends State<StationMarker> {
     final initials = brand.length > 2
         ? brand.substring(0, 2).toUpperCase()
         : brand.toUpperCase();
+    final activeColor = AppColors.primaryContainer(context);
 
     return Container(
-      width: 36,
-      height: 36,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF2563EB).withValues(alpha: 0.1),
-            const Color(0xFF2563EB).withValues(alpha: 0.05),
+            activeColor.withValues(alpha: 0.12),
+            activeColor.withValues(alpha: 0.05),
           ],
         ),
         shape: BoxShape.circle,
@@ -128,45 +278,10 @@ class _StationMarkerState extends State<StationMarker> {
       child: Center(
         child: Text(
           initials,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF2563EB),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriceBadge(BuildContext context) {
-    final price = widget.price!;
-
-    return Positioned(
-      bottom: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2563EB),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.surfaceElevated(context),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Text(
-          price.price.toStringAsFixed(2),
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: activeColor,
           ),
         ),
       ),

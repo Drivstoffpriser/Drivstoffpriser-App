@@ -324,6 +324,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       widget.station.address,
       widget.station.city,
     ].where((s) => s.isNotEmpty).join(', ');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
@@ -341,7 +342,11 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.surface(context),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.border(context),
+                  width: 0.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -378,32 +383,9 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
               const SizedBox(height: 12),
             ],
             const SizedBox(height: 20),
-            _PressableButton(
-              onPressed: _isSubmitting ? () {} : _submit,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          'Submit Report',
-                          style: AppTextStyles.bodyMedium(
-                            context,
-                          ).copyWith(color: Colors.white),
-                        ),
-                ),
-              ),
+            _GradientSubmitButton(
+              isSubmitting: _isSubmitting,
+              onPressed: _submit,
             ),
           ],
         ),
@@ -412,36 +394,80 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
   }
 }
 
-class _PressableButton extends StatefulWidget {
+class _GradientSubmitButton extends StatefulWidget {
+  final bool isSubmitting;
   final VoidCallback onPressed;
-  final Widget child;
 
-  const _PressableButton({required this.onPressed, required this.child});
+  const _GradientSubmitButton({
+    required this.isSubmitting,
+    required this.onPressed,
+  });
 
   @override
-  State<_PressableButton> createState() => _PressableButtonState();
+  State<_GradientSubmitButton> createState() => _GradientSubmitButtonState();
 }
 
-class _PressableButtonState extends State<_PressableButton> {
+class _GradientSubmitButtonState extends State<_GradientSubmitButton> {
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onPressed();
-      },
+      onTapDown: widget.isSubmitting
+          ? null
+          : (_) => setState(() => _isPressed = true),
+      onTapUp: widget.isSubmitting
+          ? null
+          : (_) {
+              setState(() => _isPressed = false);
+              widget.onPressed();
+            },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 80),
-        curve: Curves.easeOutCubic,
-        child: AnimatedOpacity(
-          opacity: _isPressed ? 0.85 : 1.0,
-          duration: const Duration(milliseconds: 80),
-          child: widget.child,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [const Color(0xFF00d1ff), const Color(0xFF0091b3)]
+                  : [const Color(0xFF0056b3), const Color(0xFF003f87)],
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: (isDark
+                        ? const Color(0xFF00d1ff)
+                        : const Color(0xFF0056b3))
+                    .withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: widget.isSubmitting
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: isDark ? AppColors.darkBackground : Colors.white,
+                    ),
+                  )
+                : Text(
+                    'Submit Report',
+                    style: AppTextStyles.bodyMedium(
+                      context,
+                    ).copyWith(
+                      color: isDark ? AppColors.darkBackground : Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
         ),
       ),
     );
