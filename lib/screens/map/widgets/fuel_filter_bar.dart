@@ -64,6 +64,7 @@ class _FuelChipState extends State<_FuelChip> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -86,26 +87,32 @@ class _FuelChipState extends State<_FuelChip> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: widget.isSelected
-                  ? const Color(0xFF2563EB)
-                  : isDark
-                  ? const Color(0xFF242424)
-                  : const Color(0xFFF7F7F5),
-              borderRadius: BorderRadius.circular(6),
+                  ? activeColor
+                  : (isDark
+                      ? AppColors.darkSurfaceHigh
+                      : AppColors.lightSurfaceLow),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: widget.isSelected
-                    ? const Color(0xFF2563EB)
-                    : isDark
-                    ? const Color(0x14FFFFFF)
-                    : const Color(0x14000000),
+                    ? activeColor
+                    : AppColors.border(context),
                 width: 0.5,
               ),
+              boxShadow: widget.isSelected
+                  ? [
+                      BoxShadow(
+                        color: activeColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                      ),
+                    ]
+                  : null,
             ),
             child: Center(
               child: Text(
                 widget.label,
                 style: AppTextStyles.chipLabel(context).copyWith(
                   color: widget.isSelected
-                      ? Colors.white
+                      ? (isDark ? AppColors.darkBackground : Colors.white)
                       : AppColors.textMuted(context),
                 ),
               ),

@@ -15,6 +15,7 @@ class BrandFilterButton extends StatelessWidget {
     final provider = context.watch<StationProvider>();
     final hasFilter =
         provider.selectedBrands.isNotEmpty || provider.filterRadiusKm != null;
+    final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
       onTap: () => _showBrandFilterSheet(context),
@@ -22,24 +23,17 @@ class BrandFilterButton extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppColors.surfaceElevated(context),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppColors.border(context), width: 0.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Center(
               child: Icon(
                 Icons.tune_outlined,
-                size: 20,
+                size: 18,
                 color: AppColors.textPrimary(context),
               ),
             ),
@@ -52,7 +46,7 @@ class BrandFilterButton extends StatelessWidget {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
+                  color: activeColor,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: AppColors.surfaceElevated(context),
@@ -71,7 +65,7 @@ class BrandFilterButton extends StatelessWidget {
       context: context,
       backgroundColor: AppColors.surface(context),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => const _BrandFilterSheet(),
     );
@@ -92,6 +86,7 @@ class _BrandFilterSheet extends StatelessWidget {
     final provider = context.watch<StationProvider>();
     final brands = provider.availableBrands;
     final radiusKm = provider.filterRadiusKm;
+    final activeColor = AppColors.primaryContainer(context);
 
     final steps = [5, 10, 20, 50, 100, 200, 500, null];
     final currentIndex = radiusKm == null
@@ -124,10 +119,10 @@ class _BrandFilterSheet extends StatelessWidget {
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFF2563EB),
+              activeTrackColor: activeColor,
               inactiveTrackColor: AppColors.border(context),
-              thumbColor: const Color(0xFF2563EB),
-              overlayColor: const Color(0xFF2563EB).withValues(alpha: 0.12),
+              thumbColor: activeColor,
+              overlayColor: activeColor.withValues(alpha: 0.12),
             ),
             child: Slider(
               value: sliderValue,
@@ -153,7 +148,7 @@ class _BrandFilterSheet extends StatelessWidget {
                     'Clear all',
                     style: AppTextStyles.label(
                       context,
-                    ).copyWith(color: const Color(0xFF2563EB)),
+                    ).copyWith(color: activeColor),
                   ),
                 ),
             ],
@@ -197,6 +192,9 @@ class _FilterChipState extends State<_FilterChip> {
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = AppColors.primaryContainer(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -216,12 +214,12 @@ class _FilterChipState extends State<_FilterChip> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: widget.isSelected
-                  ? const Color(0xFF2563EB)
+                  ? activeColor
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: widget.isSelected
-                    ? const Color(0xFF2563EB)
+                    ? activeColor
                     : AppColors.border(context),
                 width: 0.5,
               ),
@@ -230,7 +228,7 @@ class _FilterChipState extends State<_FilterChip> {
               widget.label,
               style: AppTextStyles.chipLabel(context).copyWith(
                 color: widget.isSelected
-                    ? Colors.white
+                    ? (isDark ? AppColors.darkBackground : Colors.white)
                     : AppColors.textMuted(context),
               ),
             ),
