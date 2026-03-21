@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -54,6 +56,7 @@ class _StationBottomSheetState extends State<StationBottomSheet>
   Widget build(BuildContext context) {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final sorted = stationProvider.sortedStations(
       userLat: locationProvider.position?.latitude,
@@ -68,90 +71,127 @@ class _StationBottomSheetState extends State<StationBottomSheet>
       snap: true,
       snapSizes: const [0.25, 0.5],
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 32,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(2),
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkSurface.withValues(alpha: 0.92)
+                    : Colors.white.withValues(alpha: 0.95),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      '${stationProvider.selectedFuelType.displayName} Prices',
-                      style: AppTextStyles.bodyMedium(context),
-                    ),
-                    const Spacer(),
-                    PopupMenuButton<SortMode>(
-                      initialValue: stationProvider.sortMode,
-                      onSelected: stationProvider.setSortMode,
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
-                          value: SortMode.cheapest,
-                          child: Text('Cheapest'),
-                        ),
-                        PopupMenuItem(
-                          value: SortMode.nearest,
-                          child: Text('Nearest'),
-                        ),
-                        PopupMenuItem(
-                          value: SortMode.latest,
-                          child: Text('Latest'),
-                        ),
-                      ],
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Sort: ${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}',
-                            style: AppTextStyles.label(context),
-                          ),
-                          const Icon(Icons.arrow_drop_down, size: 18),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _contentOpacity,
-                  child: SlideTransition(
-                    position: _contentSlide,
-                    child: sorted.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No prices reported yet',
-                              style: AppTextStyles.label(context),
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: scrollController,
-                            padding: EdgeInsets.only(
-                              bottom:
-                                  MediaQuery.of(context).padding.bottom + 100,
-                            ),
-                            itemCount: sorted.length,
-                            itemBuilder: (context, index) =>
-                                _StationTile(station: sorted[index]),
-                          ),
+                border: Border(
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.darkOutlineVariant.withValues(alpha: 0.5)
+                        : const Color(0xFFDDE1E6),
                   ),
                 ),
               ),
-            ],
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border(context).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Best Nearby',
+                          style: AppTextStyles.title(context),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryContainer(context)
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            stationProvider.selectedFuelType.displayName,
+                            style: AppTextStyles.label(context).copyWith(
+                              color: AppColors.primaryContainer(context),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        PopupMenuButton<SortMode>(
+                          initialValue: stationProvider.sortMode,
+                          onSelected: stationProvider.setSortMode,
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: SortMode.cheapest,
+                              child: Text('Cheapest'),
+                            ),
+                            PopupMenuItem(
+                              value: SortMode.nearest,
+                              child: Text('Nearest'),
+                            ),
+                            PopupMenuItem(
+                              value: SortMode.latest,
+                              child: Text('Latest'),
+                            ),
+                          ],
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Sort: ${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}',
+                                style: AppTextStyles.label(context),
+                              ),
+                              const Icon(Icons.arrow_drop_down, size: 18),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _contentOpacity,
+                      child: SlideTransition(
+                        position: _contentSlide,
+                        child: sorted.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No prices reported yet',
+                                  style: AppTextStyles.label(context),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                padding: EdgeInsets.only(
+                                  bottom:
+                                      MediaQuery.of(context).padding.bottom +
+                                          100,
+                                ),
+                                itemCount: sorted.length,
+                                itemBuilder: (context, index) =>
+                                    _StationTile(station: sorted[index]),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -227,7 +267,7 @@ class _StationTileState extends State<_StationTile> {
                         [
                           if (widget.station.city.isNotEmpty)
                             widget.station.city,
-                          if (distanceStr != null) distanceStr,
+                          ?distanceStr,
                           if (price != null) timeago.format(price.updatedAt),
                         ].join(' · '),
                         style: AppTextStyles.meta(context),
@@ -241,7 +281,7 @@ class _StationTileState extends State<_StationTile> {
                     '${price.price.toStringAsFixed(2)} kr',
                     style: AppTextStyles.priceLarge(
                       context,
-                    ).copyWith(color: const Color(0xFF2563EB)),
+                    ).copyWith(color: AppColors.primaryContainer(context)),
                   ),
                 ],
               ],

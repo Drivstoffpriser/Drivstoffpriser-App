@@ -182,7 +182,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           color: _hasAnyPrice
-                              ? const Color(0xFF2563EB)
+                              ? AppColors.primaryContainer(context)
                               : AppColors.surface(context),
                           borderRadius: BorderRadius.circular(10),
                         ),

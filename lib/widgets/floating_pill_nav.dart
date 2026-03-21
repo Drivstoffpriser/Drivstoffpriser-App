@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../config/app_colors.dart';
@@ -15,7 +17,11 @@ class FloatingPillNav extends StatefulWidget {
 class _FloatingPillNavState extends State<FloatingPillNav> {
   int _currentIndex = 0;
 
-  static const _screens = [MapScreen(), StationListScreen(), SettingsScreen()];
+  static const _screens = [
+    MapScreen(),
+    StationListScreen(),
+    SettingsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -31,58 +37,64 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
             right: 0,
             bottom: bottomPadding + 16,
             child: Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1A1A1A)
-                      : const Color(0xFFFFFFFF),
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: isDark
-                        ? const Color(0x14FFFFFF)
-                        : const Color(0x14000000),
-                    width: 0.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkSurfaceLow.withValues(alpha: 0.85)
+                          : AppColors.lightSurface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.darkOutlineVariant.withValues(alpha: 0.5)
+                            : const Color(0xFFDDE1E6),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _NavTab(
-                        icon: Icons.explore_outlined,
-                        activeIcon: Icons.explore,
-                        label: 'Map',
-                        isActive: _currentIndex == 0,
-                        onTap: () => setState(() => _currentIndex = 0),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
                       ),
-                      const SizedBox(width: 4),
-                      _NavTab(
-                        icon: Icons.local_gas_station_outlined,
-                        activeIcon: Icons.local_gas_station,
-                        label: 'Stations',
-                        isActive: _currentIndex == 1,
-                        onTap: () => setState(() => _currentIndex = 1),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _NavTab(
+                            icon: Icons.explore_outlined,
+                            activeIcon: Icons.explore,
+                            label: 'Map',
+                            isActive: _currentIndex == 0,
+                            onTap: () => setState(() => _currentIndex = 0),
+                          ),
+                          const SizedBox(width: 2),
+                          _NavTab(
+                            icon: Icons.local_gas_station_outlined,
+                            activeIcon: Icons.local_gas_station,
+                            label: 'Stations',
+                            isActive: _currentIndex == 1,
+                            onTap: () => setState(() => _currentIndex = 1),
+                          ),
+                          const SizedBox(width: 2),
+                          _NavTab(
+                            icon: Icons.person_outline,
+                            activeIcon: Icons.person,
+                            label: 'Profile',
+                            isActive: _currentIndex == 2,
+                            onTap: () => setState(() => _currentIndex = 2),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 4),
-                      _NavTab(
-                        icon: Icons.settings_outlined,
-                        activeIcon: Icons.settings,
-                        label: 'Settings',
-                        isActive: _currentIndex == 2,
-                        onTap: () => setState(() => _currentIndex = 2),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -169,6 +181,11 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark
+        ? AppColors.darkPrimaryContainer
+        : AppColors.lightPrimaryContainer;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -187,7 +204,7 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
               opacity: _isPressed ? 0.8 : 1.0,
               duration: const Duration(milliseconds: 100),
               child: SizedBox(
-                width: 72,
+                width: 68,
                 height: 60,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -203,10 +220,18 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
                           decoration: BoxDecoration(
                             color: Color.lerp(
                               Colors.transparent,
-                              const Color(0xFF2563EB).withValues(alpha: 0.12),
+                              activeColor.withValues(alpha: 0.15),
                               _circleAnimation.value,
                             ),
                             shape: BoxShape.circle,
+                            boxShadow: widget.isActive
+                                ? [
+                                    BoxShadow(
+                                      color: activeColor.withValues(alpha: 0.3),
+                                      blurRadius: 12,
+                                    ),
+                                  ]
+                                : null,
                           ),
                         ),
                         AnimatedScale(
@@ -229,7 +254,7 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
                               key: ValueKey(widget.isActive),
                               size: _iconSizeAnimation.value,
                               color: widget.isActive
-                                  ? const Color(0xFF2563EB)
+                                  ? activeColor
                                   : AppColors.textMuted(context),
                             ),
                           ),
@@ -245,7 +270,7 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
                             ? FontWeight.w500
                             : FontWeight.w400,
                         color: widget.isActive
-                            ? const Color(0xFF2563EB)
+                            ? activeColor
                             : AppColors.textMuted(context),
                       ),
                       child: Text(widget.label),

@@ -38,6 +38,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final userProvider = context.watch<UserProvider>();
     final user = userProvider.user;
     final isAuth = userProvider.isAuthenticated;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = AppColors.primaryContainer(context);
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
@@ -47,11 +49,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             backgroundColor: AppColors.background(context),
             surfaceTintColor: Colors.transparent,
             pinned: true,
-            expandedHeight: 120,
+            expandedHeight: 100,
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               title: Text(
-                'Settings',
+                'Profile',
                 style: AppTextStyles.heading(context).copyWith(fontSize: 28),
               ),
             ),
@@ -64,35 +66,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _ProfileCard(
+                // ── Profile Hero ──
+                _ProfileHero(
                   user: user,
                   isAuthenticated: isAuth,
                   userProvider: userProvider,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+
+                // ── Contributions Card ──
+                if (isAuth) ...[
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface(context),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.border(context),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.bar_chart_rounded, size: 20, color: activeColor),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Total Contributions',
+                              style: AppTextStyles.bodyMedium(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${user.reportCount}',
+                          style: AppTextStyles.priceLarge(context).copyWith(
+                            fontSize: 28,
+                          ),
+                        ),
+                        Text(
+                          'price reports submitted',
+                          style: AppTextStyles.meta(context),
+                        ),
+                        const SizedBox(height: 12),
+                        // Trust score bar
+                        Row(
+                          children: [
+                            Text('Trust Score', style: AppTextStyles.label(context)),
+                            const Spacer(),
+                            Text(
+                              '${(user.trustScore * 100).toStringAsFixed(0)}%',
+                              style: AppTextStyles.labelBold(context).copyWith(
+                                color: activeColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: user.trustScore,
+                            minHeight: 6,
+                            backgroundColor: AppColors.surfaceLow(context),
+                            valueColor: AlwaysStoppedAnimation<Color>(activeColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // ── Sign In / Create Account ──
                 if (!isAuth) ...[
                   _ActionCard(
                     icon: Icons.person_add_rounded,
-                    iconColor: const Color(0xFF2563EB),
+                    iconColor: activeColor,
                     title: 'Create Account',
                     subtitle: 'Sign up to report prices and earn trust',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.auth),
                     isPrimary: true,
                   ),
-                  const SizedBox(height: 12),
-                ] else ...[
-                  _ActionCard(
-                    icon: Icons.logout_rounded,
-                    iconColor: AppColors.textMuted(context),
-                    title: 'Sign Out',
-                    subtitle: 'Sign out of your account',
-                    onTap: () async {
-                      await userProvider.signOut();
-                    },
-                  ),
                   const SizedBox(height: 24),
                 ],
-                _SectionHeader(title: 'Preferences'),
+
+                // ── Map Preferences ──
+                Text(
+                  'MAP PREFERENCES',
+                  style: AppTextStyles.sectionHeader(context),
+                ),
                 const SizedBox(height: 12),
                 _SettingsCard(
                   children: [
@@ -100,14 +165,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.my_location_outlined,
-                      iconColor: const Color(0xFF10B981),
+                      iconColor: isDark
+                          ? const Color(0xFF6fddaa)
+                          : const Color(0xFF10B981),
                       title: 'Refresh Stations',
                       subtitle: 'Update nearby fuel stations',
                       trailing: _isRefreshing
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: activeColor,
+                              ),
                             )
                           : null,
                       onTap: _isRefreshing ? null : _refreshStations,
@@ -115,19 +185,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                _SectionHeader(title: 'Support'),
+
+                // ── Support ──
+                Text(
+                  'SUPPORT',
+                  style: AppTextStyles.sectionHeader(context),
+                ),
                 const SizedBox(height: 12),
                 _SettingsCard(
                   children: [
                     _SettingsTile(
                       icon: Icons.bug_report_outlined,
-                      iconColor: const Color(0xFFF59E0B),
+                      iconColor: isDark
+                          ? const Color(0xFFffd166)
+                          : const Color(0xFFF59E0B),
                       title: 'Report a Bug',
                       subtitle: 'Found an issue? Let us know',
-                      trailing: const Icon(
+                      trailing: Icon(
                         Icons.arrow_forward_ios,
                         size: 14,
-                        color: Color(0xFF8A8A8A),
+                        color: AppColors.textMuted(context),
                       ),
                       onTap: () =>
                           Navigator.pushNamed(context, AppRoutes.bugReport),
@@ -135,13 +212,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.info_outline,
-                      iconColor: const Color(0xFF6366F1),
+                      iconColor: isDark
+                          ? const Color(0xFFa4e6ff)
+                          : const Color(0xFF6366F1),
                       title: 'About',
                       subtitle: AppConstants.appName,
-                      trailing: const Icon(
+                      trailing: Icon(
                         Icons.arrow_forward_ios,
                         size: 14,
-                        color: Color(0xFF8A8A8A),
+                        color: AppColors.textMuted(context),
                       ),
                       onTap: () async {
                         final info = await PackageInfo.fromPlatform();
@@ -162,6 +241,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 24),
+
+                // ── Account Management ──
+                if (isAuth) ...[
+                  Text(
+                    'ACCOUNT',
+                    style: AppTextStyles.sectionHeader(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    children: [
+                      _SettingsTile(
+                        icon: Icons.logout_rounded,
+                        iconColor: isDark
+                            ? AppColors.darkError
+                            : const Color(0xFFDC2626),
+                        title: 'Sign Out',
+                        subtitle: 'Sign out of your account',
+                        onTap: () async {
+                          await userProvider.signOut();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+
                 const SizedBox(height: 32),
               ]),
             ),
@@ -172,12 +277,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
+class _ProfileHero extends StatelessWidget {
   final dynamic user;
   final bool isAuthenticated;
   final UserProvider userProvider;
 
-  const _ProfileCard({
+  const _ProfileHero({
     required this.user,
     required this.isAuthenticated,
     required this.userProvider,
@@ -185,25 +290,34 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = AppColors.primaryContainer(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF2563EB).withValues(alpha: 0.08),
-            const Color(0xFF2563EB).withValues(alpha: 0.02),
-          ],
+          colors: isDark
+              ? [
+                  AppColors.darkSurfaceHigh,
+                  AppColors.darkSurface,
+                ]
+              : [
+                  AppColors.lightSurfaceLow,
+                  AppColors.lightSurface,
+                ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+          color: activeColor.withValues(alpha: 0.15),
           width: 0.5,
         ),
       ),
       child: Row(
         children: [
+          // Avatar
           Container(
             width: 64,
             height: 64,
@@ -212,15 +326,21 @@ class _ProfileCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF2563EB).withValues(alpha: 0.2),
-                  const Color(0xFF2563EB).withValues(alpha: 0.05),
+                  activeColor.withValues(alpha: 0.2),
+                  activeColor.withValues(alpha: 0.05),
                 ],
               ),
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF2563EB).withValues(alpha: 0.2),
+                color: activeColor.withValues(alpha: 0.3),
                 width: 2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: activeColor.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                ),
+              ],
             ),
             child: Center(
               child: isAuthenticated && user.displayName.isNotEmpty
@@ -229,13 +349,13 @@ class _ProfileCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2563EB),
+                        color: activeColor,
                       ),
                     )
                   : Icon(
                       Icons.person_outline,
                       size: 28,
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.6),
+                      color: activeColor.withValues(alpha: 0.6),
                     ),
             ),
           ),
@@ -258,9 +378,9 @@ class _ProfileCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isAuthenticated
-                        ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                        : AppColors.surface(context),
-                    borderRadius: BorderRadius.circular(4),
+                        ? activeColor.withValues(alpha: 0.12)
+                        : AppColors.surfaceLow(context),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     userProvider.accountTypeLabel,
@@ -268,7 +388,7 @@ class _ProfileCard extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: isAuthenticated
-                          ? const Color(0xFF10B981)
+                          ? activeColor
                           : AppColors.textMuted(context),
                     ),
                   ),
@@ -351,6 +471,8 @@ class _ActionCardState extends State<_ActionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -368,13 +490,30 @@ class _ActionCardState extends State<_ActionCard> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: widget.isPrimary
-                  ? const Color(0xFF2563EB)
-                  : AppColors.surface(context),
-              borderRadius: BorderRadius.circular(12),
+              gradient: widget.isPrimary
+                  ? LinearGradient(
+                      colors: isDark
+                          ? [const Color(0xFF00d1ff), const Color(0xFF0091b3)]
+                          : [const Color(0xFF0056b3), const Color(0xFF003f87)],
+                    )
+                  : null,
+              color: widget.isPrimary ? null : AppColors.surface(context),
+              borderRadius: BorderRadius.circular(14),
               border: widget.isPrimary
                   ? null
                   : Border.all(color: AppColors.border(context), width: 0.5),
+              boxShadow: widget.isPrimary
+                  ? [
+                      BoxShadow(
+                        color: (isDark
+                                ? const Color(0xFF00d1ff)
+                                : const Color(0xFF0056b3))
+                            .withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: Row(
               children: [
@@ -384,14 +523,16 @@ class _ActionCardState extends State<_ActionCard> {
                   decoration: BoxDecoration(
                     color: widget.isPrimary
                         ? Colors.white.withValues(alpha: 0.15)
-                        : const Color(0xFF2563EB).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                        : widget.iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
                     child: Icon(
                       widget.icon,
                       size: 22,
-                      color: widget.isPrimary ? Colors.white : widget.iconColor,
+                      color: widget.isPrimary
+                          ? (isDark ? AppColors.darkBackground : Colors.white)
+                          : widget.iconColor,
                     ),
                   ),
                 ),
@@ -403,7 +544,11 @@ class _ActionCardState extends State<_ActionCard> {
                       Text(
                         widget.title,
                         style: AppTextStyles.bodyMedium(context).copyWith(
-                          color: widget.isPrimary ? Colors.white : null,
+                          color: widget.isPrimary
+                              ? (isDark
+                                  ? AppColors.darkBackground
+                                  : Colors.white)
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -411,7 +556,10 @@ class _ActionCardState extends State<_ActionCard> {
                         widget.subtitle,
                         style: AppTextStyles.meta(context).copyWith(
                           color: widget.isPrimary
-                              ? Colors.white.withValues(alpha: 0.8)
+                              ? (isDark
+                                      ? AppColors.darkBackground
+                                      : Colors.white)
+                                  .withValues(alpha: 0.8)
                               : null,
                         ),
                       ),
@@ -422,32 +570,14 @@ class _ActionCardState extends State<_ActionCard> {
                   Icons.arrow_forward_ios,
                   size: 14,
                   color: widget.isPrimary
-                      ? Colors.white.withValues(alpha: 0.8)
+                      ? (isDark ? AppColors.darkBackground : Colors.white)
+                          .withValues(alpha: 0.8)
                       : AppColors.textMuted(context),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTextStyles.label(
-          context,
-        ).copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -463,7 +593,7 @@ class _SettingsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border(context), width: 0.5),
       ),
       child: Column(children: children),
@@ -575,6 +705,7 @@ class _DarkModeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.read<UserProvider>();
+    final activeColor = AppColors.primaryContainer(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -586,7 +717,7 @@ class _DarkModeTile extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   (isDarkMode
-                          ? const Color(0xFF6366F1)
+                          ? const Color(0xFFa4e6ff)
                           : const Color(0xFFF59E0B))
                       .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
@@ -596,7 +727,7 @@ class _DarkModeTile extends StatelessWidget {
                 isDarkMode ? Icons.dark_mode : Icons.light_mode,
                 size: 20,
                 color: isDarkMode
-                    ? const Color(0xFF6366F1)
+                    ? const Color(0xFFa4e6ff)
                     : const Color(0xFFF59E0B),
               ),
             ),
@@ -618,6 +749,7 @@ class _DarkModeTile extends StatelessWidget {
           _AnimatedSwitch(
             value: isDarkMode,
             onChanged: (_) => userProvider.toggleDarkMode(),
+            activeColor: activeColor,
           ),
         ],
       ),
@@ -628,8 +760,13 @@ class _DarkModeTile extends StatelessWidget {
 class _AnimatedSwitch extends StatefulWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
+  final Color activeColor;
 
-  const _AnimatedSwitch({required this.value, required this.onChanged});
+  const _AnimatedSwitch({
+    required this.value,
+    required this.onChanged,
+    required this.activeColor,
+  });
 
   @override
   State<_AnimatedSwitch> createState() => _AnimatedSwitchState();
@@ -671,6 +808,8 @@ class _AnimatedSwitchState extends State<_AnimatedSwitch>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () => widget.onChanged(!widget.value),
       child: AnimatedBuilder(
@@ -682,8 +821,10 @@ class _AnimatedSwitchState extends State<_AnimatedSwitch>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Color.lerp(
-                const Color(0xFFE5E7EB),
-                const Color(0xFF2563EB),
+                isDark
+                    ? AppColors.darkSurfaceHighest
+                    : const Color(0xFFE5E7EB),
+                widget.activeColor,
                 _animation.value,
               ),
             ),
@@ -713,7 +854,7 @@ class _AnimatedSwitchState extends State<_AnimatedSwitch>
                         size: 14,
                         color: Color.lerp(
                           const Color(0xFF6B7280),
-                          const Color(0xFF2563EB),
+                          widget.activeColor,
                           _animation.value,
                         ),
                       ),
