@@ -193,7 +193,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 MarkerClusterLayerWidget(
                   options: MarkerClusterLayerOptions(
-                    maxClusterRadius: 110,
+                    maxClusterRadius: 95,
                     size: const Size(40, 40),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(50),

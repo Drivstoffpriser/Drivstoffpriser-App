@@ -74,20 +74,11 @@ class FirestoreService {
     return snapshot.docs.isNotEmpty;
   }
 
-  /// Upsert stations into Firestore. Existing stations are updated, not deleted.
-  /// This preserves any linked reports and currentPrices documents.
-  /// Also rebuilds the stations aggregate doc using the provided list (0 extra reads).
+  /// Upsert stations by rebuilding the stations aggregate doc.
+  /// Individual station docs are managed by the backend/admin — clients only
+  /// write to the aggregate which the Firestore rules permit.
   static Future<void> upsertStations(List<Station> stations) async {
     if (stations.isEmpty) return;
-
-    final batch = _db.batch();
-    for (final station in stations) {
-      final ref = _db.collection('stations').doc(station.id);
-      batch.set(ref, station.toJson(), SetOptions(merge: true));
-    }
-    await batch.commit();
-
-    // Rebuild aggregate directly from the provided list (0 reads).
     await _rebuildStationsAggregate(stations);
   }
 
@@ -188,6 +179,7 @@ class FirestoreService {
     required FuelType fuelType,
     required double price,
     required String userId,
+    bool incrementUserReport = false,
   }) async {
     final now = DateTime.now();
 
@@ -230,6 +222,12 @@ class FirestoreService {
         reportCount: currentCount + 1,
       ).toJson(),
     );
+
+    // Increment user report count only once per station submission
+    if (incrementUserReport) {
+      final userRef = _db.collection('users').doc(userId);
+      batch.update(userRef, {'reportCount': FieldValue.increment(1)});
+    }
 
     await batch.commit();
 
@@ -347,12 +345,6 @@ class FirestoreService {
     await _db.collection('users').doc(profile.id).set(profile.toJson());
   }
 
-  /// Increment the report count for a user.
-  static Future<void> incrementUserReportCount(String uid) async {
-    await _db.collection('users').doc(uid).update({
-      'reportCount': FieldValue.increment(1),
-    });
-  }
 
   // ── Bug Reports ──────────────────────────────────────────────────────
 
