@@ -244,8 +244,10 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     setState(() => _isSubmitting = false);
 
     if (successCount > 0) {
-      await context.read<UserProvider>().refreshProfile();
-      context.read<StationProvider>().refreshFromFirestore();
+      final userProvider = context.read<UserProvider>();
+      final stationProvider = context.read<StationProvider>();
+      await userProvider.refreshProfile();
+      stationProvider.refreshFromFirestore();
     }
 
     if (!mounted) return;
