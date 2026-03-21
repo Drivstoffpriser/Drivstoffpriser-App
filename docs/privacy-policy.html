@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - TankVenn</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #f8f9fa;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .app-name {
+      color: #6366f1;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .updated {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+
+    p, li {
+      color: #444;
+      margin-bottom: 12px;
+    }
+
+    ul, ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+    }
+
+    .data-table th, .data-table td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 13px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .contact {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .contact a {
+      color: #6366f1;
+    }
+
+    .lang-switch {
+      text-align: right;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .lang-switch a {
+      color: #6366f1;
+      text-decoration: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .lang-switch a.active {
+      background: #6366f1;
+      color: #fff;
+      border-color: #6366f1;
+    }
+
+    .lang-switch a:hover {
+      opacity: 0.8;
+    }
+
+    .lang { display: none; }
+    .lang.active { display: block; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="lang-switch">
+      <a href="#" id="btn-en" class="active" onclick="setLang('en'); return false;">English</a>
+      <a href="#" id="btn-nb" onclick="setLang('nb'); return false;">Norsk</a>
+    </div>
+
+    <div class="app-name">TankVenn</div>
+
+    <!-- English -->
+    <div id="lang-en" class="lang active">
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: March 21, 2026</p>
+
+      <p>TankVenn ("we", "our", "the app") is a community-driven fuel price tracker for Norway. This privacy policy explains what data we collect, how we use it, and your rights regarding your data.</p>
+
+      <h2>1. Data we collect</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Data type</th>
+            <th>When collected</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Email address</td>
+            <td>Account creation</td>
+            <td>Authentication and account management</td>
+          </tr>
+          <tr>
+            <td>Display name</td>
+            <td>Account creation</td>
+            <td>Shown on your profile</td>
+          </tr>
+          <tr>
+            <td>User ID</td>
+            <td>Automatically (Firebase Auth)</td>
+            <td>Link your profile and reports</td>
+          </tr>
+          <tr>
+            <td>Approximate location</td>
+            <td>While using the app</td>
+            <td>Show nearby stations, enforce report proximity</td>
+          </tr>
+          <tr>
+            <td>Price reports</td>
+            <td>When you submit a price</td>
+            <td>Community fuel price data</td>
+          </tr>
+          <tr>
+            <td>Device info</td>
+            <td>When you submit a bug report</td>
+            <td>Diagnose technical issues</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>2. How we use your data</h2>
+      <ul>
+        <li><strong>App functionality:</strong> Your location is used to find nearby fuel stations and verify you are near a station when reporting prices. It is processed in memory and not stored on our servers.</li>
+        <li><strong>Account management:</strong> Your email, display name, and user ID are used to manage your account and display your profile.</li>
+        <li><strong>Community data:</strong> Price reports you submit are shared with all app users to provide accurate fuel price information.</li>
+        <li><strong>Bug reports:</strong> Device information (model, OS version, app version) is collected only when you voluntarily submit a bug report.</li>
+      </ul>
+
+      <h2>3. Third-party services</h2>
+      <p>We use the following third-party services:</p>
+      <ul>
+        <li><strong>Firebase (Google):</strong> Authentication, data storage (Firestore). Subject to <a href="https://firebase.google.com/support/privacy" target="_blank">Firebase Privacy Policy</a>.</li>
+        <li><strong>Google Sign-In:</strong> Optional sign-in method. Subject to <a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a>.</li>
+        <li><strong>OpenStreetMap / Overpass API:</strong> Your approximate location is sent to fetch nearby fuel stations. Subject to the <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OSMF Privacy Policy</a>.</li>
+      </ul>
+
+      <h2>4. Data sharing</h2>
+      <p>We do not sell your personal data. Your data is shared only in these cases:</p>
+      <ul>
+        <li>Your approximate location is sent to the OpenStreetMap Overpass API to fetch nearby fuel stations.</li>
+        <li>Price reports you submit are visible to all app users as anonymous community data.</li>
+        <li>Account data is processed by Firebase (Google) for authentication and storage.</li>
+      </ul>
+
+      <h2>5. Data retention</h2>
+      <ul>
+        <li><strong>Account data</strong> (email, display name, user ID, profile): Retained until you delete your account.</li>
+        <li><strong>Location data:</strong> Processed in memory only. Not stored on our servers.</li>
+        <li><strong>Price reports:</strong> Retained indefinitely as anonymous community data, even after account deletion.</li>
+        <li><strong>Bug reports:</strong> Retained until the issue is resolved, then deleted.</li>
+      </ul>
+
+      <h2>6. Your rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Access your data:</strong> View your profile and report count in the app.</li>
+        <li><strong>Delete your account:</strong> Go to Profile &gt; Account &gt; Delete Account. This immediately deletes your account credentials, display name, and profile data. See our <a href="delete-account.html">account deletion page</a> for details.</li>
+        <li><strong>Use the app without an account:</strong> You can browse stations and prices without creating an account. An account is only required to submit price reports.</li>
+      </ul>
+
+      <h2>7. Data security</h2>
+      <p>All data transmitted between the app and our servers is encrypted in transit using TLS/HTTPS. User authentication is handled by Firebase Auth, which provides industry-standard security measures.</p>
+
+      <h2>8. Children's privacy</h2>
+      <p>TankVenn is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please contact us and we will delete it.</p>
+
+      <h2>9. Changes to this policy</h2>
+      <p>We may update this privacy policy from time to time. Changes will be reflected on this page with an updated date. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
+    </div>
+
+    <!-- Norwegian -->
+    <div id="lang-nb" class="lang">
+      <h1>Personvernerklæring</h1>
+      <p class="updated">Sist oppdatert: 21. mars 2026</p>
+
+      <p>TankVenn («vi», «vår», «appen») er en fellesskapsdrevet drivstoffprissporer for Norge. Denne personvernerklæringen forklarer hvilke data vi samler inn, hvordan vi bruker dem, og dine rettigheter knyttet til dataene dine.</p>
+
+      <h2>1. Data vi samler inn</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Datatype</th>
+            <th>Når innsamlet</th>
+            <th>Formål</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>E-postadresse</td>
+            <td>Kontoopprettelse</td>
+            <td>Autentisering og kontoadministrasjon</td>
+          </tr>
+          <tr>
+            <td>Visningsnavn</td>
+            <td>Kontoopprettelse</td>
+            <td>Vises på profilen din</td>
+          </tr>
+          <tr>
+            <td>Bruker-ID</td>
+            <td>Automatisk (Firebase Auth)</td>
+            <td>Koble profilen og rapportene dine</td>
+          </tr>
+          <tr>
+            <td>Omtrentlig plassering</td>
+            <td>Mens du bruker appen</td>
+            <td>Vise nærliggende stasjoner, verifisere rapportnærhet</td>
+          </tr>
+          <tr>
+            <td>Prisrapporter</td>
+            <td>Når du sender inn en pris</td>
+            <td>Fellesskapets drivstoffprisdata</td>
+          </tr>
+          <tr>
+            <td>Enhetsinformasjon</td>
+            <td>Når du sender inn en feilrapport</td>
+            <td>Diagnostisere tekniske problemer</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>2. Hvordan vi bruker dataene dine</h2>
+      <ul>
+        <li><strong>App-funksjonalitet:</strong> Plasseringen din brukes til å finne nærliggende stasjoner og bekrefte at du er i nærheten av en stasjon når du rapporterer priser. Den behandles i minnet og lagres ikke på våre servere.</li>
+        <li><strong>Kontoadministrasjon:</strong> E-posten din, visningsnavnet og bruker-ID-en brukes til å administrere kontoen din og vise profilen din.</li>
+        <li><strong>Fellesskapsdata:</strong> Prisrapporter du sender inn deles med alle appbrukere for å gi nøyaktig drivstoffprisinformasjon.</li>
+        <li><strong>Feilrapporter:</strong> Enhetsinformasjon (modell, OS-versjon, appversjon) samles bare inn når du frivillig sender inn en feilrapport.</li>
+      </ul>
+
+      <h2>3. Tredjepartstjenester</h2>
+      <p>Vi bruker følgende tredjepartstjenester:</p>
+      <ul>
+        <li><strong>Firebase (Google):</strong> Autentisering, datalagring (Firestore). Underlagt <a href="https://firebase.google.com/support/privacy" target="_blank">Firebase personvernerklæring</a>.</li>
+        <li><strong>Google-pålogging:</strong> Valgfri påloggingsmetode. Underlagt <a href="https://policies.google.com/privacy" target="_blank">Googles personvernerklæring</a>.</li>
+        <li><strong>OpenStreetMap / Overpass API:</strong> Din omtrentlige plassering sendes for å hente nærliggende stasjoner. Underlagt <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OSMFs personvernerklæring</a>.</li>
+      </ul>
+
+      <h2>4. Datadeling</h2>
+      <p>Vi selger ikke dine personlige data. Dataene dine deles kun i disse tilfellene:</p>
+      <ul>
+        <li>Din omtrentlige plassering sendes til OpenStreetMap Overpass API for å hente nærliggende stasjoner.</li>
+        <li>Prisrapporter du sender inn er synlige for alle appbrukere som anonyme fellesskapsdata.</li>
+        <li>Kontodata behandles av Firebase (Google) for autentisering og lagring.</li>
+      </ul>
+
+      <h2>5. Dataoppbevaring</h2>
+      <ul>
+        <li><strong>Kontodata</strong> (e-post, visningsnavn, bruker-ID, profil): Beholdes til du sletter kontoen din.</li>
+        <li><strong>Plasseringsdata:</strong> Behandles kun i minnet. Lagres ikke på våre servere.</li>
+        <li><strong>Prisrapporter:</strong> Beholdes på ubestemt tid som anonyme fellesskapsdata, selv etter kontosletting.</li>
+        <li><strong>Feilrapporter:</strong> Beholdes til problemet er løst, deretter slettet.</li>
+      </ul>
+
+      <h2>6. Dine rettigheter</h2>
+      <p>Du har rett til å:</p>
+      <ul>
+        <li><strong>Få tilgang til dataene dine:</strong> Se profilen din og antall rapporter i appen.</li>
+        <li><strong>Slette kontoen din:</strong> Gå til Profil &gt; Konto &gt; Slett konto. Dette sletter umiddelbart kontoinformasjonen, visningsnavnet og profildataene dine. Se vår <a href="delete-account.html">side for kontosletting</a> for detaljer.</li>
+        <li><strong>Bruke appen uten konto:</strong> Du kan bla gjennom stasjoner og priser uten å opprette en konto. En konto kreves kun for å sende inn prisrapporter.</li>
+      </ul>
+
+      <h2>7. Datasikkerhet</h2>
+      <p>All data som overføres mellom appen og våre servere er kryptert under overføring med TLS/HTTPS. Brukerautentisering håndteres av Firebase Auth, som gir bransjestandardiserte sikkerhetstiltak.</p>
+
+      <h2>8. Barns personvern</h2>
+      <p>TankVenn er ikke rettet mot barn under 13 år. Vi samler ikke bevisst inn personlig informasjon fra barn. Hvis du tror et barn har gitt oss personlige data, vennligst kontakt oss, og vi vil slette dem.</p>
+
+      <h2>9. Endringer i denne erklæringen</h2>
+      <p>Vi kan oppdatere denne personvernerklæringen fra tid til annen. Endringer vil bli reflektert på denne siden med en oppdatert dato. Fortsatt bruk av appen etter endringer utgjør aksept av den oppdaterte erklæringen.</p>
+    </div>
+
+    <div class="contact">
+      <p id="contact-en" class="lang active">Questions? Contact us at <a href="mailto:tankvennapp@gmail.com">tankvennapp@gmail.com</a></p>
+      <p id="contact-nb" class="lang">Spørsmål? Kontakt oss på <a href="mailto:tankvennapp@gmail.com">tankvennapp@gmail.com</a></p>
+      <p>
+        <a href="https://github.com/tsotnek/tankvenn" target="_blank">GitHub</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#lang-' + lang + ', #contact-' + lang).forEach(el => el.classList.add('active'));
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.getElementById('btn-nb').classList.toggle('active', lang === 'nb');
+    }
+
+    if (navigator.language.startsWith('nb') || navigator.language.startsWith('no') || navigator.language.startsWith('nn')) {
+      setLang('nb');
+    }
+  </script>
+</body>
+
+</html>
