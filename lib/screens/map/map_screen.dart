@@ -13,6 +13,8 @@ import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
 import 'widgets/brand_filter_bar.dart';
 import 'widgets/fuel_filter_bar.dart';
@@ -60,6 +62,19 @@ class _MapScreenState extends State<MapScreen> {
     final pos = context.read<LocationProvider>().position;
     if (pos != null) {
       _mapController.move(LatLng(pos.latitude, pos.longitude), 13);
+    }
+  }
+
+  Future<void> _requestLocation() async {
+    final provider = context.read<LocationProvider>();
+    await provider.fetchLocation();
+    if (!mounted) return;
+
+    final result = provider.lastResult;
+    if (result == LocationResult.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else if (result == LocationResult.serviceDisabled) {
+      await Geolocator.openLocationSettings();
     }
   }
 
@@ -354,8 +369,7 @@ class _MapScreenState extends State<MapScreen> {
                   ? null
                   : locationProvider.hasLocation
                       ? _centerOnUser
-                      : () =>
-                          context.read<LocationProvider>().fetchLocation(),
+                      : () => _requestLocation(),
             ),
           ),
 
