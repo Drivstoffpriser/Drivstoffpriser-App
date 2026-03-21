@@ -84,6 +84,13 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         ),
       ),
     );
+
+    // Auto-submit when photo has valid location metadata (within 1km of station
+    // and taken within 24h). The user already confirmed prices on the scan
+    // screen, so no need to press "Submit Report" again.
+    if (_hasValidPhotoMetadata) {
+      _submit(autoSubmit: true);
+    }
   }
 
   bool get _hasValidPhotoMetadata {
@@ -109,7 +116,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     return prices;
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool autoSubmit = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_hasValidPhotoMetadata) {
@@ -204,11 +211,15 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       return;
     }
 
-    final skipConfirm = await CooldownPrefsService.shouldSkipConfirmation();
-    if (!skipConfirm) {
-      if (!mounted) return;
-      final confirmed = await _showConfirmationDialog(toSubmit.keys.toList());
-      if (confirmed != true) return;
+    // Skip confirmation dialog when auto-submitting from a verified photo scan
+    // — the user already confirmed the prices on the scan confirmation screen.
+    if (!autoSubmit) {
+      final skipConfirm = await CooldownPrefsService.shouldSkipConfirmation();
+      if (!skipConfirm) {
+        if (!mounted) return;
+        final confirmed = await _showConfirmationDialog(toSubmit.keys.toList());
+        if (confirmed != true) return;
+      }
     }
 
     setState(() => _isSubmitting = true);
