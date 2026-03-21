@@ -4,6 +4,8 @@ import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n_helper.dart';
+
 class ManualCropScreen extends StatefulWidget {
   final File imageFile;
 
@@ -43,7 +45,7 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
       case CropFailure(:final cause):
         setState(() => _isCropping = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Crop failed: $cause')),
+          SnackBar(content: Text(context.l10n.cropFailed(cause.toString()))),
         );
     }
   }
@@ -52,7 +54,7 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select price sign'),
+        title: Text(context.l10n.selectPriceSign),
         actions: [
           TextButton(
             onPressed: _isCropping ? null : _onCrop,
@@ -62,7 +64,7 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Done'),
+                : Text(context.l10n.done),
           ),
         ],
       ),
@@ -70,11 +72,11 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(12),
+                Padding(
+                  padding: const EdgeInsets.all(12),
                   child: Text(
-                    'Drag to select the area with fuel prices',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    context.l10n.dragToSelect,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ),
                 Expanded(

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/price_provider.dart';
@@ -144,7 +145,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     Icons.directions_outlined,
                     color: activeColor,
                   ),
-                  tooltip: 'Navigate',
+                  tooltip: context.l10n.navigate,
                 ),
               ),
             ],
@@ -158,7 +159,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
                 // ── Price Bento Grid ──
                 Text(
-                  'CURRENT PRICES',
+                  context.l10n.currentPrices,
                   style: AppTextStyles.sectionHeader(context),
                 ),
                 const SizedBox(height: 12),
@@ -175,7 +176,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        'No prices reported yet',
+                        context.l10n.noPricesReported,
                         style: AppTextStyles.label(context),
                       ),
                     ),
@@ -187,7 +188,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
                 // ── Price History Chart ──
                 Text(
-                  'PRICE TREND (30 DAYS)',
+                  context.l10n.priceTrend,
                   style: AppTextStyles.sectionHeader(context),
                 ),
                 const SizedBox(height: 12),
@@ -212,7 +213,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 // ── Report Price Button ──
                 _GradientActionButton(
                   icon: Icons.add_circle_outline,
-                  label: 'Report a Price',
+                  label: context.l10n.reportAPrice,
                   onPressed: () {
                     Navigator.pushNamed(
                       context,
@@ -226,14 +227,14 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
                 // ── Recent Reports ──
                 Text(
-                  'RECENT REPORTS',
+                  context.l10n.recentReports,
                   style: AppTextStyles.sectionHeader(context),
                 ),
                 const SizedBox(height: 12),
                 if (priceProvider.isLoading)
                   const LoadingIndicator()
                 else if (priceProvider.reports.isEmpty)
-                  Text('No reports yet.', style: AppTextStyles.label(context))
+                  Text(context.l10n.noReportsYet, style: AppTextStyles.label(context))
                 else
                   ...priceProvider.reports.take(10).map((report) {
                     return Container(
@@ -270,7 +271,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  report.fuelType.displayName,
+                                  report.fuelType.localizedName(context),
                                   style: AppTextStyles.bodyMedium(context),
                                 ),
                                 Text(
@@ -281,7 +282,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                             ),
                           ),
                           Text(
-                            '${report.price.toStringAsFixed(2)} kr',
+                            '${report.price.toStringAsFixed(2)} ${context.l10n.krSuffix}',
                             style: AppTextStyles.priceMedium(context).copyWith(
                               color: activeColor,
                             ),

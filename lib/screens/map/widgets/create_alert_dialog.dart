@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../config/constants.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 import '../../../models/station.dart';
 import '../../../providers/alert_provider.dart';
@@ -35,7 +36,7 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
     final stations = context.read<StationProvider>().stations;
 
     return AlertDialog(
-      title: const Text('Create Price Alert'),
+      title: Text(context.l10n.createPriceAlert),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -48,21 +49,18 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Target price (${AppConstants.currencySymbol})',
-                  hintText: 'e.g. 20.50',
+                  labelText: context.l10n.targetPrice(AppConstants.currencySymbol),
+                  hintText: context.l10n.egPrice,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Enter a target price';
+                    return context.l10n.enterTargetPrice;
                   }
                   final price = double.tryParse(value);
-                  if (price == null) return 'Invalid number';
+                  if (price == null) return context.l10n.invalidNumber;
                   if (price < AppConstants.minFuelPrice ||
                       price > AppConstants.maxFuelPrice) {
-                    return 'Price must be between '
-                        '${AppConstants.minFuelPrice} and '
-                        '${AppConstants.maxFuelPrice} '
-                        '${AppConstants.currencySymbol}';
+                    return context.l10n.priceMustBeBetween;
                   }
                   return null;
                 },
@@ -72,11 +70,11 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
               // Fuel type
               DropdownButtonFormField<FuelType>(
                 initialValue: _fuelType,
-                decoration: const InputDecoration(labelText: 'Fuel type'),
+                decoration: InputDecoration(labelText: context.l10n.fuelType),
                 items: FuelType.values.map((ft) {
                   return DropdownMenuItem(
                     value: ft,
-                    child: Text(ft.displayName),
+                    child: Text(ft.localizedName(context)),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -88,12 +86,12 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
               // Station
               DropdownButtonFormField<String?>(
                 initialValue: _stationId,
-                decoration: const InputDecoration(labelText: 'Station'),
+                decoration: InputDecoration(labelText: context.l10n.station),
                 isExpanded: true,
                 items: [
-                  const DropdownMenuItem<String?>(
+                  DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Any station'),
+                    child: Text(context.l10n.anyStation),
                   ),
                   ...stations.map((s) {
                     return DropdownMenuItem<String?>(
@@ -110,7 +108,7 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
               if (_stationId == null) ...[
                 Row(
                   children: [
-                    const Text('Max distance'),
+                    Text(context.l10n.maxDistance),
                     const Spacer(),
                     Text('${_maxDistanceKm.round()} km',
                         style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -132,15 +130,15 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
       actions: [
         TextButton(
           onPressed: () => _showMyAlerts(context),
-          child: const Text('My Alerts'),
+          child: Text(context.l10n.myAlerts),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _submit,
-          child: const Text('Create'),
+          child: Text(context.l10n.create),
         ),
       ],
     );
@@ -171,7 +169,7 @@ class _CreateAlertDialogState extends State<CreateAlertDialog> {
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Price alert created')),
+      SnackBar(content: Text(context.l10n.priceAlertCreated)),
     );
   }
 
@@ -204,7 +202,7 @@ class _MyAlertsSheet extends StatelessWidget {
     final stationMap = {for (final s in stations) s.id: s};
 
     if (alerts.isEmpty) {
-      return const Center(child: Text('No alerts yet'));
+      return Center(child: Text(context.l10n.noAlertsYet));
     }
 
     return ListView.builder(
@@ -215,11 +213,11 @@ class _MyAlertsSheet extends StatelessWidget {
         final alert = alerts[index];
         final Station? station =
             alert.stationId != null ? stationMap[alert.stationId] : null;
-        final stationLabel = station?.name ?? 'Any station';
+        final stationLabel = station?.name ?? context.l10n.anyStation;
 
         return ListTile(
           title: Text(
-            '${alert.fuelType.displayName} ≤ '
+            '${alert.fuelType.localizedName(context)} ≤ '
             '${alert.targetPrice.toStringAsFixed(2)} '
             '${AppConstants.currencySymbol}',
           ),

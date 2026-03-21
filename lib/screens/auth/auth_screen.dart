@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../providers/user_provider.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -53,7 +54,7 @@ class _AuthScreenState extends State<AuthScreen> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'sign-in-cancelled') {
       } else {
-        setState(() => _error = _friendlyError(e.code));
+        setState(() => _error = _friendlyError(context, e.code));
       }
     } catch (e) {
       setState(() => _error = e.toString());
@@ -96,7 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      setState(() => _error = _friendlyError(e.code));
+      setState(() => _error = _friendlyError(context, e.code));
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -106,23 +107,23 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  String _friendlyError(String code) {
+  String _friendlyError(BuildContext context, String code) {
     switch (code) {
       case 'email-already-in-use':
-        return 'This email is already registered. Try signing in instead.';
+        return context.l10n.errorEmailInUse;
       case 'invalid-email':
-        return 'Please enter a valid email address.';
+        return context.l10n.errorInvalidEmail;
       case 'weak-password':
-        return 'Password must be at least 6 characters.';
+        return context.l10n.errorWeakPassword;
       case 'user-not-found':
-        return 'No account found with this email.';
+        return context.l10n.errorUserNotFound;
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Incorrect email or password.';
+        return context.l10n.errorWrongPassword;
       case 'credential-already-in-use':
-        return 'This credential is already associated with another account.';
+        return context.l10n.errorCredentialInUse;
       default:
-        return 'Authentication failed: $code';
+        return context.l10n.errorAuthFailed(code);
     }
   }
 
@@ -134,7 +135,7 @@ class _AuthScreenState extends State<AuthScreen> {
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
         title: Text(
-          _isRegister ? 'Create Account' : 'Sign In',
+          _isRegister ? context.l10n.createAccount : context.l10n.signIn,
           style: AppTextStyles.title(context),
         ),
       ),
@@ -190,7 +191,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Continue with Google',
+                        context.l10n.continueWithGoogle,
                         style: AppTextStyles.bodyMedium(context),
                       ),
                     ],
@@ -204,7 +205,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 Expanded(child: Divider(color: AppColors.border(context))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('OR', style: AppTextStyles.label(context)),
+                  child: Text(context.l10n.or, style: AppTextStyles.label(context)),
                 ),
                 Expanded(child: Divider(color: AppColors.border(context))),
               ],
@@ -213,11 +214,11 @@ class _AuthScreenState extends State<AuthScreen> {
             if (_isRegister) ...[
               _buildTextField(
                 controller: _nameController,
-                label: 'Display Name',
+                label: context.l10n.displayName,
                 icon: Icons.person_outline,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
-                    return 'Please enter your name';
+                    return context.l10n.enterYourName;
                   }
                   return null;
                 },
@@ -226,16 +227,16 @@ class _AuthScreenState extends State<AuthScreen> {
             ],
             _buildTextField(
               controller: _emailController,
-              label: 'Email',
+              label: context.l10n.email,
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {
-                  return 'Please enter your email';
+                  return context.l10n.enterYourEmail;
                 }
                 if (!v.contains('@')) {
-                  return 'Please enter a valid email';
+                  return context.l10n.enterValidEmail;
                 }
                 return null;
               },
@@ -243,15 +244,15 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox(height: 16),
             _buildTextField(
               controller: _passwordController,
-              label: 'Password',
+              label: context.l10n.password,
               icon: Icons.lock_outline,
               obscureText: true,
               validator: (v) {
                 if (v == null || v.isEmpty) {
-                  return 'Please enter your password';
+                  return context.l10n.enterYourPassword;
                 }
                 if (v.length < 6) {
-                  return 'Password must be at least 6 characters';
+                  return context.l10n.passwordMinLength;
                 }
                 return null;
               },
@@ -276,7 +277,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         )
                       : Text(
-                          _isRegister ? 'Create Account' : 'Sign In',
+                          _isRegister ? context.l10n.createAccount : context.l10n.signIn,
                           style: AppTextStyles.bodyMedium(
                             context,
                           ).copyWith(color: Colors.white),
@@ -297,8 +298,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 },
                 child: Text(
                   _isRegister
-                      ? 'Already have an account? Sign in'
-                      : 'Need an account? Create one',
+                      ? context.l10n.alreadyHaveAccount
+                      : context.l10n.needAccount,
                   style: AppTextStyles.label(
                     context,
                   ).copyWith(color: AppColors.primaryContainer(context)),

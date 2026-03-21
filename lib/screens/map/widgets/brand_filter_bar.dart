@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../providers/station_provider.dart';
 
 class BrandFilterButton extends StatelessWidget {
@@ -75,8 +76,8 @@ class BrandFilterButton extends StatelessWidget {
 class _BrandFilterSheet extends StatelessWidget {
   const _BrandFilterSheet();
 
-  static String _radiusLabel(double? km) {
-    if (km == null) return 'All of Norway';
+  static String _radiusLabel(BuildContext context, double? km) {
+    if (km == null) return context.l10n.allOfNorway;
     if (km < 1) return '${(km * 1000).round()} m';
     return '${km.round()} km';
   }
@@ -108,10 +109,10 @@ class _BrandFilterSheet extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Search Radius', style: AppTextStyles.title(context)),
+              Text(context.l10n.searchRadius, style: AppTextStyles.title(context)),
               const Spacer(),
               Text(
-                _radiusLabel(radiusKm),
+                _radiusLabel(context, radiusKm),
                 style: AppTextStyles.bodyMedium(context),
               ),
             ],
@@ -139,13 +140,13 @@ class _BrandFilterSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Text('Filter by Brand', style: AppTextStyles.title(context)),
+              Text(context.l10n.filterByBrand, style: AppTextStyles.title(context)),
               const Spacer(),
               if (provider.selectedBrands.isNotEmpty)
                 GestureDetector(
                   onTap: () => provider.clearBrandFilter(),
                   child: Text(
-                    'Clear all',
+                    context.l10n.clearAll,
                     style: AppTextStyles.label(
                       context,
                     ).copyWith(color: activeColor),
