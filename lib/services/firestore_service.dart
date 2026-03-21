@@ -76,7 +76,7 @@ class FirestoreService {
 
   /// Upsert stations into Firestore. Existing stations are updated, not deleted.
   /// This preserves any linked reports and currentPrices documents.
-  /// Also rebuilds the stations aggregate doc.
+  /// Also rebuilds the stations aggregate doc using the provided list (0 extra reads).
   static Future<void> upsertStations(List<Station> stations) async {
     if (stations.isEmpty) return;
 
@@ -87,17 +87,15 @@ class FirestoreService {
     }
     await batch.commit();
 
-    // Rebuild aggregate from the full collection (1 read of all docs,
-    // but only happens on upsert which is a rare admin/refresh action).
-    await _rebuildStationsAggregate();
+    // Rebuild aggregate directly from the provided list (0 reads).
+    await _rebuildStationsAggregate(stations);
   }
 
-  /// Rebuild the stations aggregate doc from the full collection.
-  static Future<void> _rebuildStationsAggregate() async {
-    final snapshot = await _db.collection('stations').get();
-    final allStations = snapshot.docs.map((doc) {
-      return Station.fromJson(_normalizeTimestamps(doc.data()));
-    }).toList();
+  /// Rebuild the stations aggregate doc.
+  /// If [stations] is provided, uses them directly (0 reads).
+  /// Otherwise falls back to reading all station docs from Firestore.
+  static Future<void> _rebuildStationsAggregate([List<Station>? stations]) async {
+    final allStations = stations ?? await _readAllStations();
 
     await _db.collection('aggregates').doc('stations').set({
       'stations': allStations.map((s) => s.toJson()).toList(),
@@ -105,17 +103,32 @@ class FirestoreService {
     });
   }
 
-  /// Rebuild the prices aggregate doc from the full collection.
-  static Future<void> _rebuildPricesAggregate() async {
-    final snapshot = await _db.collection('currentPrices').get();
-    final allPrices = snapshot.docs.map((doc) {
-      return CurrentPrice.fromJson(_normalizeTimestamps(doc.data()));
+  /// Read all station docs from Firestore (N reads). Only used as fallback.
+  static Future<List<Station>> _readAllStations() async {
+    final snapshot = await _db.collection('stations').get();
+    return snapshot.docs.map((doc) {
+      return Station.fromJson(_normalizeTimestamps(doc.data()));
     }).toList();
+  }
+
+  /// Rebuild the prices aggregate doc.
+  /// If [prices] is provided, uses them directly (0 reads).
+  /// Otherwise falls back to reading all currentPrices docs from Firestore.
+  static Future<void> _rebuildPricesAggregate([List<CurrentPrice>? prices]) async {
+    final allPrices = prices ?? await _readAllPrices();
 
     await _db.collection('aggregates').doc('prices').set({
       'prices': allPrices.map((p) => p.toJson()).toList(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Read all currentPrices docs from Firestore (N reads). Only used as fallback.
+  static Future<List<CurrentPrice>> _readAllPrices() async {
+    final snapshot = await _db.collection('currentPrices').get();
+    return snapshot.docs.map((doc) {
+      return CurrentPrice.fromJson(_normalizeTimestamps(doc.data()));
+    }).toList();
   }
 
   // ── Stations (aggregate reads) ─────────────────────────────────────

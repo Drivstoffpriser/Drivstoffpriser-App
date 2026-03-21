@@ -27,11 +27,10 @@ void main() async {
   userProvider.initialize();
 
   // Start station loading immediately so data is ready by the time
-  // the map screen renders.  The Firestore streams deliver whatever
-  // is already cached, and the Overpass fetch populates / refreshes
-  // the full Norway dataset in the background.
+  // the map screen renders.  Serves cache first (0 reads), then
+  // falls back to aggregate docs (2 reads), then refreshes from
+  // Overpass in the background.
   final stationProvider = StationProvider();
-  stationProvider.loadStations();
   stationProvider.fetchAllNorwayStations();
 
   runApp(

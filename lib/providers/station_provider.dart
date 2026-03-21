@@ -168,8 +168,15 @@ class StationProvider extends ChangeNotifier {
   }
 
   /// Fetch ALL fuel stations in Norway from Overpass and upsert into Firestore.
-  /// Then refresh local data from Firestore.
+  /// Serves cached/aggregate data immediately (≤2 reads), then refreshes from
+  /// Overpass in the background and updates the UI when done.
   Future<void> fetchAllNorwayStations() async {
+    // 1. Show cached or aggregate data immediately so the UI isn't empty.
+    if (_stations.isEmpty) {
+      await loadStations();
+    }
+
+    // 2. Fetch from Overpass and update Firestore + local state.
     try {
       final stations = await OverpassService.fetchAllNorwayStations();
       debugPrint('Overpass returned ${stations.length} Norway stations');
