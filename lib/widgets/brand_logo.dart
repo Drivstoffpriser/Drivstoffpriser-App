@@ -15,6 +15,8 @@ class BrandLogo extends StatelessWidget {
     'Esso': 'assets/logos/esso.png',
     'YX': 'assets/logos/yx.png',
     'Uno-X': 'assets/logos/uno-x.png',
+    'St1': 'assets/logos/st1.png',
+    'YX Truck': 'assets/logos/yx-truck.png',
   };
 
   @override

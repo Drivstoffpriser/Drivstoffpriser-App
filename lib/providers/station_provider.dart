@@ -47,15 +47,8 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sorted list of unique brand names from loaded stations.
-  List<String> get availableBrands {
-    final brands = filteredStations.map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
-    brands.sort();
-    return brands;
-  }
-
-  /// Stations filtered by radius (if set) and selected brands.
-  List<Station> get filteredStations {
+  /// Stations filtered by radius only (before brand filter).
+  Iterable<Station> get _radiusFiltered {
     Iterable<Station> result = _stations;
 
     if (_filterRadiusKm != null && _userLat != null && _userLng != null) {
@@ -67,6 +60,21 @@ class StationProvider extends ChangeNotifier {
         return d <= radiusMeters;
       });
     }
+
+    return result;
+  }
+
+  /// Sorted list of unique brand names from stations within the radius
+  /// (independent of brand filter so all chips remain visible).
+  List<String> get availableBrands {
+    final brands = _radiusFiltered.map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
+    brands.sort();
+    return brands;
+  }
+
+  /// Stations filtered by radius (if set) and selected brands.
+  List<Station> get filteredStations {
+    Iterable<Station> result = _radiusFiltered;
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));

@@ -17,14 +17,14 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.watch<UserProvider>().isDarkMode;
+    final themeMode = context.watch<UserProvider>().themeMode;
 
     return MaterialApp(
       title: 'TankVenn',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      themeMode: themeMode,
       builder: (context, child) => ConnectivityGate(child: child!),
       home: const FloatingPillNav(),
       onGenerateRoute: (settings) {
