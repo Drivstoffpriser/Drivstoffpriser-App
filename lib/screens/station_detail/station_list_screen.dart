@@ -69,7 +69,11 @@ class StationListScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        context.l10n.sortLabel('${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}'),
+                        context.l10n.sortLabel(switch (stationProvider.sortMode) {
+                          SortMode.cheapest => context.l10n.sortCheapest,
+                          SortMode.nearest => context.l10n.sortNearest,
+                          SortMode.latest => context.l10n.sortLatest,
+                        }),
                         style: AppTextStyles.label(context),
                       ),
                       const Icon(Icons.arrow_drop_down, size: 18),
