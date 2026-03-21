@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
@@ -161,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 12),
                 _SettingsCard(
                   children: [
-                    _DarkModeTile(isDarkMode: userProvider.isDarkMode),
+                    _ThemeModeTile(themeMode: userProvider.themeMode),
                     const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.my_location_outlined,
@@ -234,6 +235,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const Text(
                               'Community-driven fuel price tracker for Norway. '
                               'Report and find the cheapest fuel prices near you.',
+                            ),
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              icon: ClipOval(
+                                child: Image.asset(
+                                  'assets/logos/github.png',
+                                  width: 18,
+                                  height: 18,
+                                ),
+                              ),
+                              label: const Text('View on GitHub'),
+                              onPressed: () {
+                                launchUrl(
+                                  Uri.parse(
+                                    'https://github.com/tsotnek/tankvenn',
+                                  ),
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              },
                             ),
                           ],
                         );
@@ -474,6 +494,7 @@ class _ActionCardState extends State<_ActionCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
         setState(() => _isPressed = false);
@@ -641,6 +662,7 @@ class _SettingsTileState extends State<_SettingsTile> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: widget.onTap != null
           ? (_) => setState(() => _isPressed = true)
           : null,
@@ -697,15 +719,31 @@ class _SettingsTileState extends State<_SettingsTile> {
   }
 }
 
-class _DarkModeTile extends StatelessWidget {
-  final bool isDarkMode;
+class _ThemeModeTile extends StatelessWidget {
+  final ThemeMode themeMode;
 
-  const _DarkModeTile({required this.isDarkMode});
+  const _ThemeModeTile({required this.themeMode});
 
   @override
   Widget build(BuildContext context) {
     final userProvider = context.read<UserProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
+    final iconColor = isDark ? const Color(0xFFa4e6ff) : const Color(0xFFF59E0B);
+
+    final IconData icon;
+    final String subtitle;
+    switch (themeMode) {
+      case ThemeMode.dark:
+        icon = Icons.dark_mode;
+        subtitle = 'Dark';
+      case ThemeMode.light:
+        icon = Icons.light_mode;
+        subtitle = 'Light';
+      case ThemeMode.system:
+        icon = Icons.brightness_auto;
+        subtitle = 'System';
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -715,21 +753,11 @@ class _DarkModeTile extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color:
-                  (isDarkMode
-                          ? const Color(0xFFa4e6ff)
-                          : const Color(0xFFF59E0B))
-                      .withValues(alpha: 0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
-              child: Icon(
-                isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                size: 20,
-                color: isDarkMode
-                    ? const Color(0xFFa4e6ff)
-                    : const Color(0xFFF59E0B),
-              ),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
           ),
           const SizedBox(width: 14),
@@ -737,19 +765,16 @@ class _DarkModeTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Dark Mode', style: AppTextStyles.bodyMedium(context)),
+                Text('Appearance', style: AppTextStyles.bodyMedium(context)),
                 const SizedBox(height: 2),
-                Text(
-                  isDarkMode ? 'On' : 'Off',
-                  style: AppTextStyles.meta(context),
-                ),
+                Text(subtitle, style: AppTextStyles.meta(context)),
               ],
             ),
           ),
-          _AnimatedSwitch(
-            value: isDarkMode,
-            onChanged: (_) => userProvider.toggleDarkMode(),
+          _ThemeModeSelector(
+            themeMode: themeMode,
             activeColor: activeColor,
+            onChanged: userProvider.setThemeMode,
           ),
         ],
       ),
@@ -757,114 +782,90 @@ class _DarkModeTile extends StatelessWidget {
   }
 }
 
-class _AnimatedSwitch extends StatefulWidget {
-  final bool value;
-  final ValueChanged<bool> onChanged;
+class _ThemeModeSelector extends StatelessWidget {
+  final ThemeMode themeMode;
   final Color activeColor;
+  final ValueChanged<ThemeMode> onChanged;
 
-  const _AnimatedSwitch({
-    required this.value,
-    required this.onChanged,
+  const _ThemeModeSelector({
+    required this.themeMode,
     required this.activeColor,
+    required this.onChanged,
   });
-
-  @override
-  State<_AnimatedSwitch> createState() => _AnimatedSwitchState();
-}
-
-class _AnimatedSwitchState extends State<_AnimatedSwitch>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-      value: widget.value ? 1.0 : 0.0,
-    );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-  }
-
-  @override
-  void didUpdateWidget(_AnimatedSwitch oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value != oldWidget.value) {
-      if (widget.value) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? AppColors.darkSurfaceHighest
+        : const Color(0xFFE5E7EB);
 
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ThemeOption(
+            icon: Icons.light_mode,
+            isSelected: themeMode == ThemeMode.light,
+            activeColor: activeColor,
+            onTap: () => onChanged(ThemeMode.light),
+          ),
+          _ThemeOption(
+            icon: Icons.brightness_auto,
+            isSelected: themeMode == ThemeMode.system,
+            activeColor: activeColor,
+            onTap: () => onChanged(ThemeMode.system),
+          ),
+          _ThemeOption(
+            icon: Icons.dark_mode,
+            isSelected: themeMode == ThemeMode.dark,
+            activeColor: activeColor,
+            onTap: () => onChanged(ThemeMode.dark),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeOption extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final Color activeColor;
+  final VoidCallback onTap;
+
+  const _ThemeOption({
+    required this.icon,
+    required this.isSelected,
+    required this.activeColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => widget.onChanged(!widget.value),
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return Container(
-            width: 52,
-            height: 32,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Color.lerp(
-                isDark
-                    ? AppColors.darkSurfaceHighest
-                    : const Color(0xFFE5E7EB),
-                widget.activeColor,
-                _animation.value,
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 2 + (18 * _animation.value),
-                  top: 2,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Icon(
-                        widget.value ? Icons.dark_mode : Icons.light_mode,
-                        size: 14,
-                        color: Color.lerp(
-                          const Color(0xFF6B7280),
-                          widget.activeColor,
-                          _animation.value,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        width: 32,
+        height: 28,
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            size: 16,
+            color: isSelected ? Colors.white : AppColors.textMuted(context),
+          ),
+        ),
       ),
     );
   }

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,10 +20,11 @@ class UserProvider extends ChangeNotifier {
     trustScore: 1.0,
   );
 
-  bool _isDarkMode = false;
+  ThemeMode _themeMode = ThemeMode.system;
 
   UserProfile get user => _user;
-  bool get isDarkMode => _isDarkMode;
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   /// True when the user has linked email/password or Google credentials.
   bool get isAuthenticated {
@@ -53,10 +54,17 @@ class UserProvider extends ChangeNotifier {
   Future<void> initialize() async {
     // Load saved preferences
     final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool('isDarkMode') ?? true;
+    final themePref = prefs.getString('themeMode') ?? 'system';
+    _themeMode = ThemeMode.values.firstWhere(
+      (m) => m.name == themePref,
+      orElse: () => ThemeMode.system,
+    );
 
-    // Sign in anonymously if no user exists
-    if (_auth.currentUser == null) {
+    // Wait for Firebase Auth to restore the persisted session before
+    // deciding whether to create a new anonymous account.
+    final restoredUser = await _auth.authStateChanges().first;
+
+    if (restoredUser == null) {
       await _auth.signInAnonymously();
     }
 
@@ -187,23 +195,22 @@ class UserProvider extends ChangeNotifier {
     await _loadProfile(_auth.currentUser!);
   }
 
-  /// Increment the report count and persist to Firestore.
-  Future<void> incrementReportCount() async {
-    await FirestoreService.incrementUserReportCount(_user.id);
-    _user = UserProfile(
-      id: _user.id,
-      displayName: _user.displayName,
-      reportCount: _user.reportCount + 1,
-      trustScore: _user.trustScore,
-    );
-    notifyListeners();
+  /// Refresh the user profile from Firestore to pick up the latest report count.
+  /// Called after submitting reports (the count is incremented atomically
+  /// inside the same Firestore batch as the report write).
+  Future<void> refreshProfile() async {
+    final existing = await FirestoreService.getUserProfile(_user.id);
+    if (existing != null) {
+      _user = existing;
+      notifyListeners();
+    }
   }
 
-  void toggleDarkMode() {
-    _isDarkMode = !_isDarkMode;
+  void setThemeMode(ThemeMode mode) {
+    _themeMode = mode;
     notifyListeners();
     SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isDarkMode', _isDarkMode);
+      prefs.setString('themeMode', mode.name);
     });
   }
 

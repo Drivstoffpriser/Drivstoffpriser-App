@@ -233,6 +233,8 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         fuelType: entry.key,
         price: entry.value,
         userId: userId,
+        // Count as one station report regardless of how many fuel types
+        incrementUserReport: successCount == 0,
       );
       if (success) {
         successCount++;
@@ -245,7 +247,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     setState(() => _isSubmitting = false);
 
     if (successCount > 0) {
-      await context.read<UserProvider>().incrementReportCount();
+      await context.read<UserProvider>().refreshProfile();
       context.read<StationProvider>().refreshFromFirestore();
     }
 

@@ -16,6 +16,8 @@ class OverpassService {
     'Esso',
     'YX',
     'Uno-X',
+    'St1',
+    'YX Truck',
   ];
 
   /// Fetches fuel stations from the OSM Overpass API within [radiusMeters]
