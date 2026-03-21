@@ -4,6 +4,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../config/routes.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
@@ -31,7 +32,7 @@ class StationListScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text('Stations', style: AppTextStyles.title(context)),
+        title: Text(context.l10n.navStations, style: AppTextStyles.title(context)),
       ),
       body: Column(
         children: [
@@ -43,32 +44,32 @@ class StationListScreen extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  '${sorted.length} stations',
+                  context.l10n.stationsCount(sorted.length),
                   style: AppTextStyles.label(context),
                 ),
                 const Spacer(),
                 PopupMenuButton<SortMode>(
                   initialValue: stationProvider.sortMode,
                   onSelected: stationProvider.setSortMode,
-                  itemBuilder: (_) => const [
+                  itemBuilder: (ctx) => [
                     PopupMenuItem(
                       value: SortMode.cheapest,
-                      child: Text('Cheapest'),
+                      child: Text(ctx.l10n.sortCheapest),
                     ),
                     PopupMenuItem(
                       value: SortMode.nearest,
-                      child: Text('Nearest'),
+                      child: Text(ctx.l10n.sortNearest),
                     ),
                     PopupMenuItem(
                       value: SortMode.latest,
-                      child: Text('Latest'),
+                      child: Text(ctx.l10n.sortLatest),
                     ),
                   ],
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Sort: ${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}',
+                        context.l10n.sortLabel('${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}'),
                         style: AppTextStyles.label(context),
                       ),
                       const Icon(Icons.arrow_drop_down, size: 18),
@@ -202,7 +203,7 @@ class _StationListTileState extends State<_StationListTile> {
                 if (widget.price != null) ...[
                   const SizedBox(width: 12),
                   Text(
-                    '${widget.price!.toStringAsFixed(2)} kr',
+                    '${widget.price!.toStringAsFixed(2)} ${context.l10n.krSuffix}',
                     style: AppTextStyles.priceLarge(
                       context,
                     ).copyWith(color: AppColors.primaryContainer(context)),

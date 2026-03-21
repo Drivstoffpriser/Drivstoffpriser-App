@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../config/app_colors.dart';
+import '../l10n/l10n_helper.dart';
 import '../screens/map/map_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/station_detail/station_list_screen.dart';
@@ -72,7 +73,7 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                           _NavTab(
                             icon: Icons.explore_outlined,
                             activeIcon: Icons.explore,
-                            label: 'Map',
+                            label: context.l10n.navMap,
                             isActive: _currentIndex == 0,
                             onTap: () => setState(() => _currentIndex = 0),
                           ),
@@ -80,7 +81,7 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                           _NavTab(
                             icon: Icons.local_gas_station_outlined,
                             activeIcon: Icons.local_gas_station,
-                            label: 'Stations',
+                            label: context.l10n.navStations,
                             isActive: _currentIndex == 1,
                             onTap: () => setState(() => _currentIndex = 1),
                           ),
@@ -88,7 +89,7 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                           _NavTab(
                             icon: Icons.person_outline,
                             activeIcon: Icons.person,
-                            label: 'Profile',
+                            label: context.l10n.navProfile,
                             isActive: _currentIndex == 2,
                             onTap: () => setState(() => _currentIndex = 2),
                           ),

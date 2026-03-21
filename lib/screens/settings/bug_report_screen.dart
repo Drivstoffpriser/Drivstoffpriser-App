@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../models/bug_report.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
@@ -86,7 +87,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bug report submitted. Thank you!')),
+          SnackBar(content: Text(context.l10n.bugReportSubmitted)),
         );
         Navigator.pop(context);
       }
@@ -94,7 +95,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to submit report: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.bugReportFailed(e.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -108,7 +109,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text('Report a Bug', style: AppTextStyles.title(context)),
+        title: Text(context.l10n.bugReportTitle, style: AppTextStyles.title(context)),
       ),
       body: Form(
         key: _formKey,
@@ -116,20 +117,20 @@ class _BugReportScreenState extends State<BugReportScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             Text(
-              'Found an issue? Let us know the details and we will look into it.',
+              context.l10n.bugReportIntro,
               style: AppTextStyles.body(context),
             ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _titleController,
               style: AppTextStyles.body(context),
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'Brief summary of the issue',
+              decoration: InputDecoration(
+                labelText: context.l10n.title,
+                hintText: context.l10n.briefSummary,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a title';
+                  return context.l10n.pleaseEnterTitle;
                 }
                 return null;
               },
@@ -138,15 +139,15 @@ class _BugReportScreenState extends State<BugReportScreen> {
             TextFormField(
               controller: _descriptionController,
               style: AppTextStyles.body(context),
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'What happened? How can we reproduce it?',
+              decoration: InputDecoration(
+                labelText: context.l10n.description,
+                hintText: context.l10n.whatHappened,
                 alignLabelWithHint: true,
               ),
               maxLines: 5,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a description';
+                  return context.l10n.pleaseEnterDescription;
                 }
                 return null;
               },
@@ -171,7 +172,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
                           ),
                         )
                       : Text(
-                          'Submit Report',
+                          context.l10n.submitReportButton,
                           style: AppTextStyles.bodyMedium(
                             context,
                           ).copyWith(color: Colors.white),
@@ -181,7 +182,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Technical information about your device and app version will be included automatically to help us debug.',
+              context.l10n.technicalInfo,
               style: AppTextStyles.meta(context),
               textAlign: TextAlign.center,
             ),

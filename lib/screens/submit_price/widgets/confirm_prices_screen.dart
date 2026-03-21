@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 import '../../../services/price_sign_scanner_service.dart';
 
@@ -78,7 +79,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text('Verify Prices', style: AppTextStyles.title(context)),
+        title: Text(context.l10n.verifyPrices, style: AppTextStyles.title(context)),
       ),
       body: SafeArea(
         child: Column(
@@ -98,7 +99,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Please double check the prices',
+                    context.l10n.pleaseDoubleCheck,
                     style: AppTextStyles.bodyMedium(context),
                   ),
                   const SizedBox(height: 12),
@@ -110,7 +111,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                           SizedBox(
                             width: 80,
                             child: Text(
-                              type.displayName,
+                              type.localizedName(context),
                               style: AppTextStyles.body(context),
                             ),
                           ),
@@ -128,14 +129,14 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                                 ),
                               ],
                               style: AppTextStyles.body(context),
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
+                                contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 10,
                                 ),
                                 hintText: '-',
-                                suffixText: 'kr/L',
+                                suffixText: context.l10n.krPerL,
                               ),
                               onChanged: (_) => setState(() {}),
                             ),
@@ -165,7 +166,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                         onTap: () => Navigator.pop(context, null),
                         child: Center(
                           child: Text(
-                            'Retake',
+                            context.l10n.retake,
                             style: AppTextStyles.bodyMedium(context),
                           ),
                         ),
@@ -188,7 +189,7 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            'Confirm',
+                            context.l10n.confirm,
                             style: AppTextStyles.bodyMedium(context).copyWith(
                               color: _hasAnyPrice
                                   ? Colors.white

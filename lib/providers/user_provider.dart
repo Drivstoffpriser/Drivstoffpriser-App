@@ -21,10 +21,12 @@ class UserProvider extends ChangeNotifier {
   );
 
   ThemeMode _themeMode = ThemeMode.system;
+  Locale? _locale;
 
   UserProfile get user => _user;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
+  Locale? get locale => _locale;
 
   /// True when the user has linked email/password or Google credentials.
   bool get isAuthenticated {
@@ -35,19 +37,19 @@ class UserProvider extends ChangeNotifier {
     );
   }
 
-  /// Human-readable label for the account type shown in settings.
-  String get accountTypeLabel {
+  /// Returns a key identifying the account type. Use with l10n at the UI layer.
+  AccountType get accountType {
     final firebaseUser = _auth.currentUser;
-    if (firebaseUser == null) return 'Anonymous (browsing only)';
+    if (firebaseUser == null) return AccountType.anonymous;
 
     final providers = firebaseUser.providerData.map((i) => i.providerId).toSet();
     final hasEmail = providers.contains('password');
     final hasGoogle = providers.contains('google.com');
 
-    if (hasEmail && hasGoogle) return 'Google + Email account';
-    if (hasGoogle) return 'Google account';
-    if (hasEmail) return 'Email account';
-    return 'Anonymous (browsing only)';
+    if (hasEmail && hasGoogle) return AccountType.googleEmail;
+    if (hasGoogle) return AccountType.google;
+    if (hasEmail) return AccountType.email;
+    return AccountType.anonymous;
   }
 
   /// Called once at app startup before runApp.
@@ -59,6 +61,11 @@ class UserProvider extends ChangeNotifier {
       (m) => m.name == themePref,
       orElse: () => ThemeMode.system,
     );
+
+    final localePref = prefs.getString('locale');
+    if (localePref != null) {
+      _locale = Locale(localePref);
+    }
 
     // Wait for Firebase Auth to restore the persisted session before
     // deciding whether to create a new anonymous account.
@@ -116,12 +123,25 @@ class UserProvider extends ChangeNotifier {
       await _auth.currentUser?.updateDisplayName(displayName);
     }
 
-    _user = UserProfile(
-      id: _auth.currentUser!.uid,
-      displayName: displayName,
-      reportCount: _user.reportCount,
-      trustScore: _user.trustScore,
-    );
+    // Read existing profile to preserve reportCount/trustScore,
+    // only create a new one if the user has never been seen before.
+    final uid = _auth.currentUser!.uid;
+    final existing = await FirestoreService.getUserProfile(uid);
+    if (existing != null) {
+      _user = UserProfile(
+        id: uid,
+        displayName: displayName,
+        reportCount: existing.reportCount,
+        trustScore: existing.trustScore,
+      );
+    } else {
+      _user = UserProfile(
+        id: uid,
+        displayName: displayName,
+        reportCount: 0,
+        trustScore: 1.0,
+      );
+    }
     await FirestoreService.setUserProfile(_user);
     notifyListeners();
   }
@@ -177,12 +197,23 @@ class UserProvider extends ChangeNotifier {
     }
 
     final displayName = signedInUser.displayName ?? googleUser.displayName ?? 'User';
-    _user = UserProfile(
-      id: signedInUser.uid,
-      displayName: displayName,
-      reportCount: _user.reportCount,
-      trustScore: _user.trustScore,
-    );
+    // Read existing profile to preserve reportCount/trustScore
+    final existing = await FirestoreService.getUserProfile(signedInUser.uid);
+    if (existing != null) {
+      _user = UserProfile(
+        id: signedInUser.uid,
+        displayName: displayName,
+        reportCount: existing.reportCount,
+        trustScore: existing.trustScore,
+      );
+    } else {
+      _user = UserProfile(
+        id: signedInUser.uid,
+        displayName: displayName,
+        reportCount: 0,
+        trustScore: 1.0,
+      );
+    }
     await FirestoreService.setUserProfile(_user);
     notifyListeners();
   }
@@ -214,9 +245,24 @@ class UserProvider extends ChangeNotifier {
     });
   }
 
+  /// Set locale. Pass null for system default.
+  void setLocale(Locale? locale) {
+    _locale = locale;
+    notifyListeners();
+    SharedPreferences.getInstance().then((prefs) {
+      if (locale == null) {
+        prefs.remove('locale');
+      } else {
+        prefs.setString('locale', locale.languageCode);
+      }
+    });
+  }
+
   @override
   void dispose() {
     _authSub?.cancel();
     super.dispose();
   }
 }
+
+enum AccountType { anonymous, email, google, googleEmail }

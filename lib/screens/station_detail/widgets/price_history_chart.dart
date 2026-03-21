@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 import '../../../models/price_history_point.dart';
 
@@ -144,7 +145,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                     reservedSize: 44,
                     getTitlesWidget: (value, _) {
                       return Text(
-                        '${value.toStringAsFixed(1)} kr',
+                        '${value.toStringAsFixed(1)} ${context.l10n.krSuffix}',
                         style: TextStyle(fontSize: 10, color: labelColor),
                       );
                     },
@@ -254,7 +255,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    type.displayName,
+                    type.localizedName(context),
                     style: TextStyle(
                       fontSize: 12,
                       color: active
@@ -328,7 +329,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${visibleFuelTypes[spot.barIndex].displayName}: ${spot.y.toStringAsFixed(2)} kr',
+                      '${visibleFuelTypes[spot.barIndex].localizedName(context)}: ${spot.y.toStringAsFixed(2)} ${context.l10n.krSuffix}',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

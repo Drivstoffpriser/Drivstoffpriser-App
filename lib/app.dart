@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'config/routes.dart';
 import 'config/app_theme.dart';
+import 'l10n/app_localizations.dart';
 import 'models/station.dart';
 import 'providers/user_provider.dart';
 import 'screens/auth/auth_screen.dart';
@@ -17,14 +18,17 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = context.watch<UserProvider>().themeMode;
+    final userProvider = context.watch<UserProvider>();
 
     return MaterialApp(
       title: 'TankVenn',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
+      themeMode: userProvider.themeMode,
+      locale: userProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => ConnectivityGate(child: child!),
       home: const FloatingPillNav(),
       onGenerateRoute: (settings) {

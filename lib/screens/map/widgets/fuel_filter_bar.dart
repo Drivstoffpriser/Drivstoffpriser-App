@@ -27,7 +27,7 @@ class FuelFilterBar extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: _FuelChip(
-                    label: type.displayName,
+                    label: type.localizedName(context),
                     isSelected: selected,
                     onTap: () => provider.setFuelType(type),
                   ),

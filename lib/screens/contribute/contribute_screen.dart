@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
 import '../../config/routes.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../models/fuel_type.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
@@ -57,7 +58,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               title: Text(
-                'CONTRIBUTE DATA',
+                context.l10n.contributeData,
                 style: AppTextStyles.sectionHeader(context).copyWith(
                   fontSize: 14,
                   color: AppColors.textPrimary(context),
@@ -121,7 +122,7 @@ class _StepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
-    final labels = ['Station', 'Fuel Type', 'Price'];
+    final labels = [context.l10n.station, context.l10n.fuelType, context.l10n.price];
 
     return Row(
       children: List.generate(3, (i) {
@@ -212,12 +213,12 @@ class _StationSelectionStep extends StatelessWidget {
       sliver: SliverList(
         delegate: SliverChildListDelegate([
           Text(
-            'Select a Station',
+            context.l10n.selectStation,
             style: AppTextStyles.title(context),
           ),
           const SizedBox(height: 4),
           Text(
-            'Choose the station where you want to report a price',
+            context.l10n.chooseStationSubtitle,
             style: AppTextStyles.meta(context),
           ),
           const SizedBox(height: 16),
@@ -376,10 +377,10 @@ class _FuelTypeStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text('Select Fuel Grade', style: AppTextStyles.title(context)),
+          Text(context.l10n.selectFuelGrade, style: AppTextStyles.title(context)),
           const SizedBox(height: 4),
           Text(
-            'What type of fuel are you reporting?',
+            context.l10n.whatFuelType,
             style: AppTextStyles.meta(context),
           ),
           const SizedBox(height: 16),
@@ -457,7 +458,7 @@ class _FuelTypeCardState extends State<_FuelTypeCard> {
               ),
               const SizedBox(height: 8),
               Text(
-                widget.type.displayName,
+                widget.type.localizedName(context),
                 style: AppTextStyles.bodyMedium(context),
                 textAlign: TextAlign.center,
               ),
@@ -534,7 +535,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        widget.fuelType.displayName,
+                        widget.fuelType.localizedName(context),
                         style: AppTextStyles.meta(context),
                       ),
                     ],
@@ -549,7 +550,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
             ),
           ),
           const SizedBox(height: 24),
-          Text('Enter Price', style: AppTextStyles.title(context)),
+          Text(context.l10n.enterPrice, style: AppTextStyles.title(context)),
           const SizedBox(height: 16),
 
           // Current average pill
@@ -570,7 +571,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                   Icon(Icons.info_outline, size: 16, color: activeColor),
                   const SizedBox(width: 8),
                   Text(
-                    'Current avg: ${currentPrice.price.toStringAsFixed(2)} NOK/${widget.fuelType.unit}',
+                    context.l10n.currentAvg('${currentPrice.price.toStringAsFixed(2)} ${context.l10n.nok}/${widget.fuelType.unit}'),
                     style: AppTextStyles.label(context).copyWith(
                       color: activeColor,
                     ),
@@ -623,7 +624,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                       ),
                     ),
                     Text(
-                      'NOK',
+                      context.l10n.nok,
                       style: AppTextStyles.title(context).copyWith(
                         color: AppColors.textMuted(context),
                       ),
@@ -632,7 +633,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'per ${widget.fuelType.unit}',
+                  context.l10n.perL,
                   style: AppTextStyles.meta(context),
                 ),
               ],
@@ -642,7 +643,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
 
           // Submit button — gradient cyan
           _GradientButton(
-            label: 'Verify & Submit',
+            label: context.l10n.verifyAndSubmit,
             onPressed: _submit,
           ),
         ],

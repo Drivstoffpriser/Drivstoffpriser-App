@@ -6,6 +6,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../config/routes.dart';
 import '../../../models/station.dart';
 import '../../../providers/location_provider.dart';
@@ -108,7 +109,7 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                     child: Row(
                       children: [
                         Text(
-                          'Best Nearby',
+                          context.l10n.bestNearby,
                           style: AppTextStyles.title(context),
                         ),
                         const SizedBox(width: 8),
@@ -123,7 +124,7 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            stationProvider.selectedFuelType.displayName,
+                            stationProvider.selectedFuelType.localizedName(context),
                             style: AppTextStyles.label(context).copyWith(
                               color: AppColors.primaryContainer(context),
                               fontWeight: FontWeight.w500,
@@ -134,25 +135,25 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                         PopupMenuButton<SortMode>(
                           initialValue: stationProvider.sortMode,
                           onSelected: stationProvider.setSortMode,
-                          itemBuilder: (_) => const [
+                          itemBuilder: (ctx) => [
                             PopupMenuItem(
                               value: SortMode.cheapest,
-                              child: Text('Cheapest'),
+                              child: Text(ctx.l10n.sortCheapest),
                             ),
                             PopupMenuItem(
                               value: SortMode.nearest,
-                              child: Text('Nearest'),
+                              child: Text(ctx.l10n.sortNearest),
                             ),
                             PopupMenuItem(
                               value: SortMode.latest,
-                              child: Text('Latest'),
+                              child: Text(ctx.l10n.sortLatest),
                             ),
                           ],
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Sort: ${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}',
+                                context.l10n.sortLabel('${stationProvider.sortMode.name[0].toUpperCase()}${stationProvider.sortMode.name.substring(1)}'),
                                 style: AppTextStyles.label(context),
                               ),
                               const Icon(Icons.arrow_drop_down, size: 18),
@@ -171,7 +172,7 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                         child: sorted.isEmpty
                             ? Center(
                                 child: Text(
-                                  'No prices reported yet',
+                                  context.l10n.noPricesReported,
                                   style: AppTextStyles.label(context),
                                 ),
                               )
@@ -278,7 +279,7 @@ class _StationTileState extends State<_StationTile> {
                 if (price != null) ...[
                   const SizedBox(width: 12),
                   Text(
-                    '${price.price.toStringAsFixed(2)} kr',
+                    '${price.price.toStringAsFixed(2)} ${context.l10n.krSuffix}',
                     style: AppTextStyles.priceLarge(
                       context,
                     ).copyWith(color: AppColors.primaryContainer(context)),
