@@ -18,18 +18,23 @@ class LocationProvider extends ChangeNotifier {
   String? get error => _error;
   bool get hasLocation => _position != null;
 
+  LocationResult? _lastResult;
+  LocationResult? get lastResult => _lastResult;
+
   Future<void> fetchLocation() async {
     if (_positionSub != null) return; // Already listening
 
     _isLoading = true;
     _error = null;
+    _lastResult = null;
     notifyListeners();
 
     try {
       // Check/request permissions FIRST — must happen before any
       // Geolocator call that requires location access.
-      final allowed = await _locationService.checkPermission();
-      if (!allowed) {
+      final result = await _locationService.checkPermission();
+      _lastResult = result;
+      if (result != LocationResult.granted) {
         _error = 'Location permission denied or service disabled.';
         _isLoading = false;
         notifyListeners();
