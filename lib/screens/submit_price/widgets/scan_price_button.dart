@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../services/image_metadata_service.dart';
 import '../../../services/native_image_picker_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
@@ -43,17 +44,12 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Crop Tip'),
+              title: Text(context.l10n.cropTip),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'After taking or selecting a photo, you will be asked '
-                      'to crop it. The cropped image should ideally contain '
-                      'only the fuel station price sign with the logo and '
-                      'prices visible.',
-                    ),
+                    Text(context.l10n.cropTipBody),
                     const SizedBox(height: 16),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
@@ -85,11 +81,11 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                         setDialogState(() => dontShowAgain = value ?? false);
                       },
                     ),
-                    const Flexible(child: Text("Don't show again")),
+                    Flexible(child: Text(context.l10n.dontShowAgain)),
                     const Spacer(),
                     FilledButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Got it'),
+                      child: Text(context.l10n.gotIt),
                     ),
                   ],
                 ),
@@ -119,7 +115,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       debugPrint('[$_tag] ImagePicker error: $e\n$stack');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission required')),
+        SnackBar(content: Text(context.l10n.cameraPermissionRequired)),
       );
       return;
     }
@@ -210,7 +206,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       setState(() => _isProcessing = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to process image')));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.failedToProcessImage)));
     }
   }
 
@@ -235,7 +231,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                   Icons.camera_alt_outlined,
                   color: AppColors.textPrimary(context),
                 ),
-                title: Text('Take photo', style: AppTextStyles.body(context)),
+                title: Text(context.l10n.takePhoto, style: AppTextStyles.body(context)),
                 onTap: _pickFromCamera,
               ),
               ListTile(
@@ -244,7 +240,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                   color: AppColors.textPrimary(context),
                 ),
                 title: Text(
-                  'Choose from gallery',
+                  context.l10n.chooseFromGallery,
                   style: AppTextStyles.body(context),
                 ),
                 onTap: _pickFromGallery,
@@ -284,7 +280,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
               ),
             const SizedBox(width: 8),
             Text(
-              _isProcessing ? 'Analyzing...' : 'Scan price sign',
+              _isProcessing ? context.l10n.analyzing : context.l10n.scanPriceSign,
               style: AppTextStyles.bodyMedium(context),
             ),
           ],

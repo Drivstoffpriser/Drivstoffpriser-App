@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../config/app_colors.dart';
 import '../config/app_text_styles.dart';
+import '../l10n/l10n_helper.dart';
 
 class ConnectivityGate extends StatefulWidget {
   final Widget child;
@@ -80,14 +81,13 @@ class _NoConnectionOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Ingen internettilkobling',
+                    context.l10n.noInternetTitle,
                     style: AppTextStyles.heading(context),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'TankVenn krever en aktiv Wi-Fi- eller mobildata\u00ADtilkobling for å fungere. '
-                    'Vennligst aktiver Wi-Fi eller mobildata i innstillingene og prøv igjen.',
+                    context.l10n.noInternetBody,
                     style: AppTextStyles.body(
                       context,
                     ).copyWith(color: AppColors.textMuted(context)),
@@ -105,9 +105,9 @@ class _NoConnectionOverlay extends StatelessWidget {
                       );
                       if (context.mounted && !connected) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Fortsatt ingen tilkobling'),
-                            duration: Duration(seconds: 2),
+                          SnackBar(
+                            content: Text(context.l10n.stillNoConnection),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       }
@@ -122,7 +122,7 @@ class _NoConnectionOverlay extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        'Prøv igjen',
+                        context.l10n.tryAgain,
                         style: AppTextStyles.bodyMedium(
                           context,
                         ).copyWith(color: Colors.white),

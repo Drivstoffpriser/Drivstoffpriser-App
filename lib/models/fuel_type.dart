@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+
+import '../l10n/l10n_helper.dart';
+
 enum FuelType {
   petrol95,
   petrol98,
@@ -13,6 +17,12 @@ enum FuelType {
         return 'Bensin 98';
     }
   }
+
+  String localizedName(BuildContext context) => switch (this) {
+    FuelType.petrol95 => context.l10n.fuelPetrol95,
+    FuelType.petrol98 => context.l10n.fuelPetrol98,
+    FuelType.diesel => context.l10n.fuelDiesel,
+  };
 
   String get unit => 'L';
 }

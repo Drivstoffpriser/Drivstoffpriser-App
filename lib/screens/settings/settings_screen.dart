@@ -7,6 +7,7 @@ import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 
@@ -29,7 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Stations refreshed')));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.stationsRefreshed)));
       setState(() => _isRefreshing = false);
     }
   }
@@ -54,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               title: Text(
-                'Profile',
+                context.l10n.profile,
                 style: AppTextStyles.heading(context).copyWith(fontSize: 28),
               ),
             ),
@@ -95,7 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Icon(Icons.bar_chart_rounded, size: 20, color: activeColor),
                             const SizedBox(width: 8),
                             Text(
-                              'Total Contributions',
+                              context.l10n.totalContributions,
                               style: AppTextStyles.bodyMedium(context),
                             ),
                           ],
@@ -108,14 +109,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                         Text(
-                          'price reports submitted',
+                          context.l10n.priceReportsSubmitted,
                           style: AppTextStyles.meta(context),
                         ),
                         const SizedBox(height: 12),
                         // Trust score bar
                         Row(
                           children: [
-                            Text('Trust Score', style: AppTextStyles.label(context)),
+                            Text(context.l10n.trustScore, style: AppTextStyles.label(context)),
                             const Spacer(),
                             Text(
                               '${(user.trustScore * 100).toStringAsFixed(0)}%',
@@ -146,8 +147,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _ActionCard(
                     icon: Icons.person_add_rounded,
                     iconColor: activeColor,
-                    title: 'Create Account',
-                    subtitle: 'Sign up to report prices and earn trust',
+                    title: context.l10n.createAccount,
+                    subtitle: context.l10n.signUpSubtitle,
                     onTap: () => Navigator.pushNamed(context, AppRoutes.auth),
                     isPrimary: true,
                   ),
@@ -156,7 +157,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Map Preferences ──
                 Text(
-                  'MAP PREFERENCES',
+                  context.l10n.mapPreferences,
                   style: AppTextStyles.sectionHeader(context),
                 ),
                 const SizedBox(height: 12),
@@ -164,13 +165,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _ThemeModeTile(themeMode: userProvider.themeMode),
                     const _CardDivider(),
+                    _LanguageTile(locale: userProvider.locale),
+                    const _CardDivider(),
                     _SettingsTile(
                       icon: Icons.my_location_outlined,
                       iconColor: isDark
                           ? const Color(0xFF6fddaa)
                           : const Color(0xFF10B981),
-                      title: 'Refresh Stations',
-                      subtitle: 'Update nearby fuel stations',
+                      title: context.l10n.refreshStations,
+                      subtitle: context.l10n.updateNearbyStations,
                       trailing: _isRefreshing
                           ? SizedBox(
                               width: 20,
@@ -189,7 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Support ──
                 Text(
-                  'SUPPORT',
+                  context.l10n.support,
                   style: AppTextStyles.sectionHeader(context),
                 ),
                 const SizedBox(height: 12),
@@ -200,8 +203,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       iconColor: isDark
                           ? const Color(0xFFffd166)
                           : const Color(0xFFF59E0B),
-                      title: 'Report a Bug',
-                      subtitle: 'Found an issue? Let us know',
+                      title: context.l10n.reportABug,
+                      subtitle: context.l10n.foundIssue,
                       trailing: Icon(
                         Icons.arrow_forward_ios,
                         size: 14,
@@ -216,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       iconColor: isDark
                           ? const Color(0xFFa4e6ff)
                           : const Color(0xFF6366F1),
-                      title: 'About',
+                      title: context.l10n.about,
                       subtitle: AppConstants.appName,
                       trailing: Icon(
                         Icons.arrow_forward_ios,
@@ -232,9 +235,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           applicationVersion:
                               '${info.version}+${info.buildNumber}',
                           children: [
-                            const Text(
-                              'Community-driven fuel price tracker for Norway. '
-                              'Report and find the cheapest fuel prices near you.',
+                            Text(
+                              context.l10n.aboutDescription,
                             ),
                             const SizedBox(height: 16),
                             OutlinedButton.icon(
@@ -245,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   height: 18,
                                 ),
                               ),
-                              label: const Text('View on GitHub'),
+                              label: Text(context.l10n.viewOnGithub),
                               onPressed: () {
                                 launchUrl(
                                   Uri.parse(
@@ -266,7 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // ── Account Management ──
                 if (isAuth) ...[
                   Text(
-                    'ACCOUNT',
+                    context.l10n.account,
                     style: AppTextStyles.sectionHeader(context),
                   ),
                   const SizedBox(height: 12),
@@ -277,8 +279,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         iconColor: isDark
                             ? AppColors.darkError
                             : const Color(0xFFDC2626),
-                        title: 'Sign Out',
-                        subtitle: 'Sign out of your account',
+                        title: context.l10n.signOut,
+                        subtitle: context.l10n.signOutSubtitle,
                         onTap: () async {
                           await userProvider.signOut();
                         },
@@ -387,7 +389,7 @@ class _ProfileHero extends StatelessWidget {
                 Text(
                   isAuthenticated && user.displayName.isNotEmpty
                       ? user.displayName
-                      : 'Guest User',
+                      : context.l10n.guestUser,
                   style: AppTextStyles.title(context).copyWith(fontSize: 18),
                 ),
                 const SizedBox(height: 4),
@@ -403,7 +405,12 @@ class _ProfileHero extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    userProvider.accountTypeLabel,
+                    switch (userProvider.accountType) {
+                      AccountType.anonymous => context.l10n.anonymousBrowsingOnly,
+                      AccountType.email => context.l10n.emailAccount,
+                      AccountType.google => context.l10n.googleAccount,
+                      AccountType.googleEmail => context.l10n.googleEmailAccount,
+                    },
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -420,13 +427,13 @@ class _ProfileHero extends StatelessWidget {
                       _StatBadge(
                         icon: Icons.edit_note,
                         value: '${user.reportCount}',
-                        label: 'reports',
+                        label: context.l10n.reports,
                       ),
                       const SizedBox(width: 12),
                       _StatBadge(
                         icon: Icons.verified,
                         value: '${(user.trustScore * 100).toStringAsFixed(0)}%',
-                        label: 'trust',
+                        label: context.l10n.trust,
                       ),
                     ],
                   ),
@@ -736,13 +743,13 @@ class _ThemeModeTile extends StatelessWidget {
     switch (themeMode) {
       case ThemeMode.dark:
         icon = Icons.dark_mode;
-        subtitle = 'Dark';
+        subtitle = context.l10n.themeDark;
       case ThemeMode.light:
         icon = Icons.light_mode;
-        subtitle = 'Light';
+        subtitle = context.l10n.themeLight;
       case ThemeMode.system:
         icon = Icons.brightness_auto;
-        subtitle = 'System';
+        subtitle = context.l10n.themeSystem;
     }
 
     return Padding(
@@ -765,7 +772,7 @@ class _ThemeModeTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Appearance', style: AppTextStyles.bodyMedium(context)),
+                Text(context.l10n.appearance, style: AppTextStyles.bodyMedium(context)),
                 const SizedBox(height: 2),
                 Text(subtitle, style: AppTextStyles.meta(context)),
               ],
@@ -865,6 +872,165 @@ class _ThemeOption extends StatelessWidget {
             size: 16,
             color: isSelected ? Colors.white : AppColors.textMuted(context),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  final Locale? locale;
+
+  const _LanguageTile({required this.locale});
+
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = context.read<UserProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = AppColors.primaryContainer(context);
+    final iconColor = isDark ? const Color(0xFFa4e6ff) : const Color(0xFF6366F1);
+
+    final String subtitle;
+    switch (locale?.languageCode) {
+      case 'en':
+        subtitle = context.l10n.languageEnglish;
+      case 'nb':
+        subtitle = context.l10n.languageNorwegian;
+      default:
+        subtitle = context.l10n.languageSystem;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Icon(Icons.language, size: 20, color: iconColor),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.l10n.language, style: AppTextStyles.bodyMedium(context)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: AppTextStyles.meta(context)),
+              ],
+            ),
+          ),
+          _LanguageSelector(
+            locale: locale,
+            activeColor: activeColor,
+            onChanged: userProvider.setLocale,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageSelector extends StatelessWidget {
+  final Locale? locale;
+  final Color activeColor;
+  final ValueChanged<Locale?> onChanged;
+
+  const _LanguageSelector({
+    required this.locale,
+    required this.activeColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? AppColors.darkSurfaceHighest
+        : const Color(0xFFE5E7EB);
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _LanguageOption(
+            label: 'EN',
+            isSelected: locale?.languageCode == 'en',
+            activeColor: activeColor,
+            onTap: () => onChanged(const Locale('en')),
+          ),
+          _LanguageOption(
+            icon: Icons.phone_android,
+            isSelected: locale == null,
+            activeColor: activeColor,
+            onTap: () => onChanged(null),
+          ),
+          _LanguageOption(
+            label: 'NB',
+            isSelected: locale?.languageCode == 'nb',
+            activeColor: activeColor,
+            onTap: () => onChanged(const Locale('nb')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageOption extends StatelessWidget {
+  final IconData? icon;
+  final String? label;
+  final bool isSelected;
+  final Color activeColor;
+  final VoidCallback onTap;
+
+  const _LanguageOption({
+    this.icon,
+    this.label,
+    required this.isSelected,
+    required this.activeColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        width: 32,
+        height: 28,
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: icon != null
+              ? Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected ? Colors.white : AppColors.textMuted(context),
+                )
+              : Text(
+                  label!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : AppColors.textMuted(context),
+                  ),
+                ),
         ),
       ),
     );

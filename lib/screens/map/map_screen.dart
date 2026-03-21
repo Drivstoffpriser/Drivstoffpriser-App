@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../models/station.dart';
@@ -298,7 +299,7 @@ class _MapScreenState extends State<MapScreen> {
                             style: AppTextStyles.body(context),
                             textAlignVertical: TextAlignVertical.center,
                             decoration: InputDecoration(
-                              hintText: 'Search stations...',
+                              hintText: context.l10n.searchStations,
                               hintStyle: AppTextStyles.body(context).copyWith(
                                 color: AppColors.textMuted(context),
                               ),
@@ -437,7 +438,7 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
                 child: Text(
-                  'No stations found for "$_searchQuery"',
+                  context.l10n.noStationsFound(_searchQuery),
                   style: AppTextStyles.label(context),
                   textAlign: TextAlign.center,
                 ),

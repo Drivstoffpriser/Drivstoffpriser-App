@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/app_colors.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../models/current_price.dart';
 import '../../../models/station.dart';
 
@@ -47,23 +48,23 @@ class _StationMarkerState extends State<StationMarker> {
   /// - 6–12hr → yellow/orange
   /// - 13–23hr → red
   /// - 24hr+ → ">1d" gray
-  static ({String label, Color color}) _formatAge(Duration age) {
+  static ({String label, Color color}) _formatAge(BuildContext context, Duration age) {
     final minutes = age.inMinutes;
     final hours = age.inHours;
 
     if (minutes < 60) {
-      return (label: '${minutes}m', color: Colors.green);
+      return (label: context.l10n.ageMinutes(minutes), color: Colors.green);
     }
     if (hours <= 5) {
-      return (label: '${hours}hr', color: Colors.green);
+      return (label: context.l10n.ageHours(hours), color: Colors.green);
     }
     if (hours <= 12) {
-      return (label: '${hours}hr', color: Colors.orange);
+      return (label: context.l10n.ageHours(hours), color: Colors.orange);
     }
     if (hours <= 23) {
-      return (label: '${hours}hr', color: Colors.red);
+      return (label: context.l10n.ageHours(hours), color: Colors.red);
     }
-    return (label: '>1d', color: Colors.grey);
+    return (label: context.l10n.ageOver1Day, color: Colors.grey);
   }
 
   @override
@@ -91,7 +92,7 @@ class _StationMarkerState extends State<StationMarker> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final logoAsset = _getLogoAsset();
     final age = DateTime.now().difference(price.updatedAt);
-    final (:label, :color) = _formatAge(age);
+    final (:label, :color) = _formatAge(context, age);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

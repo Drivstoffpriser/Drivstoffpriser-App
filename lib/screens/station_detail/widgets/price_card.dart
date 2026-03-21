@@ -3,6 +3,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../models/current_price.dart';
 
 class PriceCard extends StatelessWidget {
@@ -36,7 +37,7 @@ class PriceCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  price.fuelType.displayName,
+                  price.fuelType.localizedName(context),
                   style: AppTextStyles.label(context).copyWith(
                     color: activeColor,
                     fontWeight: FontWeight.w600,
@@ -54,12 +55,12 @@ class PriceCard extends StatelessWidget {
             ),
           ),
           Text(
-            'kr/${price.fuelType.unit}',
+            context.l10n.krPerUnit(price.fuelType.unit),
             style: AppTextStyles.meta(context),
           ),
           const SizedBox(height: 8),
           Text(
-            '${price.reportCount} reports · ${timeago.format(price.updatedAt)}',
+            '${context.l10n.reportsCount(price.reportCount)} · ${timeago.format(price.updatedAt)}',
             style: AppTextStyles.meta(context),
           ),
         ],

@@ -5,6 +5,7 @@ import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../models/fuel_type.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
@@ -48,7 +49,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
   void _handleScanResult(ScanResult result) {
     if (result.prices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not recognize any fuel prices')),
+        SnackBar(content: Text(context.l10n.couldNotRecognizePrices)),
       );
       return;
     }
@@ -80,7 +81,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Filled $filled price${filled > 1 ? 's' : ''} from scan$suffix$metadataNote',
+          '${context.l10n.filledPricesFromScan(filled)}$suffix$metadataNote',
         ),
       ),
     );
@@ -127,10 +128,8 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       final locationProvider = context.read<LocationProvider>();
       if (!locationProvider.hasLocation) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Location unavailable. Enable location services or scan a photo taken at the station today.',
-            ),
+          SnackBar(
+            content: Text(context.l10n.locationUnavailable),
           ),
         );
         return;
@@ -147,9 +146,10 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'You must be within ${AppConstants.maxReportDistanceMeters.round()}m of the station. '
-              'You are ${DistanceService.formatDistance(distance)} away. '
-              'Tip: Scan a photo taken at the station today to submit remotely.',
+              context.l10n.mustBeNearStation(
+                AppConstants.maxReportDistanceMeters.round(),
+                distance.round(),
+              ),
             ),
           ),
         );
@@ -160,7 +160,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     final prices = _filledPrices();
     if (prices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter at least one fuel price.')),
+        SnackBar(content: Text(context.l10n.enterAtLeastOnePrice)),
       );
       return;
     }
@@ -169,7 +169,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
     if (!userProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You need an account to report prices.')),
+        SnackBar(content: Text(context.l10n.needAccountToReport)),
       );
       final result = await Navigator.pushNamed(context, AppRoutes.auth);
       if (result != true || !mounted) return;
@@ -202,9 +202,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'All selected fuel types are on cooldown: '
-            '${skipped.map((t) => t.displayName).join(", ")}. '
-            'Please wait $minutesLeft minute${minutesLeft != 1 ? 's' : ''} before submitting again.',
+            context.l10n.allOnCooldown,
           ),
         ),
       );
@@ -259,7 +257,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     }
     if (skipped.isNotEmpty) {
       parts.add(
-        '${skipped.map((t) => t.displayName).join(", ")} skipped (cooldown)',
+        '${skipped.map((t) => t.localizedName(context)).join(", ")} skipped (cooldown)',
       );
     }
     if (lastError != null) {
@@ -277,7 +275,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
   Future<bool?> _showConfirmationDialog(List<FuelType> fuelTypes) {
     bool doNotShowAgain = false;
-    final typeNames = fuelTypes.map((t) => t.displayName).join(', ');
+    final typeNames = fuelTypes.map((t) => t.localizedName(context)).join(', ');
 
     return showDialog<bool>(
       context: context,
@@ -285,15 +283,13 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Confirm Price Submission'),
+              title: Text(context.l10n.confirmPriceSubmission),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Submitting prices for: $typeNames.\n\n'
-                    'After submitting, you will not be able to update '
-                    'these fuel types at this station for 1 hour.',
+                    context.l10n.confirmSubmissionBody(typeNames),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -304,7 +300,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
                           setDialogState(() => doNotShowAgain = value ?? false);
                         },
                       ),
-                      const Flexible(child: Text('Do not show this again')),
+                      Flexible(child: Text(context.l10n.doNotShowAgain)),
                     ],
                   ),
                 ],
@@ -312,7 +308,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: () async {
@@ -321,7 +317,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
                     }
                     if (context.mounted) Navigator.pop(context, true);
                   },
-                  child: const Text('Submit'),
+                  child: Text(context.l10n.submit),
                 ),
               ],
             );
@@ -344,7 +340,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text('Report Price', style: AppTextStyles.title(context)),
+        title: Text(context.l10n.reportPrice, style: AppTextStyles.title(context)),
       ),
       body: Form(
         key: _formKey,
@@ -385,7 +381,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Enter prices (fill in any you know)',
+              context.l10n.enterPricesInstruction,
               style: AppTextStyles.bodyMedium(context),
             ),
             const SizedBox(height: 12),
@@ -472,7 +468,7 @@ class _GradientSubmitButtonState extends State<_GradientSubmitButton> {
                     ),
                   )
                 : Text(
-                    'Submit Report',
+                    context.l10n.submitReport,
                     style: AppTextStyles.bodyMedium(
                       context,
                     ).copyWith(

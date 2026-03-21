@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../config/app_text_styles.dart';
+import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 
 class PriceInputField extends StatelessWidget {
@@ -26,18 +27,18 @@ class PriceInputField extends StatelessWidget {
       ],
       style: AppTextStyles.body(context),
       decoration: InputDecoration(
-        labelText: '${fuelType.displayName} (${fuelType.unit})',
+        labelText: '${fuelType.localizedName(context)} (${fuelType.unit})',
         suffixText: 'kr/${fuelType.unit}',
-        helperText: 'Range: 5-50 kr',
+        helperText: context.l10n.priceRange,
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return required ? 'Enter a price' : null;
+          return required ? context.l10n.enterAPrice : null;
         }
         final price = double.tryParse(value);
-        if (price == null) return 'Invalid number';
+        if (price == null) return context.l10n.invalidNumber;
         if (price < 5.0 || price > 50.0) {
-          return 'Price must be between 5 and 50 kr';
+          return context.l10n.priceMustBeBetween;
         }
         return null;
       },
