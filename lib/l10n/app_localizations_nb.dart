@@ -174,6 +174,29 @@ class AppLocalizationsNb extends AppLocalizations {
   String get account => 'KONTO';
 
   @override
+  String get deleteAccount => 'Slett konto';
+
+  @override
+  String get deleteAccountSubtitle => 'Slett kontoen og dataene dine permanent';
+
+  @override
+  String get deleteAccountConfirmTitle => 'Slette konto?';
+
+  @override
+  String get deleteAccountConfirmBody =>
+      'Dette vil permanent slette kontoen din og profildata. Dine innsendte prisrapporter vil forbli som anonyme fellesskapsdata.\n\nDenne handlingen kan ikke angres.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Slett konto';
+
+  @override
+  String get accountDeleted => 'Kontoen er slettet';
+
+  @override
+  String get deleteAccountReauth =>
+      'Av sikkerhetsgrunner, logg ut og logg inn igjen før du sletter kontoen din';
+
+  @override
   String get signOut => 'Logg ut';
 
   @override

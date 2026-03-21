@@ -173,6 +173,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get account => 'ACCOUNT';
 
   @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Permanently delete your account and data';
+
+  @override
+  String get deleteAccountConfirmTitle => 'Delete Account?';
+
+  @override
+  String get deleteAccountConfirmBody =>
+      'This will permanently delete your account and profile data. Your submitted price reports will remain as anonymous community data.\n\nThis action cannot be undone.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Delete Account';
+
+  @override
+  String get accountDeleted => 'Account deleted successfully';
+
+  @override
+  String get deleteAccountReauth =>
+      'For security, please sign out and sign back in before deleting your account';
+
+  @override
   String get signOut => 'Sign Out';
 
   @override
