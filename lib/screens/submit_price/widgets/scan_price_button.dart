@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../services/image_metadata_service.dart';
+import '../../../services/native_image_picker_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
 import 'confirm_prices_screen.dart';
 import 'manual_crop_screen.dart';
@@ -106,13 +107,14 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     return acknowledged == true;
   }
 
-  Future<void> _pickAndScan(ImageSource source) async {
+  /// Pick from camera using image_picker (camera images aren't GPS-redacted).
+  Future<void> _pickFromCamera() async {
     Navigator.pop(context);
 
     final picker = ImagePicker();
     final XFile? picked;
     try {
-      picked = await picker.pickImage(source: source);
+      picked = await picker.pickImage(source: ImageSource.camera);
     } catch (e, stack) {
       debugPrint('[$_tag] ImagePicker error: $e\n$stack');
       if (!mounted) return;
@@ -123,12 +125,11 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     }
 
     if (picked == null) {
-      debugPrint('[$_tag] User cancelled image picker');
+      debugPrint('[$_tag] User cancelled camera');
       return;
     }
 
-    debugPrint('[$_tag] Image picked: ${picked.path}');
-
+    debugPrint('[$_tag] Camera image: ${picked.path}');
     final originalBytes = await picked.readAsBytes();
     final metadata = await ImageMetadataService.extractMetadata(originalBytes);
     debugPrint(
@@ -136,12 +137,36 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       'hasDateTime=${metadata.hasDateTime}, within24h=${metadata.isTakenWithin24Hours}',
     );
 
-    final file = File(picked.path);
+    await _cropAndScan(File(picked.path), metadata);
+  }
+
+  /// Pick from gallery using native method channel to preserve GPS EXIF data.
+  Future<void> _pickFromGallery() async {
+    Navigator.pop(context);
+
+    final pickResult = await NativeImagePickerService.pickImageFromGallery();
+    if (pickResult == null) {
+      debugPrint('[$_tag] User cancelled gallery');
+      return;
+    }
+
+    debugPrint('[$_tag] Gallery image: ${pickResult.path}');
+    debugPrint(
+      '[$_tag] Native EXIF: hasLocation=${pickResult.metadata.hasLocation}, '
+      'hasDateTime=${pickResult.metadata.hasDateTime}, '
+      'within24h=${pickResult.metadata.isTakenWithin24Hours}',
+    );
+
+    await _cropAndScan(File(pickResult.path), pickResult.metadata);
+  }
+
+  /// Common flow: crop → scan → confirm → callback.
+  Future<void> _cropAndScan(File imageFile, ImageMetadata metadata) async {
     if (!mounted) return;
 
     final croppedBytes = await Navigator.push<dynamic>(
       context,
-      MaterialPageRoute(builder: (_) => ManualCropScreen(imageFile: file)),
+      MaterialPageRoute(builder: (_) => ManualCropScreen(imageFile: imageFile)),
     );
 
     if (croppedBytes == null || !mounted) {
@@ -211,7 +236,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                   color: AppColors.textPrimary(context),
                 ),
                 title: Text('Take photo', style: AppTextStyles.body(context)),
-                onTap: () => _pickAndScan(ImageSource.camera),
+                onTap: _pickFromCamera,
               ),
               ListTile(
                 leading: Icon(
@@ -222,7 +247,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                   'Choose from gallery',
                   style: AppTextStyles.body(context),
                 ),
-                onTap: () => _pickAndScan(ImageSource.gallery),
+                onTap: _pickFromGallery,
               ),
             ],
           ),
