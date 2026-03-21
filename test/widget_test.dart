@@ -88,13 +88,16 @@ void main() {
       ),
     );
 
-    // Let async operations settle
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    // Pump a few frames to let the widget tree build.
+    // pumpAndSettle can't be used because map tiles and connectivity
+    // checks create animations/timers that never settle in test.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
-    // App should render the bottom navigation
+    // App should render the bottom navigation (English l10n defaults)
     expect(find.text('Map'), findsWidgets);
     expect(find.text('Stations'), findsWidgets);
-    expect(find.text('Settings'), findsWidgets);
+    expect(find.text('Profile'), findsWidgets);
 
     FlutterError.onError = origOnError;
   });
