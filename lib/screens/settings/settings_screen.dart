@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -274,6 +275,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _SettingsCard(
                     children: [
+                      _SettingsTile(
+                        icon: Icons.delete_forever_rounded,
+                        iconColor: isDark
+                            ? AppColors.darkError
+                            : const Color(0xFFDC2626),
+                        title: context.l10n.deleteAccount,
+                        subtitle: context.l10n.deleteAccountSubtitle,
+                        onTap: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(ctx.l10n.deleteAccountConfirmTitle),
+                              content: Text(ctx.l10n.deleteAccountConfirmBody),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: Text(ctx.l10n.cancel),
+                                ),
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFFDC2626),
+                                  ),
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: Text(ctx.l10n.deleteAccountConfirmButton),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true || !context.mounted) return;
+                          try {
+                            await userProvider.deleteAccount();
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(context.l10n.accountDeleted)),
+                            );
+                          } on FirebaseAuthException catch (e) {
+                            if (!context.mounted) return;
+                            if (e.code == 'requires-recent-login') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(context.l10n.deleteAccountReauth)),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.message ?? e.code)),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                      const _CardDivider(),
                       _SettingsTile(
                         icon: Icons.logout_rounded,
                         iconColor: isDark

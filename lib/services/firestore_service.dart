@@ -346,6 +346,14 @@ class FirestoreService {
   }
 
 
+  // ── Account Deletion ─────────────────────────────────────────────────
+
+  /// Delete all Firestore data associated with a user account.
+  /// Community-contributed price data is left intact (anonymized/shared).
+  static Future<void> deleteUserData(String uid) async {
+    await _db.collection('users').doc(uid).delete();
+  }
+
   // ── Bug Reports ──────────────────────────────────────────────────────
 
   /// Submit a bug report to the bug_reports collection.

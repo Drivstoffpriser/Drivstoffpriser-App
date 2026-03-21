@@ -218,6 +218,16 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Delete the user's account and all associated Firestore data,
+  /// then sign in anonymously for continued browsing.
+  Future<void> deleteAccount() async {
+    final uid = _auth.currentUser!.uid;
+    await FirestoreService.deleteUserData(uid);
+    await _auth.currentUser!.delete();
+    await _auth.signInAnonymously();
+    await _loadProfile(_auth.currentUser!);
+  }
+
   /// Sign out and re-create an anonymous session for browsing.
   Future<void> signOut() async {
     await _googleSignIn.signOut();

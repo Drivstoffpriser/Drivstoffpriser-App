@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Account - TankVenn</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #f8f9fa;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .app-name {
+      color: #6366f1;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+
+    p,
+    li {
+      color: #444;
+      margin-bottom: 12px;
+    }
+
+    ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    ol li {
+      margin-bottom: 8px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+    }
+
+    .data-table th,
+    .data-table td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 13px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .badge-deleted {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .badge-kept {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .note {
+      background: #f0f4ff;
+      border-left: 4px solid #6366f1;
+      padding: 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+
+    .contact {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .contact a {
+      color: #6366f1;
+    }
+
+    .lang-switch {
+      text-align: right;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .lang-switch a {
+      color: #6366f1;
+      text-decoration: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .lang-switch a.active {
+      background: #6366f1;
+      color: #fff;
+      border-color: #6366f1;
+    }
+
+    .lang-switch a:hover {
+      opacity: 0.8;
+    }
+
+    .lang { display: none; }
+    .lang.active { display: block; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="lang-switch">
+      <a href="#" id="btn-en" class="active" onclick="setLang('en'); return false;">English</a>
+      <a href="#" id="btn-nb" onclick="setLang('nb'); return false;">Norsk</a>
+    </div>
+
+    <div class="app-name">TankVenn</div>
+
+    <!-- English -->
+    <div id="lang-en" class="lang active">
+      <h1>Delete Your Account</h1>
+      <p>You can delete your TankVenn account and associated data at any time. Follow the steps below.</p>
+
+      <h2>How to delete your account</h2>
+      <ol>
+        <li>Open the <strong>TankVenn</strong> app on your device.</li>
+        <li>Go to the <strong>Profile</strong> tab (bottom right).</li>
+        <li>Scroll down to the <strong>Account</strong> section.</li>
+        <li>Tap <strong>Delete Account</strong>.</li>
+        <li>Read the confirmation message and tap <strong>Delete Account</strong> to confirm.</li>
+      </ol>
+
+      <div class="note">
+        If you are unable to access the app, you can request account deletion by emailing us at the address below. Please
+        include the email address associated with your account.
+      </div>
+
+      <h2>What data is deleted or retained</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Data type</th>
+            <th>Action</th>
+            <th>Retention</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Account credentials</td>
+            <td><span class="badge badge-deleted">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>Display name</td>
+            <td><span class="badge badge-deleted">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>User profile (trust score, report count)</td>
+            <td><span class="badge badge-deleted">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>Price reports</td>
+            <td><span class="badge badge-kept">Retained (anonymized)</span></td>
+            <td>Indefinitely</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Previously submitted price reports are retained as anonymous community data. They are not linked to your account
+        after deletion and cannot be traced back to you.
+      </p>
+    </div>
+
+    <!-- Norwegian -->
+    <div id="lang-nb" class="lang">
+      <h1>Slett kontoen din</h1>
+      <p>Du kan slette TankVenn-kontoen din og tilknyttede data når som helst. Følg trinnene nedenfor.</p>
+
+      <h2>Slik sletter du kontoen din</h2>
+      <ol>
+        <li>Åpne <strong>TankVenn</strong>-appen på enheten din.</li>
+        <li>Gå til <strong>Profil</strong>-fanen (nederst til høyre).</li>
+        <li>Rull ned til <strong>Konto</strong>-delen.</li>
+        <li>Trykk på <strong>Slett konto</strong>.</li>
+        <li>Les bekreftelsesmeldingen og trykk <strong>Slett konto</strong> for å bekrefte.</li>
+      </ol>
+
+      <div class="note">
+        Hvis du ikke har tilgang til appen, kan du be om sletting av kontoen ved å sende en e-post til adressen nedenfor.
+        Oppgi e-postadressen som er knyttet til kontoen din.
+      </div>
+
+      <h2>Hvilke data slettes eller beholdes</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Datatype</th>
+            <th>Handling</th>
+            <th>Oppbevaring</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kontoinformasjon</td>
+            <td><span class="badge badge-deleted">Slettet</span></td>
+            <td>Umiddelbart</td>
+          </tr>
+          <tr>
+            <td>Visningsnavn</td>
+            <td><span class="badge badge-deleted">Slettet</span></td>
+            <td>Umiddelbart</td>
+          </tr>
+          <tr>
+            <td>Brukerprofil (tillitsscore, antall rapporter)</td>
+            <td><span class="badge badge-deleted">Slettet</span></td>
+            <td>Umiddelbart</td>
+          </tr>
+          <tr>
+            <td>Prisrapporter</td>
+            <td><span class="badge badge-kept">Beholdt (anonymisert)</span></td>
+            <td>Ubestemt</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Tidligere innsendte prisrapporter beholdes som anonyme fellesskapsdata. De er ikke knyttet til kontoen din
+        etter sletting og kan ikke spores tilbake til deg.
+      </p>
+    </div>
+
+    <div class="contact">
+      <p id="contact-en" class="lang active">Need help? Contact us at <a href="mailto:tankvennapp@gmail.com">tankvennapp@gmail.com</a></p>
+      <p id="contact-nb" class="lang">Trenger du hjelp? Kontakt oss på <a href="mailto:tankvennapp@gmail.com">tankvennapp@gmail.com</a></p>
+      <p>
+        <a href="https://github.com/tsotnek/tankvenn" target="_blank">GitHub</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#lang-' + lang + ', #contact-' + lang).forEach(el => el.classList.add('active'));
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.getElementById('btn-nb').classList.toggle('active', lang === 'nb');
+    }
+
+    // Auto-detect browser language
+    if (navigator.language.startsWith('nb') || navigator.language.startsWith('no') || navigator.language.startsWith('nn')) {
+      setLang('nb');
+    }
+  </script>
+</body>
+
+</html>
