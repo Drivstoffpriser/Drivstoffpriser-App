@@ -1,12 +1,14 @@
-name: PR Build Check
+name: Build & Test
 
 on:
   pull_request:
-    types: [ready_for_review]
+    branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-  build:
-    name: Flutter Build
+  build-and-test:
+    name: Build & Run Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +37,9 @@ jobs:
 
       - name: Analyze
         run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
 
       - name: Build APK (debug)
         run: flutter build apk --debug --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
