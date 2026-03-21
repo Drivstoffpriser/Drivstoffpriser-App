@@ -48,7 +48,7 @@ class PriceCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '${price.price.toStringAsFixed(2)}',
+            price.price.toStringAsFixed(2),
             style: AppTextStyles.priceLarge(context).copyWith(
               fontSize: 24,
               color: AppColors.textPrimary(context),

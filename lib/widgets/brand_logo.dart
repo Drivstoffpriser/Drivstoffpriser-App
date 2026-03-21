@@ -38,7 +38,7 @@ class BrandLogo extends StatelessWidget {
                 width: radius * 2,
                 height: radius * 2,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallbackInitial(context),
+                errorBuilder: (_, _, _) => _fallbackInitial(context),
               ),
             )
           : _fallbackInitial(context),
