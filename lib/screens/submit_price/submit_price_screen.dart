@@ -198,7 +198,6 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
     if (toSubmit.isEmpty) {
       if (!mounted) return;
-      final minutesLeft = maxRemaining.inMinutes + 1;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -333,7 +332,6 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       widget.station.address,
       widget.station.city,
     ].where((s) => s.isNotEmpty).join(', ');
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
