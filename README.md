@@ -41,8 +41,8 @@ A community-driven Flutter application for tracking and comparing fuel prices ac
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/tsotnek/fuelpriceapp.git
-    cd fuelpriceapp
+    git clone https://github.com/tsotnek/tankvenn.git
+    cd tankvenn
     ```
 
 2.  **Install dependencies**
