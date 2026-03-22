@@ -1,4 +1,4 @@
-name: Build & Release APK
+name: Build & Release
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Release APK
+    name: Build Release APK & AAB
     runs-on: ubuntu-latest
 
     steps:
@@ -59,10 +59,15 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
 
+      - name: Build AAB
+        run: flutter build appbundle --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ inputs.version }}+${{ inputs.build_number }}
           name: Release ${{ inputs.version }} (${{ inputs.build_number }})
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
           generate_release_notes: true
