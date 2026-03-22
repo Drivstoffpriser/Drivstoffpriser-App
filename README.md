@@ -10,6 +10,10 @@ An open-source, community-driven app to find the cheapest fuel nearby.
 
 ---
 
+<p align="center">
+  <img src="assets/screenshots/screen1.png" alt="TankVenn Screenshots" width="600"/>
+</p>
+
 ## Norsk
 
 ### Hva er TankVenn?
