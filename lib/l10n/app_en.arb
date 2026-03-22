@@ -62,6 +62,8 @@
   "about": "About",
   "aboutDescription": "Community-driven fuel price tracker for Norway. Report and find the cheapest fuel prices near you.",
   "viewOnGithub": "View on GitHub",
+  "privacyPolicy": "Privacy Policy",
+  "privacyPolicySubtitle": "How we handle your data",
   "account": "ACCOUNT",
   "deleteAccount": "Delete Account",
   "deleteAccountSubtitle": "Permanently delete your account and data",

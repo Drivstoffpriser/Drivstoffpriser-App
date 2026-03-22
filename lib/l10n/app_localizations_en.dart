@@ -170,6 +170,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewOnGithub => 'View on GitHub';
 
   @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get privacyPolicySubtitle => 'How we handle your data';
+
+  @override
   String get account => 'ACCOUNT';
 
   @override

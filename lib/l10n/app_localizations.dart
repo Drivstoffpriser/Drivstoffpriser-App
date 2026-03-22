@@ -398,6 +398,18 @@ abstract class AppLocalizations {
   /// **'View on GitHub'**
   String get viewOnGithub;
 
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @privacyPolicySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How we handle your data'**
+  String get privacyPolicySubtitle;
+
   /// No description provided for @account.
   ///
   /// In en, this message translates to:

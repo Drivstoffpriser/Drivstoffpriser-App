@@ -57,6 +57,8 @@
   "about": "Om",
   "aboutDescription": "Fellesskapsdrevet drivstoffprissporer for Norge. Rapporter og finn de billigste drivstoffprisene i nærheten.",
   "viewOnGithub": "Se på GitHub",
+  "privacyPolicy": "Personvernerklæring",
+  "privacyPolicySubtitle": "Hvordan vi håndterer dataene dine",
   "account": "KONTO",
   "deleteAccount": "Slett konto",
   "deleteAccountSubtitle": "Slett kontoen og dataene dine permanent",
