@@ -171,6 +171,12 @@ class AppLocalizationsNb extends AppLocalizations {
   String get viewOnGithub => 'Se på GitHub';
 
   @override
+  String get privacyPolicy => 'Personvernerklæring';
+
+  @override
+  String get privacyPolicySubtitle => 'Hvordan vi håndterer dataene dine';
+
+  @override
   String get account => 'KONTO';
 
   @override

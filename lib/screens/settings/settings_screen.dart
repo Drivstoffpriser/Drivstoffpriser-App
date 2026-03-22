@@ -262,6 +262,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       },
                     ),
+                    const _CardDivider(),
+                    _SettingsTile(
+                      icon: Icons.privacy_tip_outlined,
+                      iconColor: isDark
+                          ? const Color(0xFF6fddaa)
+                          : const Color(0xFF10B981),
+                      title: context.l10n.privacyPolicy,
+                      subtitle: context.l10n.privacyPolicySubtitle,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textMuted(context),
+                      ),
+                      onTap: () {
+                        launchUrl(
+                          Uri.parse(
+                            'https://tsotnek.github.io/tankvenn/privacy-policy.html',
+                          ),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
