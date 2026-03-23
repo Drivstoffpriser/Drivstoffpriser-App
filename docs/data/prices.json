@@ -1,116 +1,151 @@
 {
-  "exportedAt": "2026-03-22T10:47:50.666159+00:00",
-  "count": 16,
+  "exportedAt": "2026-03-23T07:16:06.005996+00:00",
+  "count": 21,
   "prices": [
     {
+      "fuelType": "diesel",
       "price": 26.45,
       "stationId": "osm_177201618",
-      "fuelType": "diesel",
-      "updatedAt": "2026-03-21T22:11:39.938927",
-      "reportCount": 3
+      "updatedAt": "2026-03-22T13:03:58.775687",
+      "reportCount": 4
     },
     {
+      "fuelType": "petrol95",
       "price": 24.07,
       "stationId": "osm_177201618",
-      "fuelType": "petrol95",
-      "updatedAt": "2026-03-21T22:11:39.076511",
-      "reportCount": 3
+      "updatedAt": "2026-03-22T13:03:57.815112",
+      "reportCount": 4
     },
     {
+      "fuelType": "diesel",
       "price": 26.44,
       "stationId": "osm_40655415",
-      "fuelType": "diesel",
       "updatedAt": "2026-03-21T19:12:22.819121",
       "reportCount": 5
     },
     {
+      "fuelType": "petrol95",
       "price": 24.06,
       "stationId": "osm_40655415",
-      "fuelType": "petrol95",
       "updatedAt": "2026-03-21T19:12:22.220612",
       "reportCount": 6
     },
     {
-      "price": 26.45,
-      "stationId": "osm_6093787872",
       "fuelType": "diesel",
-      "updatedAt": "2026-03-21T22:12:00.325512",
-      "reportCount": 2
-    },
-    {
-      "price": 24.07,
-      "stationId": "osm_6093787872",
-      "fuelType": "petrol95",
-      "updatedAt": "2026-03-21T22:11:59.201934",
-      "reportCount": 2
-    },
-    {
-      "price": 26.57,
-      "stationId": "osm_6093787872",
-      "fuelType": "petrol98",
-      "updatedAt": "2026-03-21T22:11:59.775809",
+      "price": 26.04,
+      "stationId": "osm_6066333688",
+      "updatedAt": "2026-03-23T07:30:42.612029",
       "reportCount": 1
     },
     {
-      "price": 26.44,
-      "stationId": "osm_6093788692",
-      "fuelType": "diesel",
-      "updatedAt": "2026-03-21T22:10:22.738417",
-      "reportCount": 10
-    },
-    {
-      "price": 24.06,
-      "stationId": "osm_6093788692",
       "fuelType": "petrol95",
-      "updatedAt": "2026-03-21T22:10:21.865775",
-      "reportCount": 12
+      "price": 23.04,
+      "stationId": "osm_6066333688",
+      "updatedAt": "2026-03-23T07:30:42.042133",
+      "reportCount": 1
     },
     {
+      "fuelType": "diesel",
+      "price": 26.99,
+      "stationId": "osm_6066895913",
+      "updatedAt": "2026-03-22T22:21:03.860930",
+      "reportCount": 1
+    },
+    {
+      "fuelType": "diesel",
+      "price": 26.39,
+      "stationId": "osm_6082905353",
+      "updatedAt": "2026-03-23T07:04:45.235860",
+      "reportCount": 1
+    },
+    {
+      "fuelType": "petrol95",
+      "price": 25.39,
+      "stationId": "osm_6082905353",
+      "updatedAt": "2026-03-23T07:04:44.647420",
+      "reportCount": 1
+    },
+    {
+      "fuelType": "diesel",
+      "price": 26.45,
+      "stationId": "osm_6093787872",
+      "updatedAt": "2026-03-22T13:04:46.913007",
+      "reportCount": 3
+    },
+    {
+      "fuelType": "petrol95",
+      "price": 24.07,
+      "stationId": "osm_6093787872",
+      "updatedAt": "2026-03-22T13:04:45.604981",
+      "reportCount": 3
+    },
+    {
+      "fuelType": "petrol98",
+      "price": 26.57,
+      "stationId": "osm_6093787872",
+      "updatedAt": "2026-03-22T13:04:46.356747",
+      "reportCount": 2
+    },
+    {
+      "fuelType": "diesel",
+      "price": 26.13,
+      "stationId": "osm_6093788692",
+      "updatedAt": "2026-03-22T16:31:33.597535",
+      "reportCount": 11
+    },
+    {
+      "fuelType": "petrol95",
+      "price": 23.75,
+      "stationId": "osm_6093788692",
+      "updatedAt": "2026-03-22T16:31:32.816400",
+      "reportCount": 13
+    },
+    {
+      "fuelType": "petrol98",
       "price": 24.49,
       "stationId": "osm_6093788692",
-      "fuelType": "petrol98",
       "updatedAt": "2026-03-21T20:16:42.783473",
       "reportCount": 4
     },
     {
-      "price": 26.79,
-      "stationId": "osm_6117259980",
       "fuelType": "diesel",
-      "updatedAt": "2026-03-17T08:36:39.534041",
-      "reportCount": 5
-    },
-    {
-      "price": 25.29,
+      "price": 25.99,
       "stationId": "osm_6117259980",
-      "fuelType": "petrol95",
-      "updatedAt": "2026-03-17T08:36:38.729753",
-      "reportCount": 5
+      "updatedAt": "2026-03-22T16:25:02.304142",
+      "reportCount": 6
     },
     {
+      "fuelType": "petrol95",
+      "price": 23.54,
+      "stationId": "osm_6117259980",
+      "updatedAt": "2026-03-22T16:25:01.256965",
+      "reportCount": 6
+    },
+    {
+      "fuelType": "diesel",
       "price": 25.12,
       "stationId": "osm_6117259981",
-      "fuelType": "diesel",
       "updatedAt": "2026-03-07T11:22:50.297562",
       "reportCount": 1
     },
     {
+      "fuelType": "petrol95",
       "price": 23.72,
       "stationId": "osm_6117259981",
-      "fuelType": "petrol95",
       "updatedAt": "2026-03-07T11:22:49.804065",
       "reportCount": 1
     },
     {
+      "fuelType": "diesel",
       "price": 26.24,
       "stationId": "osm_8791397001",
-      "fuelType": "diesel",
       "updatedAt": "2026-03-21T19:11:55.786636",
       "reportCount": 5
     },
     {
+      "fuelType": "petrol95",
       "price": 23.86,
       "stationId": "osm_8791397001",
-      "fuelType": "petrol95",
       "updatedAt": "2026-03-21T19:11:55.141214",
       "reportCount": 5
     }
