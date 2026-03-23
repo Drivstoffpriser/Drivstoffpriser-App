@@ -265,5 +265,22 @@
   "edit": "Edit",
   "delete": "Delete",
   "deleteSubmissionTitle": "Delete Submission?",
-  "deleteSubmissionBody": "This will permanently delete this station submission. This action cannot be undone."
+  "deleteSubmissionBody": "This will permanently delete this station submission. This action cannot be undone.",
+
+  "adminSection": "ADMIN",
+  "adminPanel": "Station Approvals",
+  "adminPanelSubtitle": "Review and approve new station submissions",
+  "noPendingSubmissions": "No pending submissions",
+  "approve": "Approve",
+  "reject": "Reject",
+  "rejectStationTitle": "Reject Station?",
+  "rejectStationBody": "This will reject the submission. You can optionally provide feedback to the user.",
+  "adminFeedbackHint": "Feedback for the user (optional)",
+  "deleteReportTitle": "Delete Report?",
+  "deleteReportBody": "This will permanently remove this price report.",
+  "coordinates": "Coordinates",
+  "approveStationTitle": "Approve Station?",
+  "approveStationBody": "This will add the station to the map. You can optionally send feedback to the user.",
+  "deleteStationTitle": "Delete Station?",
+  "deleteStationBody": "This will permanently remove this station from the map."
 }

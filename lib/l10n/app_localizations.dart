@@ -1411,6 +1411,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This will permanently delete this station submission. This action cannot be undone.'**
   String get deleteSubmissionBody;
+
+  /// No description provided for @adminSection.
+  ///
+  /// In en, this message translates to:
+  /// **'ADMIN'**
+  String get adminSection;
+
+  /// No description provided for @adminPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Station Approvals'**
+  String get adminPanel;
+
+  /// No description provided for @adminPanelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and approve new station submissions'**
+  String get adminPanelSubtitle;
+
+  /// No description provided for @noPendingSubmissions.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending submissions'**
+  String get noPendingSubmissions;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @rejectStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Station?'**
+  String get rejectStationTitle;
+
+  /// No description provided for @rejectStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will reject the submission. You can optionally provide feedback to the user.'**
+  String get rejectStationBody;
+
+  /// No description provided for @adminFeedbackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback for the user (optional)'**
+  String get adminFeedbackHint;
+
+  /// No description provided for @deleteReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Report?'**
+  String get deleteReportTitle;
+
+  /// No description provided for @deleteReportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently remove this price report.'**
+  String get deleteReportBody;
+
+  /// No description provided for @coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates'**
+  String get coordinates;
+
+  /// No description provided for @approveStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve Station?'**
+  String get approveStationTitle;
+
+  /// No description provided for @approveStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will add the station to the map. You can optionally send feedback to the user.'**
+  String get approveStationBody;
+
+  /// No description provided for @deleteStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Station?'**
+  String get deleteStationTitle;
+
+  /// No description provided for @deleteStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently remove this station from the map.'**
+  String get deleteStationBody;
 }
 
 class _AppLocalizationsDelegate

@@ -8,4 +8,5 @@ class AppRoutes {
   static const String bugReport = '/bug-report';
   static const String addStation = '/add-station';
   static const String myStationSubmissions = '/my-station-submissions';
+  static const String adminSubmissions = '/admin-submissions';
 }

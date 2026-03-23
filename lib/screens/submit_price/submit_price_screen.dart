@@ -120,7 +120,11 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
   Future<void> _submit({bool autoSubmit = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_hasValidPhotoMetadata) {
+    final isAdmin = context.read<UserProvider>().isAdmin;
+
+    if (isAdmin) {
+      debugPrint('[SubmitPrice] Location check bypassed — admin user');
+    } else if (_hasValidPhotoMetadata) {
       debugPrint(
         '[SubmitPrice] Location check bypassed — photo metadata valid',
       );
