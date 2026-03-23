@@ -103,7 +103,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalContributions => 'Total Contributions';
 
   @override
-  String get priceReportsSubmitted => 'price reports submitted';
+  String get priceReportsSubmitted => 'price reports';
 
   @override
   String get trustScore => 'Trust Score';
@@ -600,4 +600,127 @@ class AppLocalizationsEn extends AppLocalizations {
   String distanceKm(String km) {
     return '$km km';
   }
+
+  @override
+  String get addStationHintTitle => 'Add a missing station';
+
+  @override
+  String get addStationHintBody =>
+      'Tap and hold on the map at the location where you want to add a new station.';
+
+  @override
+  String get addStation => 'Add Station';
+
+  @override
+  String get addStationTapMap => 'Tap the map to set the station location';
+
+  @override
+  String get addStationName => 'Station Name';
+
+  @override
+  String get addStationNameHint => 'e.g. Shell Storo';
+
+  @override
+  String get addStationNameRequired => 'Please enter a station name';
+
+  @override
+  String get addStationBrand => 'Brand';
+
+  @override
+  String get addStationSelectBrand => 'Please select a brand';
+
+  @override
+  String get addStationNoChain => 'Other / No chain';
+
+  @override
+  String get addStationCustomBrand => 'Brand Name';
+
+  @override
+  String get addStationCustomBrandHint => 'e.g. Local Gas';
+
+  @override
+  String get addStationBrandRequired => 'Please enter a brand name';
+
+  @override
+  String get addStationAddress => 'Address';
+
+  @override
+  String get addStationAddressHint => 'e.g. Storgata 1';
+
+  @override
+  String get addStationAddressRequired => 'Please enter an address';
+
+  @override
+  String get addStationCity => 'City';
+
+  @override
+  String get addStationCityHint => 'e.g. Oslo';
+
+  @override
+  String get addStationCityRequired => 'Please enter a city';
+
+  @override
+  String get addStationSubmitButton => 'Submit Station';
+
+  @override
+  String get addStationSubmitted => 'Station submitted for review!';
+
+  @override
+  String get addStationFailed => 'Failed to submit station. Please try again.';
+
+  @override
+  String get stationsSubmitted => 'stations submitted';
+
+  @override
+  String stationsSubmittedCount(int count) {
+    return '$count stations submitted';
+  }
+
+  @override
+  String get myStationSubmissions => 'My Station Submissions';
+
+  @override
+  String get noSubmissionsYet => 'No station submissions yet';
+
+  @override
+  String get submissionStatusPending => 'Pending';
+
+  @override
+  String get submissionStatusApproved => 'Approved';
+
+  @override
+  String get submissionStatusRejected => 'Rejected';
+
+  @override
+  String get adminFeedback => 'Admin Feedback';
+
+  @override
+  String adminFeedbackFor(String stationName) {
+    return 'Feedback for $stationName';
+  }
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String get editStation => 'Edit Station';
+
+  @override
+  String get addStationUpdateButton => 'Update Station';
+
+  @override
+  String get addStationUpdated => 'Station updated!';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get deleteSubmissionTitle => 'Delete Submission?';
+
+  @override
+  String get deleteSubmissionBody =>
+      'This will permanently delete this station submission. This action cannot be undone.';
 }

@@ -49,6 +49,34 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── New Station Submissions ────────────────────────────────────
+    // Only authenticated (non-anonymous) users can submit new stations.
+    // Users can read/edit/delete their own pending submissions.
+    // Users can mark feedback as read on any of their submissions.
+    // Admins manage status/feedback via console.
+    match /new_stations/{docId} {
+      allow create: if request.auth != null
+                    && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+                    && request.resource.data.keys().hasAll(['name', 'brand', 'address', 'city', 'latitude', 'longitude', 'submittedBy', 'status'])
+                    && request.resource.data.submittedBy == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read: if request.auth != null
+                  && resource.data.submittedBy == request.auth.uid;
+      allow update: if request.auth != null
+                    && resource.data.submittedBy == request.auth.uid
+                    && (
+                      // Allow marking feedback as read
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackRead'])
+                      // Allow editing own pending submissions (cannot change submittedBy or status)
+                      || (resource.data.status == 'pending'
+                          && request.resource.data.submittedBy == request.auth.uid
+                          && request.resource.data.status == 'pending')
+                    );
+      allow delete: if request.auth != null
+                    && resource.data.submittedBy == request.auth.uid
+                    && resource.data.status == 'pending';
+    }
+
     // ── Aggregates ─────────────────────────────────────────────────
     // Anyone can read aggregate docs (stations + prices in single docs).
     // Writes happen from client after upsert/submit — allow for authed users.

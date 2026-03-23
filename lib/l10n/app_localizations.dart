@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @priceReportsSubmitted.
   ///
   /// In en, this message translates to:
-  /// **'price reports submitted'**
+  /// **'price reports'**
   String get priceReportsSubmitted;
 
   /// No description provided for @trustScore.
@@ -1177,6 +1177,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{km} km'**
   String distanceKm(String km);
+
+  /// No description provided for @addStationHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a missing station'**
+  String get addStationHintTitle;
+
+  /// No description provided for @addStationHintBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap and hold on the map at the location where you want to add a new station.'**
+  String get addStationHintBody;
+
+  /// No description provided for @addStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Station'**
+  String get addStation;
+
+  /// No description provided for @addStationTapMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the map to set the station location'**
+  String get addStationTapMap;
+
+  /// No description provided for @addStationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Station Name'**
+  String get addStationName;
+
+  /// No description provided for @addStationNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Shell Storo'**
+  String get addStationNameHint;
+
+  /// No description provided for @addStationNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a station name'**
+  String get addStationNameRequired;
+
+  /// No description provided for @addStationBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get addStationBrand;
+
+  /// No description provided for @addStationSelectBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a brand'**
+  String get addStationSelectBrand;
+
+  /// No description provided for @addStationNoChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Other / No chain'**
+  String get addStationNoChain;
+
+  /// No description provided for @addStationCustomBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand Name'**
+  String get addStationCustomBrand;
+
+  /// No description provided for @addStationCustomBrandHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Local Gas'**
+  String get addStationCustomBrandHint;
+
+  /// No description provided for @addStationBrandRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a brand name'**
+  String get addStationBrandRequired;
+
+  /// No description provided for @addStationAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get addStationAddress;
+
+  /// No description provided for @addStationAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Storgata 1'**
+  String get addStationAddressHint;
+
+  /// No description provided for @addStationAddressRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an address'**
+  String get addStationAddressRequired;
+
+  /// No description provided for @addStationCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get addStationCity;
+
+  /// No description provided for @addStationCityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Oslo'**
+  String get addStationCityHint;
+
+  /// No description provided for @addStationCityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a city'**
+  String get addStationCityRequired;
+
+  /// No description provided for @addStationSubmitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Station'**
+  String get addStationSubmitButton;
+
+  /// No description provided for @addStationSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Station submitted for review!'**
+  String get addStationSubmitted;
+
+  /// No description provided for @addStationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit station. Please try again.'**
+  String get addStationFailed;
+
+  /// No description provided for @stationsSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'stations submitted'**
+  String get stationsSubmitted;
+
+  /// No description provided for @stationsSubmittedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stations submitted'**
+  String stationsSubmittedCount(int count);
+
+  /// No description provided for @myStationSubmissions.
+  ///
+  /// In en, this message translates to:
+  /// **'My Station Submissions'**
+  String get myStationSubmissions;
+
+  /// No description provided for @noSubmissionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No station submissions yet'**
+  String get noSubmissionsYet;
+
+  /// No description provided for @submissionStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get submissionStatusPending;
+
+  /// No description provided for @submissionStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get submissionStatusApproved;
+
+  /// No description provided for @submissionStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get submissionStatusRejected;
+
+  /// No description provided for @adminFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Feedback'**
+  String get adminFeedback;
+
+  /// No description provided for @adminFeedbackFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback for {stationName}'**
+  String adminFeedbackFor(String stationName);
+
+  /// No description provided for @dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
+  /// No description provided for @editStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Station'**
+  String get editStation;
+
+  /// No description provided for @addStationUpdateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Station'**
+  String get addStationUpdateButton;
+
+  /// No description provided for @addStationUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Station updated!'**
+  String get addStationUpdated;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteSubmissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Submission?'**
+  String get deleteSubmissionTitle;
+
+  /// No description provided for @deleteSubmissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete this station submission. This action cannot be undone.'**
+  String get deleteSubmissionBody;
 }
 
 class _AppLocalizationsDelegate
