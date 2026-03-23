@@ -1,0 +1,91 @@
+name: Discord Issue Notifications
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  notify-bug:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'bug')
+    steps:
+      - name: Send Discord notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL_BUGS }}
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          URL="${{ github.event.issue.html_url }}"
+          USER="${{ github.event.issue.user.login }}"
+          BODY=$(echo "${{ github.event.issue.body }}" | head -c 500)
+
+          payload=$(jq -n \
+            --arg title "$TITLE" \
+            --arg url "$URL" \
+            --arg user "$USER" \
+            --arg body "$BODY" \
+            '{
+              embeds: [{
+                title: ("\ud83d\udc1b Bug: " + $title),
+                url: $url,
+                description: $body,
+                color: 15548997,
+                footer: { text: ("Reported by " + $user) }
+              }]
+            }')
+
+          curl -s -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
+
+  notify-task:
+    runs-on: ubuntu-latest
+    if: >-
+      contains(github.event.issue.labels.*.name, 'feature') ||
+      contains(github.event.issue.labels.*.name, 'documentation') ||
+      contains(github.event.issue.labels.*.name, 'good first issue')
+    steps:
+      - name: Determine label for title
+        id: label
+        run: |
+          LABELS='${{ toJson(github.event.issue.labels.*.name) }}'
+          if echo "$LABELS" | jq -e 'index("feature")' > /dev/null 2>&1; then
+            echo "emoji=✨" >> "$GITHUB_OUTPUT"
+            echo "type=Feature" >> "$GITHUB_OUTPUT"
+            echo "color=5763719" >> "$GITHUB_OUTPUT"
+          elif echo "$LABELS" | jq -e 'index("documentation")' > /dev/null 2>&1; then
+            echo "emoji=📄" >> "$GITHUB_OUTPUT"
+            echo "type=Documentation" >> "$GITHUB_OUTPUT"
+            echo "color=3447003" >> "$GITHUB_OUTPUT"
+          else
+            echo "emoji=👋" >> "$GITHUB_OUTPUT"
+            echo "type=Good First Issue" >> "$GITHUB_OUTPUT"
+            echo "color=2067276" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send Discord notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL_TASK }}
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          URL="${{ github.event.issue.html_url }}"
+          USER="${{ github.event.issue.user.login }}"
+          BODY=$(echo "${{ github.event.issue.body }}" | head -c 500)
+          EMOJI="${{ steps.label.outputs.emoji }}"
+          TYPE="${{ steps.label.outputs.type }}"
+          COLOR="${{ steps.label.outputs.color }}"
+
+          payload=$(jq -n \
+            --arg title "$EMOJI $TYPE: $TITLE" \
+            --arg url "$URL" \
+            --arg user "$USER" \
+            --arg body "$BODY" \
+            --argjson color "$COLOR" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                description: $body,
+                color: $color,
+                footer: { text: ("Reported by " + $user) }
+              }]
+            }')
+
+          curl -s -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
