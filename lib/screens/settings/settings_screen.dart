@@ -271,6 +271,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           AppRoutes.adminSubmissions,
                         ),
                       ),
+                      const _CardDivider(),
+                      _SettingsTile(
+                        icon: Icons.edit_note_outlined,
+                        iconColor: Colors.orange,
+                        title: context.l10n.modifyRequests,
+                        subtitle: context.l10n.modifyRequestsSubtitle,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.adminModifyRequests,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),

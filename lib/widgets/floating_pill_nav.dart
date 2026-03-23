@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../config/app_colors.dart';
 import '../config/app_text_styles.dart';
 import '../l10n/l10n_helper.dart';
+import '../models/station_modify_request.dart';
 import '../models/station_submission.dart';
 import '../providers/user_provider.dart';
 import '../screens/map/map_screen.dart';
@@ -42,14 +43,24 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
   Future<void> _checkForFeedback() async {
     final userProvider = context.read<UserProvider>();
     if (!userProvider.isAuthenticated) return;
+    final uid = userProvider.user.id;
 
-    final unread =
-        await FirestoreService.getUnreadFeedback(userProvider.user.id);
-    if (!mounted || unread.isEmpty) return;
+    // Check new station submission feedback
+    final unread = await FirestoreService.getUnreadFeedback(uid);
+    if (mounted) {
+      for (final submission in unread) {
+        if (!mounted) return;
+        await _showFeedbackDialog(submission);
+      }
+    }
 
-    for (final submission in unread) {
-      if (!mounted) return;
-      await _showFeedbackDialog(submission);
+    // Check modify request feedback
+    final unreadModify = await FirestoreService.getUnreadModifyFeedback(uid);
+    if (mounted) {
+      for (final req in unreadModify) {
+        if (!mounted) return;
+        await _showModifyFeedbackDialog(req);
+      }
     }
   }
 
@@ -103,6 +114,58 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
     );
 
     await FirestoreService.markFeedbackRead(submission.id);
+  }
+
+  Future<void> _showModifyFeedbackDialog(StationModifyRequest request) async {
+    final statusLabel = switch (request.status) {
+      ModifyRequestStatus.approved => context.l10n.submissionStatusApproved,
+      ModifyRequestStatus.rejected => context.l10n.submissionStatusRejected,
+      ModifyRequestStatus.pending => context.l10n.submissionStatusPending,
+    };
+    final statusColor = switch (request.status) {
+      ModifyRequestStatus.approved => Colors.green,
+      ModifyRequestStatus.rejected => Colors.red,
+      ModifyRequestStatus.pending => Colors.orange,
+    };
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          context.l10n.adminFeedbackFor(request.originalName),
+          style: AppTextStyles.title(context),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                statusLabel,
+                style: AppTextStyles.labelBold(context).copyWith(
+                  color: statusColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(request.feedback!, style: AppTextStyles.body(context)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.dismiss),
+          ),
+        ],
+      ),
+    );
+
+    await FirestoreService.markModifyFeedbackRead(request.id);
   }
 
   @override

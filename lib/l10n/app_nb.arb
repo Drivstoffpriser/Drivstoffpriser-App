@@ -260,5 +260,16 @@
   "approveStationTitle": "Godkjenn stasjon?",
   "approveStationBody": "Dette vil legge stasjonen til på kartet. Du kan eventuelt sende tilbakemelding til brukeren.",
   "deleteStationTitle": "Slette stasjon?",
-  "deleteStationBody": "Dette vil permanent fjerne denne stasjonen fra kartet."
+  "deleteStationBody": "Dette vil permanent fjerne denne stasjonen fra kartet.",
+
+  "editStationInfo": "Foreslå endring",
+  "submitChanges": "Send inn endringer",
+  "noChangesToSubmit": "Ingen endringer å sende inn",
+  "modifyRequestSubmitted": "Endringsforslag sendt inn for gjennomgang!",
+  "modifyRequestFailed": "Kunne ikke sende inn endringsforslag. Prøv igjen.",
+  "modifyRequests": "Endringsforslag for stasjoner",
+  "modifyRequestsSubtitle": "Gjennomgå foreslåtte stasjonsendringer",
+  "noPendingModifyRequests": "Ingen ventende endringsforslag",
+  "approveModifyBody": "Dette vil bruke de foreslåtte endringene på stasjonen.",
+  "stationId": "ID: {id}"
 }

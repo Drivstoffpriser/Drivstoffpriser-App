@@ -1507,6 +1507,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This will permanently remove this station from the map.'**
   String get deleteStationBody;
+
+  /// No description provided for @editStationInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest Edit'**
+  String get editStationInfo;
+
+  /// No description provided for @submitChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Changes'**
+  String get submitChanges;
+
+  /// No description provided for @noChangesToSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'No changes to submit'**
+  String get noChangesToSubmit;
+
+  /// No description provided for @modifyRequestSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Change request submitted for review!'**
+  String get modifyRequestSubmitted;
+
+  /// No description provided for @modifyRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit change request. Please try again.'**
+  String get modifyRequestFailed;
+
+  /// No description provided for @modifyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Station Edit Requests'**
+  String get modifyRequests;
+
+  /// No description provided for @modifyRequestsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review proposed station changes'**
+  String get modifyRequestsSubtitle;
+
+  /// No description provided for @noPendingModifyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending edit requests'**
+  String get noPendingModifyRequests;
+
+  /// No description provided for @approveModifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will apply the proposed changes to the station.'**
+  String get approveModifyBody;
+
+  /// No description provided for @stationId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID: {id}'**
+  String stationId(String id);
 }
 
 class _AppLocalizationsDelegate

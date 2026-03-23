@@ -10,6 +10,7 @@ import 'models/station_submission.dart';
 import 'providers/user_provider.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/add_station/add_station_screen.dart';
+import 'screens/admin/admin_modify_requests_screen.dart';
 import 'screens/admin/admin_submissions_screen.dart';
 import 'screens/settings/bug_report_screen.dart';
 import 'screens/settings/my_station_submissions_screen.dart';
@@ -71,6 +72,10 @@ class App extends StatelessWidget {
           case AppRoutes.adminSubmissions:
             return MaterialPageRoute(
               builder: (_) => const AdminSubmissionsScreen(),
+            );
+          case AppRoutes.adminModifyRequests:
+            return MaterialPageRoute(
+              builder: (_) => const AdminModifyRequestsScreen(),
             );
           default:
             return null;

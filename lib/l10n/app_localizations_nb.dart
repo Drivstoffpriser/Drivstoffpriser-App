@@ -779,4 +779,39 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get deleteStationBody =>
       'Dette vil permanent fjerne denne stasjonen fra kartet.';
+
+  @override
+  String get editStationInfo => 'Foreslå endring';
+
+  @override
+  String get submitChanges => 'Send inn endringer';
+
+  @override
+  String get noChangesToSubmit => 'Ingen endringer å sende inn';
+
+  @override
+  String get modifyRequestSubmitted =>
+      'Endringsforslag sendt inn for gjennomgang!';
+
+  @override
+  String get modifyRequestFailed =>
+      'Kunne ikke sende inn endringsforslag. Prøv igjen.';
+
+  @override
+  String get modifyRequests => 'Endringsforslag for stasjoner';
+
+  @override
+  String get modifyRequestsSubtitle => 'Gjennomgå foreslåtte stasjonsendringer';
+
+  @override
+  String get noPendingModifyRequests => 'Ingen ventende endringsforslag';
+
+  @override
+  String get approveModifyBody =>
+      'Dette vil bruke de foreslåtte endringene på stasjonen.';
+
+  @override
+  String stationId(String id) {
+    return 'ID: $id';
+  }
 }
