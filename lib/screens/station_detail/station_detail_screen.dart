@@ -16,6 +16,7 @@ import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
+import 'edit_station_screen.dart';
 import 'widgets/price_card.dart';
 import 'widgets/price_history_chart.dart';
 
@@ -171,6 +172,18 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () => _deleteStation(stationProvider),
                 ),
+              // Edit station button
+              IconButton(
+                icon: Icon(Icons.edit_outlined, color: activeColor),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditStationScreen(station: widget.station),
+                    ),
+                  );
+                },
+              ),
               // Navigate button
               Padding(
                 padding: const EdgeInsets.only(right: 8),

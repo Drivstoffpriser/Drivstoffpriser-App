@@ -96,6 +96,26 @@ service cloud.firestore {
                     && resource.data.status == 'pending';
     }
 
+    // ── Station Modify Requests ─────────────────────────────────────
+    // Authenticated users can submit modify requests for existing stations.
+    // Users can read their own requests and mark feedback as read.
+    // Admins can read all and approve/reject.
+    match /station_modify_requests/{docId} {
+      allow create: if request.auth != null
+                    && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+                    && request.resource.data.submittedBy == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read: if request.auth != null
+                  && (resource.data.submittedBy == request.auth.uid || isAdmin());
+      allow update: if request.auth != null
+                    && (
+                      isAdmin()
+                      || (resource.data.submittedBy == request.auth.uid
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackRead']))
+                    );
+      allow delete: if false;
+    }
+
     // ── Aggregates ─────────────────────────────────────────────────
     // Anyone can read aggregate docs (stations + prices in single docs).
     // Writes happen from client after upsert/submit — allow for authed users.

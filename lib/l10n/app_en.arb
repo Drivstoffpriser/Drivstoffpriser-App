@@ -282,5 +282,17 @@
   "approveStationTitle": "Approve Station?",
   "approveStationBody": "This will add the station to the map. You can optionally send feedback to the user.",
   "deleteStationTitle": "Delete Station?",
-  "deleteStationBody": "This will permanently remove this station from the map."
+  "deleteStationBody": "This will permanently remove this station from the map.",
+
+  "editStationInfo": "Suggest Edit",
+  "submitChanges": "Submit Changes",
+  "noChangesToSubmit": "No changes to submit",
+  "modifyRequestSubmitted": "Change request submitted for review!",
+  "modifyRequestFailed": "Failed to submit change request. Please try again.",
+  "modifyRequests": "Station Edit Requests",
+  "modifyRequestsSubtitle": "Review proposed station changes",
+  "noPendingModifyRequests": "No pending edit requests",
+  "approveModifyBody": "This will apply the proposed changes to the station.",
+  "stationId": "ID: {id}",
+  "@stationId": { "placeholders": { "id": { "type": "String" } } }
 }

@@ -775,4 +775,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteStationBody =>
       'This will permanently remove this station from the map.';
+
+  @override
+  String get editStationInfo => 'Suggest Edit';
+
+  @override
+  String get submitChanges => 'Submit Changes';
+
+  @override
+  String get noChangesToSubmit => 'No changes to submit';
+
+  @override
+  String get modifyRequestSubmitted => 'Change request submitted for review!';
+
+  @override
+  String get modifyRequestFailed =>
+      'Failed to submit change request. Please try again.';
+
+  @override
+  String get modifyRequests => 'Station Edit Requests';
+
+  @override
+  String get modifyRequestsSubtitle => 'Review proposed station changes';
+
+  @override
+  String get noPendingModifyRequests => 'No pending edit requests';
+
+  @override
+  String get approveModifyBody =>
+      'This will apply the proposed changes to the station.';
+
+  @override
+  String stationId(String id) {
+    return 'ID: $id';
+  }
 }

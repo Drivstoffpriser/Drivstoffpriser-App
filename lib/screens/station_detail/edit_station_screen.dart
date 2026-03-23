@@ -8,25 +8,23 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
-import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../l10n/l10n_helper.dart';
-import '../../models/station_submission.dart';
-import '../../providers/location_provider.dart';
+import '../../models/station.dart';
+import '../../models/station_modify_request.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
 
-class AddStationScreen extends StatefulWidget {
-  final LatLng? initialLocation;
-  final StationSubmission? editSubmission;
+class EditStationScreen extends StatefulWidget {
+  final Station station;
 
-  const AddStationScreen({super.key, this.initialLocation, this.editSubmission});
+  const EditStationScreen({super.key, required this.station});
 
   @override
-  State<AddStationScreen> createState() => _AddStationScreenState();
+  State<EditStationScreen> createState() => _EditStationScreenState();
 }
 
-class _AddStationScreenState extends State<AddStationScreen> {
+class _EditStationScreenState extends State<EditStationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -51,40 +49,20 @@ class _AddStationScreenState extends State<AddStationScreen> {
     'Tanken',
   ];
 
-  bool get _isEditing => widget.editSubmission != null;
-
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
-
-    final edit = widget.editSubmission;
-    if (edit != null) {
-      // Pre-fill from existing submission
-      _selectedLocation = LatLng(edit.latitude, edit.longitude);
-      _nameController.text = edit.name;
-      _addressController.text = edit.address;
-      _cityController.text = edit.city;
-      if (_knownBrands.contains(edit.brand)) {
-        _selectedBrand = edit.brand;
-      } else {
-        _isCustomBrand = true;
-        _customBrandController.text = edit.brand;
-      }
+    final s = widget.station;
+    _selectedLocation = LatLng(s.latitude, s.longitude);
+    _nameController.text = s.name;
+    _addressController.text = s.address;
+    _cityController.text = s.city;
+    if (_knownBrands.contains(s.brand)) {
+      _selectedBrand = s.brand;
     } else {
-      final loc = widget.initialLocation;
-      if (loc != null) {
-        _selectedLocation = loc;
-      } else {
-        final pos = context.read<LocationProvider>().position;
-        _selectedLocation = pos != null
-            ? LatLng(pos.latitude, pos.longitude)
-            : AppConstants.defaultMapCenter;
-      }
-      // Auto-fill address for the initial location (not when editing)
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _reverseGeocode(_selectedLocation);
-      });
+      _isCustomBrand = true;
+      _customBrandController.text = s.brand;
     }
   }
 
@@ -127,7 +105,7 @@ class _AddStationScreenState extends State<AddStationScreen> {
         }
       }
     } catch (_) {
-      // Silently fail — user can still type manually
+      // Silently fail
     } finally {
       if (mounted) setState(() => _isGeocodingLoading = false);
     }
@@ -152,44 +130,46 @@ class _AddStationScreenState extends State<AddStationScreen> {
     }
 
     final userProvider = context.read<UserProvider>();
+    final s = widget.station;
+
+    final request = StationModifyRequest(
+      id: '',
+      stationId: s.id,
+      originalName: s.name,
+      originalBrand: s.brand,
+      originalAddress: s.address,
+      originalCity: s.city,
+      originalLatitude: s.latitude,
+      originalLongitude: s.longitude,
+      proposedName: _nameController.text.trim(),
+      proposedBrand: brand,
+      proposedAddress: _addressController.text.trim(),
+      proposedCity: _cityController.text.trim(),
+      proposedLatitude: _selectedLocation.latitude,
+      proposedLongitude: _selectedLocation.longitude,
+      submittedBy: userProvider.user.id,
+    );
+
+    if (!request.hasChanges) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.noChangesToSubmit)),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
     try {
-      if (_isEditing) {
-        await FirestoreService.updateStationSubmission(
-          docId: widget.editSubmission!.id,
-          name: _nameController.text.trim(),
-          brand: brand,
-          address: _addressController.text.trim(),
-          city: _cityController.text.trim(),
-          latitude: _selectedLocation.latitude,
-          longitude: _selectedLocation.longitude,
-          submittedBy: userProvider.user.id,
-        );
-      } else {
-        await FirestoreService.submitNewStation(
-          name: _nameController.text.trim(),
-          brand: brand,
-          address: _addressController.text.trim(),
-          city: _cityController.text.trim(),
-          latitude: _selectedLocation.latitude,
-          longitude: _selectedLocation.longitude,
-          submittedBy: userProvider.user.id,
-        );
-      }
-
+      await FirestoreService.submitModifyRequest(request);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(
-          _isEditing ? context.l10n.addStationUpdated : context.l10n.addStationSubmitted,
-        )),
+        SnackBar(content: Text(context.l10n.modifyRequestSubmitted)),
       );
-      Navigator.pop(context, true);
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.addStationFailed)),
+        SnackBar(content: Text(context.l10n.modifyRequestFailed)),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -206,7 +186,7 @@ class _AddStationScreenState extends State<AddStationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isEditing ? context.l10n.editStation : context.l10n.addStation,
+          context.l10n.editStationInfo,
           style: AppTextStyles.title(context),
         ),
         backgroundColor: AppColors.surface(context),
@@ -217,7 +197,6 @@ class _AddStationScreenState extends State<AddStationScreen> {
         child: ListView(
           padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
           children: [
-            // Map pin picker
             Text(
               context.l10n.addStationTapMap,
               style: AppTextStyles.label(context),
@@ -259,20 +238,17 @@ class _AddStationScreenState extends State<AddStationScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Station name
             TextFormField(
               controller: _nameController,
               style: AppTextStyles.body(context),
               decoration: InputDecoration(
                 labelText: context.l10n.addStationName,
-                hintText: context.l10n.addStationNameHint,
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? context.l10n.addStationNameRequired : null,
             ),
             const SizedBox(height: 16),
 
-            // Brand selector
             Text(
               context.l10n.addStationBrand,
               style: AppTextStyles.labelBold(context),
@@ -311,7 +287,6 @@ class _AddStationScreenState extends State<AddStationScreen> {
                 style: AppTextStyles.body(context),
                 decoration: InputDecoration(
                   labelText: context.l10n.addStationCustomBrand,
-                  hintText: context.l10n.addStationCustomBrandHint,
                 ),
                 validator: (v) => _isCustomBrand && (v == null || v.trim().isEmpty)
                     ? context.l10n.addStationBrandRequired
@@ -320,13 +295,11 @@ class _AddStationScreenState extends State<AddStationScreen> {
             ],
             const SizedBox(height: 16),
 
-            // Address (auto-filled, still editable)
             TextFormField(
               controller: _addressController,
               style: AppTextStyles.body(context),
               decoration: InputDecoration(
                 labelText: context.l10n.addStationAddress,
-                hintText: context.l10n.addStationAddressHint,
                 suffixIcon: _isGeocodingLoading
                     ? const Padding(
                         padding: EdgeInsets.all(12),
@@ -343,20 +316,17 @@ class _AddStationScreenState extends State<AddStationScreen> {
             ),
             const SizedBox(height: 16),
 
-            // City (auto-filled, still editable)
             TextFormField(
               controller: _cityController,
               style: AppTextStyles.body(context),
               decoration: InputDecoration(
                 labelText: context.l10n.addStationCity,
-                hintText: context.l10n.addStationCityHint,
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? context.l10n.addStationCityRequired : null,
             ),
             const SizedBox(height: 24),
 
-            // Submit / Sign in button
             if (!context.watch<UserProvider>().isAuthenticated) ...[
               Text(
                 context.l10n.needAccountToReport,
@@ -382,7 +352,7 @@ class _AddStationScreenState extends State<AddStationScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(_isEditing ? context.l10n.addStationUpdateButton : context.l10n.addStationSubmitButton),
+                      : Text(context.l10n.submitChanges),
                 ),
               ),
           ],
