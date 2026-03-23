@@ -11,6 +11,7 @@ import '../../config/routes.dart';
 import '../../l10n/l10n_helper.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/firestore_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,6 +22,21 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isRefreshing = false;
+  int _stationSubmissionCount = 0;
+  bool _hasLoadedCount = false;
+
+  Future<void> _loadSubmissionCount() async {
+    final userProvider = context.read<UserProvider>();
+    if (!userProvider.isAuthenticated) return;
+    final submissions =
+        await FirestoreService.getUserStationSubmissions(userProvider.user.id);
+    if (mounted) {
+      setState(() {
+        _stationSubmissionCount = submissions.length;
+        _hasLoadedCount = true;
+      });
+    }
+  }
 
   Future<void> _refreshStations() async {
     setState(() => _isRefreshing = true);
@@ -43,6 +59,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isAuth = userProvider.isAuthenticated;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
+
+    if (isAuth && !_hasLoadedCount) {
+      _loadSubmissionCount();
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
@@ -103,15 +123,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          '${user.reportCount}',
-                          style: AppTextStyles.priceLarge(context).copyWith(
-                            fontSize: 28,
-                          ),
-                        ),
-                        Text(
-                          context.l10n.priceReportsSubmitted,
-                          style: AppTextStyles.meta(context),
+                        Row(
+                          children: [
+                            // Price reports
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: 80),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceLow(context),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${user.reportCount}',
+                                        style: AppTextStyles.priceLarge(context).copyWith(
+                                          fontSize: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        context.l10n.priceReportsSubmitted,
+                                        style: AppTextStyles.meta(context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            // Station submissions — clickable
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: 80),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(10),
+                                  onTap: () async {
+                                    await Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.myStationSubmissions,
+                                    );
+                                    _hasLoadedCount = false;
+                                    _loadSubmissionCount();
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceLow(context),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              '$_stationSubmissionCount',
+                                              style: AppTextStyles.priceLarge(context).copyWith(
+                                                fontSize: 24,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            Icon(
+                                              Icons.chevron_right,
+                                              size: 18,
+                                              color: AppColors.textMuted(context),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          context.l10n.stationsSubmitted,
+                                          style: AppTextStyles.meta(context),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         // Trust score bar

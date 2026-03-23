@@ -6,4 +6,6 @@ class AppRoutes {
   static const String submitPrice = '/submit-price';
   static const String auth = '/auth';
   static const String bugReport = '/bug-report';
+  static const String addStation = '/add-station';
+  static const String myStationSubmissions = '/my-station-submissions';
 }

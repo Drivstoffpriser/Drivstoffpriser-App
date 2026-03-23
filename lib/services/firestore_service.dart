@@ -6,6 +6,7 @@ import '../models/fuel_type.dart';
 import '../models/price_history_point.dart';
 import '../models/price_report.dart';
 import '../models/station.dart';
+import '../models/station_submission.dart';
 import '../models/user_profile.dart';
 import 'mock_data_service.dart';
 
@@ -359,6 +360,97 @@ class FirestoreService {
   /// Submit a bug report to the bug_reports collection.
   static Future<void> submitBugReport(BugReport report) async {
     await _db.collection('bug_reports').add(report.toMap());
+  }
+
+  // ── New Station Submissions ─────────────────────────────────────────
+
+  /// Submit a new station for admin approval.
+  /// Writes to the `new_stations` collection (not the main `stations`).
+  static Future<void> submitNewStation({
+    required String name,
+    required String brand,
+    required String address,
+    required String city,
+    required double latitude,
+    required double longitude,
+    required String submittedBy,
+  }) async {
+    await _db.collection('new_stations').add({
+      'name': name,
+      'brand': brand,
+      'address': address,
+      'city': city,
+      'latitude': latitude,
+      'longitude': longitude,
+      'submittedBy': submittedBy,
+      'submittedAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+  }
+
+  /// Fetch all station submissions for a given user.
+  static Future<List<StationSubmission>> getUserStationSubmissions(String uid) async {
+    final snapshot = await _db
+        .collection('new_stations')
+        .where('submittedBy', isEqualTo: uid)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+    }).toList();
+  }
+
+  /// Fetch submissions with unread feedback for a given user.
+  static Future<List<StationSubmission>> getUnreadFeedback(String uid) async {
+    final snapshot = await _db
+        .collection('new_stations')
+        .where('submittedBy', isEqualTo: uid)
+        .get();
+
+    return snapshot.docs
+        .where((doc) {
+          final data = doc.data();
+          final feedback = data['feedback'] as String?;
+          final feedbackRead = data['feedbackRead'] as bool? ?? false;
+          return feedback != null && feedback.isNotEmpty && !feedbackRead;
+        })
+        .map((doc) => StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data())))
+        .toList();
+  }
+
+  /// Update an existing pending station submission.
+  static Future<void> updateStationSubmission({
+    required String docId,
+    required String name,
+    required String brand,
+    required String address,
+    required String city,
+    required double latitude,
+    required double longitude,
+    required String submittedBy,
+  }) async {
+    await _db.collection('new_stations').doc(docId).update({
+      'name': name,
+      'brand': brand,
+      'address': address,
+      'city': city,
+      'latitude': latitude,
+      'longitude': longitude,
+      'submittedBy': submittedBy,
+      'status': 'pending',
+    });
+  }
+
+  /// Delete a pending station submission.
+  static Future<void> deleteStationSubmission(String docId) async {
+    await _db.collection('new_stations').doc(docId).delete();
+  }
+
+  /// Mark feedback as read on a station submission.
+  static Future<void> markFeedbackRead(String docId) async {
+    await _db.collection('new_stations').doc(docId).update({
+      'feedbackRead': true,
+    });
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

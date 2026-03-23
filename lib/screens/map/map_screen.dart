@@ -175,6 +175,13 @@ class _MapScreenState extends State<MapScreen> {
                 onTap: (_, _) {
                   if (_isSearching) _searchFocus.unfocus();
                 },
+                onLongPress: (_, point) {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.addStation,
+                    arguments: point,
+                  );
+                },
               ),
               children: [
                 TileLayer(
@@ -356,6 +363,30 @@ class _MapScreenState extends State<MapScreen> {
             left: 0,
             right: 0,
             child: FuelFilterBar(),
+          ),
+
+          // Add Station button — bottom right, above locate button
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 148,
+            right: 16,
+            child: _MapActionButton(
+              icon: Icons.add_location_alt_outlined,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(context.l10n.addStationHintTitle),
+                    content: Text(context.l10n.addStationHintBody),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(context.l10n.gotIt),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
 
           // Locate button — bottom right, above the nav bar
@@ -577,6 +608,63 @@ class _LocateButtonState extends State<_LocateButton> {
                     size: 20,
                     color: AppColors.textPrimary(context),
                   ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapActionButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _MapActionButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  State<_MapActionButton> createState() => _MapActionButtonState();
+}
+
+class _MapActionButtonState extends State<_MapActionButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onPressed();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated(context),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border(context), width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              widget.icon,
+              size: 20,
+              color: AppColors.textPrimary(context),
+            ),
           ),
         ),
       ),

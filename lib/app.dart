@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import 'config/routes.dart';
 import 'config/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'models/station.dart';
+import 'models/station_submission.dart';
 import 'providers/user_provider.dart';
 import 'screens/auth/auth_screen.dart';
+import 'screens/add_station/add_station_screen.dart';
 import 'screens/settings/bug_report_screen.dart';
+import 'screens/settings/my_station_submissions_screen.dart';
 import 'screens/station_detail/station_detail_screen.dart';
 import 'screens/submit_price/submit_price_screen.dart';
 import 'widgets/connectivity_gate.dart';
@@ -49,6 +53,20 @@ class App extends StatelessWidget {
             );
           case AppRoutes.bugReport:
             return MaterialPageRoute(builder: (_) => const BugReportScreen());
+          case AppRoutes.addStation:
+            final args = settings.arguments;
+            if (args is StationSubmission) {
+              return MaterialPageRoute(
+                builder: (_) => AddStationScreen(editSubmission: args),
+              );
+            }
+            return MaterialPageRoute(
+              builder: (_) => AddStationScreen(initialLocation: args as LatLng?),
+            );
+          case AppRoutes.myStationSubmissions:
+            return MaterialPageRoute(
+              builder: (_) => const MyStationSubmissionsScreen(),
+            );
           default:
             return null;
         }
