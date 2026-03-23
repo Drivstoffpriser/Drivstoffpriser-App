@@ -252,6 +252,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 24),
                 ],
 
+                // ── Admin Panel ──
+                if (userProvider.isAdmin) ...[
+                  Text(
+                    context.l10n.adminSection,
+                    style: AppTextStyles.sectionHeader(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    children: [
+                      _SettingsTile(
+                        icon: Icons.admin_panel_settings_outlined,
+                        iconColor: Colors.orange,
+                        title: context.l10n.adminPanel,
+                        subtitle: context.l10n.adminPanelSubtitle,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.adminSubmissions,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
                 // ── Map Preferences ──
                 Text(
                   context.l10n.mapPreferences,

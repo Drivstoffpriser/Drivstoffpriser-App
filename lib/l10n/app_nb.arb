@@ -243,5 +243,22 @@
   "edit": "Rediger",
   "delete": "Slett",
   "deleteSubmissionTitle": "Slette forslag?",
-  "deleteSubmissionBody": "Dette vil permanent slette dette stasjonsforslaget. Denne handlingen kan ikke angres."
+  "deleteSubmissionBody": "Dette vil permanent slette dette stasjonsforslaget. Denne handlingen kan ikke angres.",
+
+  "adminSection": "ADMIN",
+  "adminPanel": "Stasjonsgodkjenning",
+  "adminPanelSubtitle": "Gjennomgå og godkjenn nye stasjonsforslag",
+  "noPendingSubmissions": "Ingen ventende forslag",
+  "approve": "Godkjenn",
+  "reject": "Avvis",
+  "rejectStationTitle": "Avvise stasjon?",
+  "rejectStationBody": "Dette vil avvise forslaget. Du kan eventuelt gi tilbakemelding til brukeren.",
+  "adminFeedbackHint": "Tilbakemelding til brukeren (valgfritt)",
+  "deleteReportTitle": "Slette rapport?",
+  "deleteReportBody": "Dette vil permanent fjerne denne prisrapporten.",
+  "coordinates": "Koordinater",
+  "approveStationTitle": "Godkjenn stasjon?",
+  "approveStationBody": "Dette vil legge stasjonen til på kartet. Du kan eventuelt sende tilbakemelding til brukeren.",
+  "deleteStationTitle": "Slette stasjon?",
+  "deleteStationBody": "Dette vil permanent fjerne denne stasjonen fra kartet."
 }

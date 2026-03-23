@@ -727,4 +727,56 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get deleteSubmissionBody =>
       'Dette vil permanent slette dette stasjonsforslaget. Denne handlingen kan ikke angres.';
+
+  @override
+  String get adminSection => 'ADMIN';
+
+  @override
+  String get adminPanel => 'Stasjonsgodkjenning';
+
+  @override
+  String get adminPanelSubtitle => 'Gjennomgå og godkjenn nye stasjonsforslag';
+
+  @override
+  String get noPendingSubmissions => 'Ingen ventende forslag';
+
+  @override
+  String get approve => 'Godkjenn';
+
+  @override
+  String get reject => 'Avvis';
+
+  @override
+  String get rejectStationTitle => 'Avvise stasjon?';
+
+  @override
+  String get rejectStationBody =>
+      'Dette vil avvise forslaget. Du kan eventuelt gi tilbakemelding til brukeren.';
+
+  @override
+  String get adminFeedbackHint => 'Tilbakemelding til brukeren (valgfritt)';
+
+  @override
+  String get deleteReportTitle => 'Slette rapport?';
+
+  @override
+  String get deleteReportBody =>
+      'Dette vil permanent fjerne denne prisrapporten.';
+
+  @override
+  String get coordinates => 'Koordinater';
+
+  @override
+  String get approveStationTitle => 'Godkjenn stasjon?';
+
+  @override
+  String get approveStationBody =>
+      'Dette vil legge stasjonen til på kartet. Du kan eventuelt sende tilbakemelding til brukeren.';
+
+  @override
+  String get deleteStationTitle => 'Slette stasjon?';
+
+  @override
+  String get deleteStationBody =>
+      'Dette vil permanent fjerne denne stasjonen fra kartet.';
 }

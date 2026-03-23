@@ -723,4 +723,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteSubmissionBody =>
       'This will permanently delete this station submission. This action cannot be undone.';
+
+  @override
+  String get adminSection => 'ADMIN';
+
+  @override
+  String get adminPanel => 'Station Approvals';
+
+  @override
+  String get adminPanelSubtitle => 'Review and approve new station submissions';
+
+  @override
+  String get noPendingSubmissions => 'No pending submissions';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get rejectStationTitle => 'Reject Station?';
+
+  @override
+  String get rejectStationBody =>
+      'This will reject the submission. You can optionally provide feedback to the user.';
+
+  @override
+  String get adminFeedbackHint => 'Feedback for the user (optional)';
+
+  @override
+  String get deleteReportTitle => 'Delete Report?';
+
+  @override
+  String get deleteReportBody =>
+      'This will permanently remove this price report.';
+
+  @override
+  String get coordinates => 'Coordinates';
+
+  @override
+  String get approveStationTitle => 'Approve Station?';
+
+  @override
+  String get approveStationBody =>
+      'This will add the station to the map. You can optionally send feedback to the user.';
+
+  @override
+  String get deleteStationTitle => 'Delete Station?';
+
+  @override
+  String get deleteStationBody =>
+      'This will permanently remove this station from the map.';
 }
