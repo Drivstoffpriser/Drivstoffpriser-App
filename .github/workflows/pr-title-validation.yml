@@ -1,0 +1,20 @@
+name: PR Title Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  validate-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title prefix
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          if [[ ! "$TITLE" =~ ^KAN-[0-9]+\ -\  ]]; then
+            echo "::error::PR title must start with 'KAN-{number} - '. Got: '$TITLE'"
+            exit 1
+          fi
+          echo "PR title is valid: $TITLE"
