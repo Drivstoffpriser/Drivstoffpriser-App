@@ -76,16 +76,30 @@ class FirestoreService {
     return snapshot.docs.isNotEmpty;
   }
 
-  /// Upsert stations by rebuilding the stations aggregate doc.
-  /// Individual station docs are managed by the backend/admin — clients only
-  /// write to the aggregate which the Firestore rules permit.
+  /// Upsert stations by merging incoming stations with any existing
+  /// stations in the aggregate (e.g. manually added), then rebuilding.
+  /// Costs 1 read (aggregate doc) instead of N reads (individual docs).
   static Future<void> upsertStations(List<Station> stations) async {
     if (stations.isEmpty) return;
-    await _rebuildStationsAggregate(stations);
+
+    // Read existing aggregate (1 read) to preserve manually-added stations
+    final existing = await getStations();
+
+    // Index incoming stations by ID — Overpass data takes priority
+    final mergedById = {for (final s in existing) s.id: s};
+    for (final s in stations) {
+      mergedById[s.id] = s;
+    }
+
+    await _rebuildStationsAggregate(mergedById.values.toList());
   }
 
+  /// Rebuild the aggregate from the stations collection (N reads).
+  /// Use when Overpass is unavailable and the aggregate may be stale.
+  static Future<void> rebuildStationsAggregate() => _rebuildStationsAggregate();
+
   /// Rebuild the stations aggregate doc.
-  /// If [stations] is provided, uses them directly (0 reads).
+  /// If [stations] is provided, uses them directly.
   /// Otherwise falls back to reading all station docs from Firestore.
   static Future<void> _rebuildStationsAggregate([List<Station>? stations]) async {
     final allStations = stations ?? await _readAllStations();
@@ -354,7 +368,10 @@ class FirestoreService {
 
   /// Create or update a user profile in Firestore.
   static Future<void> setUserProfile(UserProfile profile) async {
-    await _db.collection('users').doc(profile.id).set(profile.toJson());
+    await _db.collection('users').doc(profile.id).set(
+      profile.toJson(),
+      SetOptions(merge: true),
+    );
   }
 
 
