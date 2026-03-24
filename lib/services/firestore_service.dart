@@ -6,6 +6,8 @@ import '../models/fuel_type.dart';
 import '../models/price_history_point.dart';
 import '../models/price_report.dart';
 import '../models/station.dart';
+import '../models/station_modify_request.dart';
+import '../models/station_submission.dart';
 import '../models/user_profile.dart';
 import 'mock_data_service.dart';
 
@@ -170,6 +172,16 @@ class FirestoreService {
     return snapshot.docs.map((doc) {
       return PriceReport.fromJson(_normalizeTimestamps(doc.data()));
     }).toList();
+  }
+
+  /// Delete a price report (admin only).
+  static Future<void> deleteReport(String stationId, String reportId) async {
+    await _db
+        .collection('stations')
+        .doc(stationId)
+        .collection('reports')
+        .doc(reportId)
+        .delete();
   }
 
   /// Submit a new price report and update the denormalized current price.
@@ -359,6 +371,310 @@ class FirestoreService {
   /// Submit a bug report to the bug_reports collection.
   static Future<void> submitBugReport(BugReport report) async {
     await _db.collection('bug_reports').add(report.toMap());
+  }
+
+  // ── New Station Submissions ─────────────────────────────────────────
+
+  /// Submit a new station for admin approval.
+  /// Writes to the `new_stations` collection (not the main `stations`).
+  static Future<void> submitNewStation({
+    required String name,
+    required String brand,
+    required String address,
+    required String city,
+    required double latitude,
+    required double longitude,
+    required String submittedBy,
+  }) async {
+    await _db.collection('new_stations').add({
+      'name': name,
+      'brand': brand,
+      'address': address,
+      'city': city,
+      'latitude': latitude,
+      'longitude': longitude,
+      'submittedBy': submittedBy,
+      'submittedAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+  }
+
+  /// Fetch all station submissions for a given user.
+  static Future<List<StationSubmission>> getUserStationSubmissions(String uid) async {
+    final snapshot = await _db
+        .collection('new_stations')
+        .where('submittedBy', isEqualTo: uid)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+    }).toList();
+  }
+
+  /// Fetch submissions with unread feedback for a given user.
+  static Future<List<StationSubmission>> getUnreadFeedback(String uid) async {
+    final snapshot = await _db
+        .collection('new_stations')
+        .where('submittedBy', isEqualTo: uid)
+        .get();
+
+    return snapshot.docs
+        .where((doc) {
+          final data = doc.data();
+          final feedback = data['feedback'] as String?;
+          final feedbackRead = data['feedbackRead'] as bool? ?? false;
+          return feedback != null && feedback.isNotEmpty && !feedbackRead;
+        })
+        .map((doc) => StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data())))
+        .toList();
+  }
+
+  /// Update an existing pending station submission.
+  static Future<void> updateStationSubmission({
+    required String docId,
+    required String name,
+    required String brand,
+    required String address,
+    required String city,
+    required double latitude,
+    required double longitude,
+    required String submittedBy,
+  }) async {
+    await _db.collection('new_stations').doc(docId).update({
+      'name': name,
+      'brand': brand,
+      'address': address,
+      'city': city,
+      'latitude': latitude,
+      'longitude': longitude,
+      'submittedBy': submittedBy,
+      'status': 'pending',
+    });
+  }
+
+  /// Delete a pending station submission.
+  static Future<void> deleteStationSubmission(String docId) async {
+    await _db.collection('new_stations').doc(docId).delete();
+  }
+
+  /// Mark feedback as read on a station submission.
+  static Future<void> markFeedbackRead(String docId) async {
+    await _db.collection('new_stations').doc(docId).update({
+      'feedbackRead': true,
+    });
+  }
+
+  // ── Admin Operations ────────────────────────────────────────────────
+
+  /// Fetch all pending station submissions (admin only).
+  static Future<List<StationSubmission>> getAllPendingSubmissions() async {
+    final snapshot = await _db
+        .collection('new_stations')
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+    }).toList();
+  }
+
+  /// Approve a station submission: copy to stations collection,
+  /// update status to approved, rebuild stations aggregate.
+  static Future<void> approveStation(StationSubmission submission, {String? feedback}) async {
+    final stationId = 'user_${submission.id}';
+    final station = Station(
+      id: stationId,
+      name: submission.name,
+      brand: submission.brand,
+      address: submission.address,
+      city: submission.city,
+      latitude: submission.latitude,
+      longitude: submission.longitude,
+    );
+
+    final batch = _db.batch();
+
+    // Add to stations collection
+    batch.set(
+      _db.collection('stations').doc(stationId),
+      station.toJson(),
+    );
+
+    // Update submission status + optional feedback
+    final updateData = <String, dynamic>{'status': 'approved'};
+    if (feedback != null && feedback.isNotEmpty) {
+      updateData['feedback'] = feedback;
+      updateData['feedbackRead'] = false;
+    }
+    batch.update(
+      _db.collection('new_stations').doc(submission.id),
+      updateData,
+    );
+
+    await batch.commit();
+
+    // Append the new station to the aggregate directly
+    // (avoids race condition with batch write propagation)
+    final aggDoc = await _db.collection('aggregates').doc('stations').get();
+    final existing = aggDoc.exists
+        ? ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList()
+        : <Map<String, dynamic>>[];
+    existing.add(station.toJson());
+    await _db.collection('aggregates').doc('stations').set({
+      'stations': existing,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Delete a station from the stations collection and remove from aggregate.
+  static Future<void> deleteStation(String stationId) async {
+    await _db.collection('stations').doc(stationId).delete();
+
+    // Remove from aggregate
+    final aggDoc = await _db.collection('aggregates').doc('stations').get();
+    if (aggDoc.exists) {
+      final list = ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .where((s) => s['id'] != stationId)
+          .toList();
+      await _db.collection('aggregates').doc('stations').set({
+        'stations': list,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  /// Reject a station submission with optional feedback.
+  static Future<void> rejectStation(String docId, {String? feedback}) async {
+    final data = <String, dynamic>{'status': 'rejected'};
+    if (feedback != null && feedback.isNotEmpty) {
+      data['feedback'] = feedback;
+      data['feedbackRead'] = false;
+    }
+    await _db.collection('new_stations').doc(docId).update(data);
+  }
+
+  // ── Station Modify Requests ─────────────────────────────────────────
+
+  /// Submit a request to modify an existing station.
+  static Future<void> submitModifyRequest(StationModifyRequest request) async {
+    final data = request.toJson();
+    data['submittedAt'] = FieldValue.serverTimestamp();
+    data['status'] = 'pending';
+    await _db.collection('station_modify_requests').add(data);
+  }
+
+  /// Fetch modify requests submitted by a given user.
+  static Future<List<StationModifyRequest>> getUserModifyRequests(String uid) async {
+    final snapshot = await _db
+        .collection('station_modify_requests')
+        .where('submittedBy', isEqualTo: uid)
+        .get();
+    return snapshot.docs.map((doc) {
+      return StationModifyRequest.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+    }).toList();
+  }
+
+  /// Fetch all pending modify requests (admin only).
+  static Future<List<StationModifyRequest>> getAllPendingModifyRequests() async {
+    final snapshot = await _db
+        .collection('station_modify_requests')
+        .where('status', isEqualTo: 'pending')
+        .get();
+    return snapshot.docs.map((doc) {
+      return StationModifyRequest.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+    }).toList();
+  }
+
+  /// Approve a modify request: update the station and rebuild aggregate.
+  static Future<void> approveModifyRequest(
+    StationModifyRequest request, {
+    String? feedback,
+  }) async {
+    final stationRef = _db.collection('stations').doc(request.stationId);
+    final requestRef = _db.collection('station_modify_requests').doc(request.id);
+
+    final batch = _db.batch();
+
+    // Update the station with proposed values
+    batch.update(stationRef, {
+      'name': request.proposedName,
+      'brand': request.proposedBrand,
+      'address': request.proposedAddress,
+      'city': request.proposedCity,
+      'latitude': request.proposedLatitude,
+      'longitude': request.proposedLongitude,
+    });
+
+    // Update request status
+    final updateData = <String, dynamic>{'status': 'approved'};
+    if (feedback != null && feedback.isNotEmpty) {
+      updateData['feedback'] = feedback;
+      updateData['feedbackRead'] = false;
+    }
+    batch.update(requestRef, updateData);
+
+    await batch.commit();
+
+    // Update the aggregate — replace the station in-place
+    final aggDoc = await _db.collection('aggregates').doc('stations').get();
+    if (aggDoc.exists) {
+      final list = ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      final idx = list.indexWhere((s) => s['id'] == request.stationId);
+      if (idx != -1) {
+        list[idx] = {
+          'id': request.stationId,
+          'name': request.proposedName,
+          'brand': request.proposedBrand,
+          'address': request.proposedAddress,
+          'city': request.proposedCity,
+          'latitude': request.proposedLatitude,
+          'longitude': request.proposedLongitude,
+        };
+      }
+      await _db.collection('aggregates').doc('stations').set({
+        'stations': list,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  /// Reject a modify request with optional feedback.
+  static Future<void> rejectModifyRequest(String docId, {String? feedback}) async {
+    final data = <String, dynamic>{'status': 'rejected'};
+    if (feedback != null && feedback.isNotEmpty) {
+      data['feedback'] = feedback;
+      data['feedbackRead'] = false;
+    }
+    await _db.collection('station_modify_requests').doc(docId).update(data);
+  }
+
+  /// Mark feedback as read on a modify request.
+  static Future<void> markModifyFeedbackRead(String docId) async {
+    await _db.collection('station_modify_requests').doc(docId).update({
+      'feedbackRead': true,
+    });
+  }
+
+  /// Fetch modify requests with unread feedback for a given user.
+  static Future<List<StationModifyRequest>> getUnreadModifyFeedback(String uid) async {
+    final snapshot = await _db
+        .collection('station_modify_requests')
+        .where('submittedBy', isEqualTo: uid)
+        .get();
+    return snapshot.docs
+        .where((doc) {
+          final data = doc.data();
+          final feedback = data['feedback'] as String?;
+          final feedbackRead = data['feedbackRead'] as bool? ?? false;
+          return feedback != null && feedback.isNotEmpty && !feedbackRead;
+        })
+        .map((doc) => StationModifyRequest.fromJson(doc.id, _normalizeTimestamps(doc.data())))
+        .toList();
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

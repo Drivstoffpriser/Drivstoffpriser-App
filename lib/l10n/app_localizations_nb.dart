@@ -103,7 +103,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get totalContributions => 'Totale bidrag';
 
   @override
-  String get priceReportsSubmitted => 'prisrapporter sendt inn';
+  String get priceReportsSubmitted => 'prisrapporter';
 
   @override
   String get trustScore => 'Tillitsscore';
@@ -602,5 +602,216 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String distanceKm(String km) {
     return '$km km';
+  }
+
+  @override
+  String get addStationHintTitle => 'Legg til en manglende stasjon';
+
+  @override
+  String get addStationHintBody =>
+      'Trykk og hold på kartet der du ønsker å legge til en ny stasjon.';
+
+  @override
+  String get addStation => 'Legg til stasjon';
+
+  @override
+  String get addStationTapMap =>
+      'Trykk på kartet for å angi stasjonens plassering';
+
+  @override
+  String get addStationName => 'Stasjonsnavn';
+
+  @override
+  String get addStationNameHint => 'f.eks. Shell Storo';
+
+  @override
+  String get addStationNameRequired => 'Vennligst skriv inn et stasjonsnavn';
+
+  @override
+  String get addStationBrand => 'Merke';
+
+  @override
+  String get addStationSelectBrand => 'Vennligst velg et merke';
+
+  @override
+  String get addStationNoChain => 'Annet / Ingen kjede';
+
+  @override
+  String get addStationCustomBrand => 'Merkenavn';
+
+  @override
+  String get addStationCustomBrandHint => 'f.eks. Lokal Bensin';
+
+  @override
+  String get addStationBrandRequired => 'Vennligst skriv inn et merkenavn';
+
+  @override
+  String get addStationAddress => 'Adresse';
+
+  @override
+  String get addStationAddressHint => 'f.eks. Storgata 1';
+
+  @override
+  String get addStationAddressRequired => 'Vennligst skriv inn en adresse';
+
+  @override
+  String get addStationCity => 'By';
+
+  @override
+  String get addStationCityHint => 'f.eks. Oslo';
+
+  @override
+  String get addStationCityRequired => 'Vennligst skriv inn en by';
+
+  @override
+  String get addStationSubmitButton => 'Send inn stasjon';
+
+  @override
+  String get addStationSubmitted => 'Stasjon sendt inn for gjennomgang!';
+
+  @override
+  String get addStationFailed => 'Kunne ikke sende inn stasjon. Prøv igjen.';
+
+  @override
+  String get stationsSubmitted => 'stasjoner sendt inn';
+
+  @override
+  String stationsSubmittedCount(int count) {
+    return '$count stasjoner sendt inn';
+  }
+
+  @override
+  String get myStationSubmissions => 'Mine stasjonsforslag';
+
+  @override
+  String get noSubmissionsYet => 'Ingen stasjonsforslag ennå';
+
+  @override
+  String get submissionStatusPending => 'Venter';
+
+  @override
+  String get submissionStatusApproved => 'Godkjent';
+
+  @override
+  String get submissionStatusRejected => 'Avvist';
+
+  @override
+  String get adminFeedback => 'Tilbakemelding fra admin';
+
+  @override
+  String adminFeedbackFor(String stationName) {
+    return 'Tilbakemelding for $stationName';
+  }
+
+  @override
+  String get dismiss => 'Lukk';
+
+  @override
+  String get editStation => 'Rediger stasjon';
+
+  @override
+  String get addStationUpdateButton => 'Oppdater stasjon';
+
+  @override
+  String get addStationUpdated => 'Stasjon oppdatert!';
+
+  @override
+  String get edit => 'Rediger';
+
+  @override
+  String get delete => 'Slett';
+
+  @override
+  String get deleteSubmissionTitle => 'Slette forslag?';
+
+  @override
+  String get deleteSubmissionBody =>
+      'Dette vil permanent slette dette stasjonsforslaget. Denne handlingen kan ikke angres.';
+
+  @override
+  String get adminSection => 'ADMIN';
+
+  @override
+  String get adminPanel => 'Stasjonsgodkjenning';
+
+  @override
+  String get adminPanelSubtitle => 'Gjennomgå og godkjenn nye stasjonsforslag';
+
+  @override
+  String get noPendingSubmissions => 'Ingen ventende forslag';
+
+  @override
+  String get approve => 'Godkjenn';
+
+  @override
+  String get reject => 'Avvis';
+
+  @override
+  String get rejectStationTitle => 'Avvise stasjon?';
+
+  @override
+  String get rejectStationBody =>
+      'Dette vil avvise forslaget. Du kan eventuelt gi tilbakemelding til brukeren.';
+
+  @override
+  String get adminFeedbackHint => 'Tilbakemelding til brukeren (valgfritt)';
+
+  @override
+  String get deleteReportTitle => 'Slette rapport?';
+
+  @override
+  String get deleteReportBody =>
+      'Dette vil permanent fjerne denne prisrapporten.';
+
+  @override
+  String get coordinates => 'Koordinater';
+
+  @override
+  String get approveStationTitle => 'Godkjenn stasjon?';
+
+  @override
+  String get approveStationBody =>
+      'Dette vil legge stasjonen til på kartet. Du kan eventuelt sende tilbakemelding til brukeren.';
+
+  @override
+  String get deleteStationTitle => 'Slette stasjon?';
+
+  @override
+  String get deleteStationBody =>
+      'Dette vil permanent fjerne denne stasjonen fra kartet.';
+
+  @override
+  String get editStationInfo => 'Foreslå endring';
+
+  @override
+  String get submitChanges => 'Send inn endringer';
+
+  @override
+  String get noChangesToSubmit => 'Ingen endringer å sende inn';
+
+  @override
+  String get modifyRequestSubmitted =>
+      'Endringsforslag sendt inn for gjennomgang!';
+
+  @override
+  String get modifyRequestFailed =>
+      'Kunne ikke sende inn endringsforslag. Prøv igjen.';
+
+  @override
+  String get modifyRequests => 'Endringsforslag for stasjoner';
+
+  @override
+  String get modifyRequestsSubtitle => 'Gjennomgå foreslåtte stasjonsendringer';
+
+  @override
+  String get noPendingModifyRequests => 'Ingen ventende endringsforslag';
+
+  @override
+  String get approveModifyBody =>
+      'Dette vil bruke de foreslåtte endringene på stasjonen.';
+
+  @override
+  String stationId(String id) {
+    return 'ID: $id';
   }
 }

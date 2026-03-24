@@ -24,6 +24,7 @@ class UserProvider extends ChangeNotifier {
   Locale? _locale;
 
   UserProfile get user => _user;
+  bool get isAdmin => _user.isAdmin;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   Locale? get locale => _locale;
@@ -133,6 +134,7 @@ class UserProvider extends ChangeNotifier {
         displayName: displayName,
         reportCount: existing.reportCount,
         trustScore: existing.trustScore,
+        isAdmin: existing.isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -205,6 +207,7 @@ class UserProvider extends ChangeNotifier {
         displayName: displayName,
         reportCount: existing.reportCount,
         trustScore: existing.trustScore,
+        isAdmin: existing.isAdmin,
       );
     } else {
       _user = UserProfile(

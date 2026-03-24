@@ -12,8 +12,11 @@ import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../services/firestore_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
+import 'edit_station_screen.dart';
 import 'widgets/price_card.dart';
 import 'widgets/price_history_chart.dart';
 
@@ -59,10 +62,38 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     }
   }
 
+  Future<void> _deleteStation(StationProvider stationProvider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.deleteStationTitle),
+        content: Text(context.l10n.deleteStationBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(context.l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await FirestoreService.deleteStation(widget.station.id);
+    if (mounted) {
+      await stationProvider.refreshFromFirestore();
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final stationProvider = context.watch<StationProvider>();
     final priceProvider = context.watch<PriceProvider>();
+    final userProvider = context.watch<UserProvider>();
     final prices = stationProvider.getPricesForStation(widget.station.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
@@ -136,6 +167,23 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ),
             ),
             actions: [
+              if (userProvider.isAdmin)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _deleteStation(stationProvider),
+                ),
+              // Edit station button
+              IconButton(
+                icon: Icon(Icons.edit_outlined, color: activeColor),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditStationScreen(station: widget.station),
+                    ),
+                  );
+                },
+              ),
               // Navigate button
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -287,6 +335,45 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                               color: activeColor,
                             ),
                           ),
+                          if (userProvider.isAdmin) ...[
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () async {
+                                final provider = context.read<PriceProvider>();
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(context.l10n.deleteReportTitle),
+                                    content: Text(context.l10n.deleteReportBody),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: Text(context.l10n.cancel),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                        child: Text(context.l10n.delete),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed != true || !mounted) return;
+                                await FirestoreService.deleteReport(
+                                  widget.station.id,
+                                  report.id,
+                                );
+                                if (mounted) {
+                                  provider.loadReports(widget.station.id);
+                                }
+                              },
+                              child: Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: Colors.red.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     );

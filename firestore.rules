@@ -2,16 +2,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Helper: check if user is admin ──
+    function isAdmin() {
+      return request.auth != null
+             && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
     // ── Stations ──────────────────────────────────────────────────
-    // Anyone can read stations. No client-side writes (seeded by admin/backend).
+    // Anyone can read stations. Admins can write (for approving new stations).
     match /stations/{stationId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
 
       // ── Price Reports (subcollection) ───────────────────────────
       // Anyone can read reports.
       // Only authenticated (non-anonymous) users can create reports.
-      // Reports are immutable once created — no updates or deletes.
+      // Admins can delete reports.
       match /reports/{reportId} {
         allow read: if true;
         allow create: if request.auth != null
@@ -21,7 +28,8 @@ service cloud.firestore {
                       && request.resource.data.price is number
                       && request.resource.data.price > 0
                       && request.resource.data.price < 100;
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAdmin();
       }
     }
 
@@ -36,9 +44,17 @@ service cloud.firestore {
     }
 
     // ── User Profiles ─────────────────────────────────────────────
-    // Users can only read and write their own profile.
+    // Users can read and write their own profile, but cannot set isAdmin.
+    // isAdmin is only settable via Firebase Console.
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && !request.resource.data.keys().hasAny(['isAdmin']);
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']);
+      allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
     // ── Bug Reports ───────────────────────────────────────────────
@@ -47,6 +63,57 @@ service cloud.firestore {
     match /bug_reports/{reportId} {
       allow create: if request.auth != null;
       allow read, update, delete: if false;
+    }
+
+    // ── New Station Submissions ────────────────────────────────────
+    // Only authenticated (non-anonymous) users can submit new stations.
+    // Users can read/edit/delete their own pending submissions.
+    // Users can mark feedback as read on any of their submissions.
+    // Admins can read all and update status/feedback.
+    match /new_stations/{docId} {
+      allow create: if request.auth != null
+                    && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+                    && request.resource.data.keys().hasAll(['name', 'brand', 'address', 'city', 'latitude', 'longitude', 'submittedBy', 'status'])
+                    && request.resource.data.submittedBy == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read: if request.auth != null
+                  && (resource.data.submittedBy == request.auth.uid || isAdmin());
+      allow update: if request.auth != null
+                    && (
+                      // Admins can update any field (approve/reject/feedback)
+                      isAdmin()
+                      // Users can mark feedback as read
+                      || (resource.data.submittedBy == request.auth.uid
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackRead']))
+                      // Users can edit own pending submissions
+                      || (resource.data.submittedBy == request.auth.uid
+                          && resource.data.status == 'pending'
+                          && request.resource.data.submittedBy == request.auth.uid
+                          && request.resource.data.status == 'pending')
+                    );
+      allow delete: if request.auth != null
+                    && resource.data.submittedBy == request.auth.uid
+                    && resource.data.status == 'pending';
+    }
+
+    // ── Station Modify Requests ─────────────────────────────────────
+    // Authenticated users can submit modify requests for existing stations.
+    // Users can read their own requests and mark feedback as read.
+    // Admins can read all and approve/reject.
+    match /station_modify_requests/{docId} {
+      allow create: if request.auth != null
+                    && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+                    && request.resource.data.submittedBy == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read: if request.auth != null
+                  && (resource.data.submittedBy == request.auth.uid || isAdmin());
+      allow update: if request.auth != null
+                    && (
+                      isAdmin()
+                      || (resource.data.submittedBy == request.auth.uid
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackRead']))
+                    );
+      allow delete: if false;
     }
 
     // ── Aggregates ─────────────────────────────────────────────────
