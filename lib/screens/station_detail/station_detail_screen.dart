@@ -167,6 +167,20 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ),
             ),
             actions: [
+              // Favorite button
+              Consumer<StationProvider>(
+                builder: (context, provider, _) {
+                  final isFav = provider.isFavorite(widget.station.id);
+                  return IconButton(
+                    onPressed: () => provider.toggleFavorite(widget.station.id),
+                    icon: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      color: isFav ? Colors.red : activeColor,
+                    ),
+                    tooltip: isFav ? 'Remove from favorites' : 'Add to favorites',
+                  );
+                },
+              ),
               if (userProvider.isAdmin)
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),

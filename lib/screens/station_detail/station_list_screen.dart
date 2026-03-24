@@ -109,6 +109,7 @@ class StationListScreen extends StatelessWidget {
                       }
 
                       return _StationListTile(
+                        id: station.id,
                         name: station.name,
                         brand: station.brand,
                         city: station.city,
@@ -133,6 +134,7 @@ class StationListScreen extends StatelessWidget {
 }
 
 class _StationListTile extends StatefulWidget {
+  final String id;
   final String name;
   final String brand;
   final String city;
@@ -142,6 +144,7 @@ class _StationListTile extends StatefulWidget {
   final VoidCallback onTap;
 
   const _StationListTile({
+    required this.id,
     required this.name,
     required this.brand,
     required this.city,
@@ -213,6 +216,23 @@ class _StationListTileState extends State<_StationListTile> {
                     ).copyWith(color: AppColors.primaryContainer(context)),
                   ),
                 ],
+                const SizedBox(width: 8),
+                Consumer<StationProvider>(
+                  builder: (context, provider, _) {
+                    final isFav = provider.isFavorite(widget.id);
+                    return IconButton(
+                      onPressed: () => provider.toggleFavorite(widget.id),
+                      icon: Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                        color: isFav ? Colors.red : AppColors.textMuted(context),
+                        size: 20,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    );
+                  },
+                ),
               ],
             ),
           ),

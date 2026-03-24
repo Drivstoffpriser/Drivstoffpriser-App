@@ -6,6 +6,7 @@ import '../models/fuel_type.dart';
 import '../models/station.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
+import '../services/favorites_service.dart';
 import '../services/firestore_service.dart';
 import '../services/overpass_service.dart';
 
@@ -17,6 +18,8 @@ class StationProvider extends ChangeNotifier {
   FuelType _selectedFuelType = FuelType.petrol95;
   SortMode _sortMode = SortMode.cheapest;
   Set<String> _selectedBrands = {};
+  Set<String> _favoriteStationIds = {};
+  bool _showOnlyFavorites = false;
   bool _isLoading = false;
 
   /// Filter radius in km. null means show all stations (no distance filter).
@@ -30,6 +33,8 @@ class StationProvider extends ChangeNotifier {
   FuelType get selectedFuelType => _selectedFuelType;
   SortMode get sortMode => _sortMode;
   Set<String> get selectedBrands => _selectedBrands;
+  Set<String> get favoriteStationIds => _favoriteStationIds;
+  bool get showOnlyFavorites => _showOnlyFavorites;
   bool get isLoading => _isLoading;
   bool get hasUserLocation => _userLat != null && _userLng != null;
   double? get filterRadiusKm => _filterRadiusKm;
@@ -44,6 +49,23 @@ class StationProvider extends ChangeNotifier {
   void setUserLocation(double lat, double lng) {
     _userLat = lat;
     _userLng = lng;
+    notifyListeners();
+  }
+
+  bool isFavorite(String stationId) => _favoriteStationIds.contains(stationId);
+
+  Future<void> toggleFavorite(String stationId) async {
+    if (_favoriteStationIds.contains(stationId)) {
+      _favoriteStationIds.remove(stationId);
+    } else {
+      _favoriteStationIds.add(stationId);
+    }
+    notifyListeners();
+    await FavoritesService.saveFavorites(_favoriteStationIds);
+  }
+
+  void setShowOnlyFavorites(bool value) {
+    _showOnlyFavorites = value;
     notifyListeners();
   }
 
@@ -80,6 +102,10 @@ class StationProvider extends ChangeNotifier {
       result = result.where((s) => _selectedBrands.contains(s.brand));
     }
 
+    if (_showOnlyFavorites) {
+      result = result.where((s) => _favoriteStationIds.contains(s.id));
+    }
+
     return result.toList();
   }
 
@@ -105,6 +131,9 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Load favorites
+      _favoriteStationIds = await FavoritesService.getFavorites();
+
       // Try local cache first (0 Firestore reads)
       final cachedStations = await CacheService.getCachedStations();
       final cachedPrices = await CacheService.getCachedPrices();
