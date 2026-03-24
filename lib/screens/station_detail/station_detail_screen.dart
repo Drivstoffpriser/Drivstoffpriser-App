@@ -181,23 +181,26 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   );
                 },
               ),
-              if (userProvider.isAdmin)
+              if (userProvider.isAdmin) ...[
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () => _deleteStation(stationProvider),
+                  tooltip: 'Delete station',
                 ),
-              // Edit station button
-              IconButton(
-                icon: Icon(Icons.edit_outlined, color: activeColor),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => EditStationScreen(station: widget.station),
-                    ),
-                  );
-                },
-              ),
+                // Edit station button
+                IconButton(
+                  icon: Icon(Icons.edit_outlined, color: activeColor),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditStationScreen(station: widget.station),
+                      ),
+                    );
+                  },
+                  tooltip: 'Edit station',
+                ),
+              ],
               // Navigate button
               Padding(
                 padding: const EdgeInsets.only(right: 8),
