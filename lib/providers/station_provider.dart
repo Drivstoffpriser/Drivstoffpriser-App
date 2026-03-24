@@ -191,14 +191,16 @@ class StationProvider extends ChangeNotifier {
       if (stations.isNotEmpty) {
         await FirestoreService.upsertStations(stations);
       } else {
-        await FirestoreService.seedIfEmpty();
+        // Overpass returned nothing — rebuild aggregate from stations
+        // collection so manually-added stations still appear.
+        await FirestoreService.rebuildStationsAggregate();
       }
     } catch (e) {
       debugPrint('Failed to fetch/save Norway stations: $e');
       try {
-        await FirestoreService.seedIfEmpty();
+        await FirestoreService.rebuildStationsAggregate();
       } catch (e2) {
-        debugPrint('Seed fallback also failed: $e2');
+        debugPrint('Aggregate rebuild also failed: $e2');
       }
     }
     await refreshFromFirestore();
