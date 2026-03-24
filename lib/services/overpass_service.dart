@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/station.dart';
+import '../models/toll_station.dart';
 
 class OverpassService {
   static const String _baseUrl = 'https://overpass-api.de/api/interpreter';
@@ -51,6 +52,41 @@ class OverpassService {
         'out body;';
 
     return _executeQuery(query, timeoutSeconds: timeout);
+  }
+
+  /// Fetches ALL toll stations (bomstasjoner) in Norway from OSM.
+  static Future<List<TollStation>> fetchAllNorwayTollStations() async {
+    const timeout = 60;
+    // Query for toll gantries and booths
+    final query = '[out:json][timeout:$timeout];'
+        'area["ISO3166-1"="NO"]->.norway;'
+        '('
+        'node["barrier"="toll_gantry"](area.norway);'
+        'node["highway"="toll_gantry"](area.norway);'
+        'node["barrier"="toll_booth"](area.norway);'
+        ');'
+        'out body;';
+
+    final uri = Uri.parse(_baseUrl).replace(queryParameters: {'data': query});
+
+    try {
+      final response = await http
+          .get(uri)
+          .timeout(Duration(seconds: timeout + 5));
+
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final elements = data['elements'] as List<dynamic>? ?? [];
+
+      return elements
+          .where((e) => (e as Map<String, dynamic>)['type'] == 'node')
+          .map((e) => TollStation.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Fetching toll stations failed: $e');
+      return [];
+    }
   }
 
   /// Shared query execution logic.

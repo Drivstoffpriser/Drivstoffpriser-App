@@ -8,6 +8,7 @@ import '../../l10n/l10n_helper.dart';
 import '../../config/routes.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../services/distance_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
@@ -22,9 +23,22 @@ class StationListScreen extends StatelessWidget {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
 
+    final userProvider = context.watch<UserProvider>();
+
+    // Default to Best For You if vehicle data is available and no sort mode is set yet (or it's still the initial default)
+    if (userProvider.hasVehicleData && stationProvider.sortMode == SortMode.cheapest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (stationProvider.sortMode == SortMode.cheapest) {
+          stationProvider.setSortMode(SortMode.bestForYou);
+        }
+      });
+    }
+
     final sorted = stationProvider.sortedStations(
       userLat: locationProvider.position?.latitude,
       userLng: locationProvider.position?.longitude,
+      tankSize: userProvider.tankSize,
+      consumptionPer100km: userProvider.consumptionPer100km,
     );
 
     return Scaffold(
@@ -64,6 +78,10 @@ class StationListScreen extends StatelessWidget {
                       value: SortMode.latest,
                       child: Text(ctx.l10n.sortLatest),
                     ),
+                    PopupMenuItem(
+                      value: SortMode.bestForYou,
+                      child: Text(context.l10n.sortBestForYou),
+                    ),
                   ],
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -73,6 +91,7 @@ class StationListScreen extends StatelessWidget {
                           SortMode.cheapest => context.l10n.sortCheapest,
                           SortMode.nearest => context.l10n.sortNearest,
                           SortMode.latest => context.l10n.sortLatest,
+                          SortMode.bestForYou => context.l10n.sortBestForYou,
                         }),
                         style: AppTextStyles.label(context),
                       ),

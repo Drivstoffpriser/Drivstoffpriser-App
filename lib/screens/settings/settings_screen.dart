@@ -191,6 +191,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // ── Vehicle Settings ──
+                Text(
+                  context.l10n.vehicleSettings,
+                  style: AppTextStyles.sectionHeader(context),
+                ),
+                const SizedBox(height: 12),
+                _SettingsCard(
+                  children: [
+                    _VehicleSettingTile(
+                      icon: Icons.ev_station_rounded,
+                      iconColor: const Color(0xFF3B82F6),
+                      title: context.l10n.tankSize,
+                      subtitle: context.l10n.tankSizeSubtitle,
+                      value: userProvider.tankSize,
+                      onChanged: (val) =>
+                          userProvider.setVehicleData(tankSize: val),
+                    ),
+                    const _CardDivider(),
+                    _VehicleSettingTile(
+                      icon: Icons.speed_rounded,
+                      iconColor: const Color(0xFFF59E0B),
+                      title: context.l10n.consumption,
+                      subtitle: context.l10n.consumptionSubtitle,
+                      value: userProvider.consumptionPer100km,
+                      onChanged: (val) =>
+                          userProvider.setVehicleData(consumptionPer100km: val),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
                 // ── Support ──
                 Text(
                   context.l10n.support,
@@ -711,6 +742,76 @@ class _CardDivider extends StatelessWidget {
       height: 0.5,
       margin: const EdgeInsets.only(left: 68),
       color: AppColors.border(context),
+    );
+  }
+}
+
+class _VehicleSettingTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  const _VehicleSettingTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(child: Icon(icon, size: 20, color: iconColor)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTextStyles.bodyMedium(context)),
+                Text(subtitle, style: AppTextStyles.meta(context)),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: TextFormField(
+              initialValue: value > 0 ? value.toString() : '',
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: AppTextStyles.bodyMedium(context).copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.right,
+              decoration: InputDecoration(
+                hintText: '0.0',
+                hintStyle: AppTextStyles.meta(context),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              onFieldSubmitted: (val) {
+                final d = double.tryParse(val.replaceAll(',', '.'));
+                if (d != null) onChanged(d);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

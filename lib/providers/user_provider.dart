@@ -23,10 +23,21 @@ class UserProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   Locale? _locale;
 
+  // Vehicle Settings (saved locally)
+  double _tankSize = 0; // Liters
+  double _consumptionPer100km = 0; // L/100km
+  double _avgTollCost = 0; // Kr per trip
+
   UserProfile get user => _user;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   Locale? get locale => _locale;
+
+  double get tankSize => _tankSize;
+  double get consumptionPer100km => _consumptionPer100km;
+  double get avgTollCost => _avgTollCost;
+
+  bool get hasVehicleData => _tankSize > 0 && _consumptionPer100km > 0;
 
   /// True when the user has linked email/password or Google credentials.
   bool get isAuthenticated {
@@ -66,6 +77,10 @@ class UserProvider extends ChangeNotifier {
     if (localePref != null) {
       _locale = Locale(localePref);
     }
+
+    _tankSize = prefs.getDouble('tankSize') ?? 0;
+    _consumptionPer100km = prefs.getDouble('consumptionPer100km') ?? 0;
+    _avgTollCost = prefs.getDouble('avgTollCost') ?? 0;
 
     // Wait for Firebase Auth to restore the persisted session before
     // deciding whether to create a new anonymous account.
@@ -265,6 +280,26 @@ class UserProvider extends ChangeNotifier {
       } else {
         prefs.setString('locale', locale.languageCode);
       }
+    });
+  }
+
+  void setVehicleData({
+    double? tankSize,
+    double? consumptionPer100km,
+    double? avgTollCost,
+  }) {
+    if (tankSize != null) _tankSize = tankSize;
+    if (consumptionPer100km != null) _consumptionPer100km = consumptionPer100km;
+    if (avgTollCost != null) _avgTollCost = avgTollCost;
+
+    notifyListeners();
+
+    SharedPreferences.getInstance().then((prefs) {
+      if (tankSize != null) prefs.setDouble('tankSize', tankSize);
+      if (consumptionPer100km != null) {
+        prefs.setDouble('consumptionPer100km', consumptionPer100km);
+      }
+      if (avgTollCost != null) prefs.setDouble('avgTollCost', avgTollCost);
     });
   }
 

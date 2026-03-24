@@ -200,5 +200,12 @@
   "ageOver1Day": ">1d",
 
   "distanceMeters": "{meters} m",
-  "distanceKm": "{km} km"
+  "distanceKm": "{km} km",
+  "vehicleSettings": "KJØRETØYINNSTILLINGER",
+  "tankSize": "Tankstørrelse",
+  "tankSizeSubtitle": "Liter (L)",
+  "consumption": "Forbruk",
+  "consumptionSubtitle": "Liter per 100 km (L/100km)",
+  "sortBestForYou": "Best for deg"
 }
+

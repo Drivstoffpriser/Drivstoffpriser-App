@@ -8,8 +8,9 @@ import '../services/cache_service.dart';
 import '../services/distance_service.dart';
 import '../services/firestore_service.dart';
 import '../services/overpass_service.dart';
+import '../models/toll_station.dart';
 
-enum SortMode { cheapest, nearest, latest }
+enum SortMode { cheapest, nearest, latest, bestForYou }
 
 class StationProvider extends ChangeNotifier {
   List<Station> _stations = [];
@@ -18,6 +19,7 @@ class StationProvider extends ChangeNotifier {
   SortMode _sortMode = SortMode.cheapest;
   Set<String> _selectedBrands = {};
   bool _isLoading = false;
+  List<TollStation> _tollStations = [];
 
   /// Filter radius in km. null means show all stations (no distance filter).
   double? _filterRadiusKm = 20;
@@ -198,10 +200,20 @@ class StationProvider extends ChangeNotifier {
       try {
         await FirestoreService.seedIfEmpty();
       } catch (e2) {
-        debugPrint('Seed fallback also failed: $e2');
+        debugPrint('Final fallback failed: $e2');
       }
     }
-    await refreshFromFirestore();
+    
+    // 3. Fetch toll stations in the background
+    try {
+      _tollStations = await OverpassService.fetchAllNorwayTollStations();
+      debugPrint('Fetched ${_tollStations.length} toll stations');
+    } catch (e) {
+      debugPrint('Failed to fetch toll stations: $e');
+    }
+    
+    _isLoading = false;
+    notifyListeners();
   }
 
   void setFuelType(FuelType type) {
@@ -230,12 +242,117 @@ class StationProvider extends ChangeNotifier {
     return _prices.where((p) => p.stationId == stationId).toList();
   }
 
+  /// Calculates the effective cost of a fill-up at a station, 
+  /// including liter price, detour distance fuel cost, and tolls.
+  double calculateEffectiveCost(
+    Station station,
+    double userLat,
+    double userLng, {
+    double tankSize = 50.0,
+    double consumptionPer100km = 7.0,
+  }) {
+    final p = getPriceForStation(station.id);
+    if (p == null) return double.infinity;
+
+    final distanceMeters = DistanceService.distanceInMeters(
+      userLat,
+      userLng,
+      station.latitude,
+      station.longitude,
+    );
+    
+    final tolls = _countTollsOnWay(userLat, userLng, station.latitude, station.longitude);
+
+    // Use default values if provided zeroes
+    final effectiveTank = tankSize > 0 ? tankSize : 50.0;
+    final effectiveConsumption = consumptionPer100km > 0 ? consumptionPer100km : 7.0;
+
+    // Formula: (Tank * Price) + (DetourDistanceKm * Consumption/100 * Price) + (Tolls * 25 NOK)
+    // We assume the trip is a detour (there and back) so we multiply distance by 2.
+    final fuelCostForFillup = effectiveTank * p.price;
+    final detourFuelCost = (distanceMeters / 1000) * 2 * (effectiveConsumption / 100) * p.price;
+    final tollCost = tolls * 25.0;
+
+    return fuelCostForFillup + detourFuelCost + tollCost;
+  }
+
+  /// Counts toll gantries that are roughly on the route from start to end.
+  /// Uses a "corridor" approach by sampling points along the straight line.
+  int _countTollsOnWay(double uLat, double uLng, double sLat, double sLng) {
+    if (_tollStations.isEmpty) return 0;
+
+    int count = 0;
+    for (final toll in _tollStations) {
+      // Crude bounding box check for performance
+      final minLat = (uLat < sLat ? uLat : sLat) - 0.01;
+      final maxLat = (uLat > sLat ? uLat : sLat) + 0.01;
+      final minLng = (uLng < sLng ? uLng : sLng) - 0.01;
+      final maxLng = (uLng > sLng ? uLng : sLng) + 0.01;
+
+      if (toll.latitude < minLat ||
+          toll.latitude > maxLat ||
+          toll.longitude < minLng ||
+          toll.longitude > maxLng) {
+        continue;
+      }
+
+      // Sample 10 points along the segment to check proximity
+      bool onWay = false;
+      for (int i = 0; i <= 10; i++) {
+        double t = i / 10.0;
+        double pLat = uLat + (sLat - uLat) * t;
+        double pLng = uLng + (sLng - uLng) * t;
+        if (DistanceService.distanceInMeters(
+                pLat, pLng, toll.latitude, toll.longitude) <
+            500) {
+          onWay = true;
+          break;
+        }
+      }
+      if (onWay) count++;
+    }
+    return count;
+  }
+
   /// Stations filtered by brand and sorted by the current sort mode.
   /// Shows all stations; those with prices sort first.
-  List<Station> sortedStations({double? userLat, double? userLng}) {
+  List<Station> sortedStations({
+    double? userLat,
+    double? userLng,
+    double? tankSize,
+    double? consumptionPer100km,
+  }) {
     final all = List<Station>.from(filteredStations);
 
+    // Apply default values if missing
+    final effectiveTankSize = (tankSize != null && tankSize > 0) ? tankSize : 50.0;
+    final effectiveConsumption = (consumptionPer100km != null && consumptionPer100km > 0) ? consumptionPer100km : 7.0;
+
     switch (_sortMode) {
+      case SortMode.bestForYou:
+        if (userLat != null &&
+            userLng != null &&
+            tankSize != null &&
+            consumptionPer100km != null) {
+          
+          all.sort((a, b) {
+            final costA = calculateEffectiveCost(a, userLat, userLng, tankSize: tankSize, consumptionPer100km: consumptionPer100km);
+            final costB = calculateEffectiveCost(b, userLat, userLng, tankSize: tankSize, consumptionPer100km: consumptionPer100km);
+            
+            if (costA == double.infinity && costB == double.infinity) return a.name.compareTo(b.name);
+            return costA.compareTo(costB);
+          });
+          return all;
+        }
+        // Fallback to cheapest if vehicle data missing
+        return List<Station>.from(all)..sort((a, b) {
+          final pa = getPriceForStation(a.id);
+          final pb = getPriceForStation(b.id);
+          if (pa == null && pb == null) return a.name.compareTo(b.name);
+          if (pa == null) return 1;
+          if (pb == null) return -1;
+          return pa.price.compareTo(pb.price);
+        });
       case SortMode.cheapest:
         all.sort((a, b) {
           final pa = getPriceForStation(a.id);

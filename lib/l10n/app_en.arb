@@ -220,5 +220,12 @@
   "distanceMeters": "{meters} m",
   "@distanceMeters": { "placeholders": { "meters": { "type": "String" } } },
   "distanceKm": "{km} km",
-  "@distanceKm": { "placeholders": { "km": { "type": "String" } } }
+  "@distanceKm": { "placeholders": { "km": { "type": "String" } } },
+  "vehicleSettings": "VEHICLE SETTINGS",
+  "tankSize": "Tank Size",
+  "tankSizeSubtitle": "Liters (L)",
+  "consumption": "Consumption",
+  "consumptionSubtitle": "Liters per 100km (L/100km)",
+  "sortBestForYou": "Best For You"
 }
+

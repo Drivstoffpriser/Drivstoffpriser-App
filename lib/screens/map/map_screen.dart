@@ -13,13 +13,15 @@ import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
-import 'package:geolocator/geolocator.dart';
+import '../../providers/user_provider.dart';
+import '../../services/distance_service.dart';
 import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
 import 'widgets/brand_filter_bar.dart';
 import 'widgets/fuel_filter_bar.dart';
 import 'widgets/station_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -107,6 +109,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
+    final userProvider = context.watch<UserProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (locationProvider.hasLocation && !_hasCenteredOnUser) {
@@ -141,14 +144,33 @@ class _MapScreenState extends State<MapScreen> {
     final filtered = stationProvider.filteredStations;
     final results = _searchResults(stationProvider.stations);
 
-    // Find best (cheapest) station for the selected fuel type
+    // Find best (cheapest or best for you) station for the selected fuel type
     String? bestStationId;
     double bestPrice = double.infinity;
+    double bestEffectiveCost = double.infinity;
+
     for (final station in filtered) {
       final p = stationProvider.getPriceForStation(station.id);
-      if (p != null && p.price < bestPrice) {
-        bestPrice = p.price;
-        bestStationId = station.id;
+      if (p == null) continue;
+
+      if (locationProvider.hasLocation) {
+        final cost = stationProvider.calculateEffectiveCost(
+          station,
+          locationProvider.position!.latitude,
+          locationProvider.position!.longitude,
+          tankSize: userProvider.tankSize,
+          consumptionPer100km: userProvider.consumptionPer100km,
+        );
+
+        if (cost < bestEffectiveCost) {
+          bestEffectiveCost = cost;
+          bestStationId = station.id;
+        }
+      } else {
+        if (p.price < bestPrice) {
+          bestPrice = p.price;
+          bestStationId = station.id;
+        }
       }
     }
 
