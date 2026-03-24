@@ -47,9 +47,22 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs your location to show nearby fuel stations and calculate distances.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs your location to show nearby fuel stations and calculate distances.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs your location to show nearby fuel stations and calculate distances.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan fuel station price signs.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to scan fuel station price signs.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to select photos of fuel station price signs.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>geo</string>
+	</array>
 </dict>
 </plist>
+
