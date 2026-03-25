@@ -20,7 +20,11 @@ class AddStationScreen extends StatefulWidget {
   final LatLng? initialLocation;
   final StationSubmission? editSubmission;
 
-  const AddStationScreen({super.key, this.initialLocation, this.editSubmission});
+  const AddStationScreen({
+    super.key,
+    this.initialLocation,
+    this.editSubmission,
+  });
 
   @override
   State<AddStationScreen> createState() => _AddStationScreenState();
@@ -104,9 +108,10 @@ class _AddStationScreenState extends State<AddStationScreen> {
         'https://nominatim.openstreetmap.org/reverse'
         '?format=json&lat=${point.latitude}&lon=${point.longitude}&zoom=18&addressdetails=1',
       );
-      final response = await http.get(uri, headers: {
-        'User-Agent': 'TankVenn/1.0',
-      });
+      final response = await http.get(
+        uri,
+        headers: {'User-Agent': 'TankVenn/1.0'},
+      );
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
@@ -114,10 +119,12 @@ class _AddStationScreenState extends State<AddStationScreen> {
         if (address != null) {
           final road = address['road'] as String? ?? '';
           final houseNumber = address['house_number'] as String? ?? '';
-          final street = [road, houseNumber]
-              .where((s) => s.isNotEmpty)
-              .join(' ');
-          final city = address['city'] as String? ??
+          final street = [
+            road,
+            houseNumber,
+          ].where((s) => s.isNotEmpty).join(' ');
+          final city =
+              address['city'] as String? ??
               address['town'] as String? ??
               address['village'] as String? ??
               address['municipality'] as String? ??
@@ -181,16 +188,20 @@ class _AddStationScreenState extends State<AddStationScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(
-          _isEditing ? context.l10n.addStationUpdated : context.l10n.addStationSubmitted,
-        )),
+        SnackBar(
+          content: Text(
+            _isEditing
+                ? context.l10n.addStationUpdated
+                : context.l10n.addStationSubmitted,
+          ),
+        ),
       );
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.addStationFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.addStationFailed)));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -215,7 +226,12 @@ class _AddStationScreenState extends State<AddStationScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
           children: [
             // Map pin picker
             Text(
@@ -267,8 +283,9 @@ class _AddStationScreenState extends State<AddStationScreen> {
                 labelText: context.l10n.addStationName,
                 hintText: context.l10n.addStationNameHint,
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.addStationNameRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.addStationNameRequired
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -282,16 +299,18 @@ class _AddStationScreenState extends State<AddStationScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                ..._knownBrands.map((brand) => ChoiceChip(
-                      label: Text(brand),
-                      selected: !_isCustomBrand && _selectedBrand == brand,
-                      onSelected: (selected) {
-                        setState(() {
-                          _isCustomBrand = false;
-                          _selectedBrand = selected ? brand : null;
-                        });
-                      },
-                    )),
+                ..._knownBrands.map(
+                  (brand) => ChoiceChip(
+                    label: Text(brand),
+                    selected: !_isCustomBrand && _selectedBrand == brand,
+                    onSelected: (selected) {
+                      setState(() {
+                        _isCustomBrand = false;
+                        _selectedBrand = selected ? brand : null;
+                      });
+                    },
+                  ),
+                ),
                 ChoiceChip(
                   label: Text(context.l10n.addStationNoChain),
                   selected: _isCustomBrand,
@@ -313,7 +332,8 @@ class _AddStationScreenState extends State<AddStationScreen> {
                   labelText: context.l10n.addStationCustomBrand,
                   hintText: context.l10n.addStationCustomBrandHint,
                 ),
-                validator: (v) => _isCustomBrand && (v == null || v.trim().isEmpty)
+                validator: (v) =>
+                    _isCustomBrand && (v == null || v.trim().isEmpty)
                     ? context.l10n.addStationBrandRequired
                     : null,
               ),
@@ -338,8 +358,9 @@ class _AddStationScreenState extends State<AddStationScreen> {
                       )
                     : null,
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.addStationAddressRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.addStationAddressRequired
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -351,8 +372,9 @@ class _AddStationScreenState extends State<AddStationScreen> {
                 labelText: context.l10n.addStationCity,
                 hintText: context.l10n.addStationCityHint,
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.addStationCityRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.addStationCityRequired
+                  : null,
             ),
             const SizedBox(height: 24),
 
@@ -382,7 +404,11 @@ class _AddStationScreenState extends State<AddStationScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(_isEditing ? context.l10n.addStationUpdateButton : context.l10n.addStationSubmitButton),
+                      : Text(
+                          _isEditing
+                              ? context.l10n.addStationUpdateButton
+                              : context.l10n.addStationSubmitButton,
+                        ),
                 ),
               ),
           ],

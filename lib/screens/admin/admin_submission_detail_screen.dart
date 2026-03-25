@@ -25,17 +25,16 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          submission.name,
-          style: AppTextStyles.title(context),
-        ),
+        title: Text(submission.name, style: AppTextStyles.title(context)),
         backgroundColor: AppColors.surface(context),
         elevation: 0,
       ),
       backgroundColor: AppColors.background(context),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          16, 16, 16,
+          16,
+          16,
+          16,
           MediaQuery.of(context).padding.bottom + 32,
         ),
         children: [
@@ -53,37 +52,37 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
                 height: 220,
                 child: AbsorbPointer(
                   child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: location,
-                  initialZoom: 17,
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.none,
-                  ),
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate: tileUrl,
-                    userAgentPackageName: 'com.example.fuel_price_tracker',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: location,
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.location_pin,
-                          color: AppColors.primaryContainer(context),
-                          size: 40,
-                        ),
+                    options: MapOptions(
+                      initialCenter: location,
+                      initialZoom: 17,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: tileUrl,
+                        userAgentPackageName: 'com.example.fuel_price_tracker',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: location,
+                            width: 40,
+                            height: 40,
+                            child: Icon(
+                              Icons.location_pin,
+                              color: AppColors.primaryContainer(context),
+                              size: 40,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
               ),
             ),
-          ),
           ),
           const SizedBox(height: 20),
 
@@ -131,15 +130,14 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
                 _DetailRow(
                   icon: Icons.location_city_outlined,
                   label: context.l10n.addStationCity,
-                  value: submission.city.isNotEmpty
-                      ? submission.city
-                      : '—',
+                  value: submission.city.isNotEmpty ? submission.city : '—',
                 ),
                 const SizedBox(height: 10),
                 _DetailRow(
                   icon: Icons.my_location_outlined,
                   label: context.l10n.coordinates,
-                  value: '${submission.latitude.toStringAsFixed(5)}, '
+                  value:
+                      '${submission.latitude.toStringAsFixed(5)}, '
                       '${submission.longitude.toStringAsFixed(5)}',
                 ),
               ],

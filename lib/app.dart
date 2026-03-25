@@ -63,7 +63,8 @@ class App extends StatelessWidget {
               );
             }
             return MaterialPageRoute(
-              builder: (_) => AddStationScreen(initialLocation: args as LatLng?),
+              builder: (_) =>
+                  AddStationScreen(initialLocation: args as LatLng?),
             );
           case AppRoutes.myStationSubmissions:
             return MaterialPageRoute(

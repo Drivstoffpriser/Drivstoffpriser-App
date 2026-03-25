@@ -132,9 +132,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       final locationProvider = context.read<LocationProvider>();
       if (!locationProvider.hasLocation) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.locationUnavailable),
-          ),
+          SnackBar(content: Text(context.l10n.locationUnavailable)),
         );
         return;
       }
@@ -172,9 +170,9 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     final userProvider = context.read<UserProvider>();
 
     if (!userProvider.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.needAccountToReport)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.needAccountToReport)));
       final result = await Navigator.pushNamed(context, AppRoutes.auth);
       if (result != true || !mounted) return;
     }
@@ -202,13 +200,9 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
     if (toSubmit.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.allOnCooldown,
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.allOnCooldown)));
       return;
     }
 
@@ -293,9 +287,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.l10n.confirmSubmissionBody(typeNames),
-                  ),
+                  Text(context.l10n.confirmSubmissionBody(typeNames)),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -344,7 +336,10 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text(context.l10n.reportPrice, style: AppTextStyles.title(context)),
+        title: Text(
+          context.l10n.reportPrice,
+          style: AppTextStyles.title(context),
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -452,10 +447,9 @@ class _GradientSubmitButtonState extends State<_GradientSubmitButton> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: (isDark
-                        ? const Color(0xFF00d1ff)
-                        : const Color(0xFF0056b3))
-                    .withValues(alpha: 0.3),
+                color:
+                    (isDark ? const Color(0xFF00d1ff) : const Color(0xFF0056b3))
+                        .withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -473,9 +467,7 @@ class _GradientSubmitButtonState extends State<_GradientSubmitButton> {
                   )
                 : Text(
                     context.l10n.submitReport,
-                    style: AppTextStyles.bodyMedium(
-                      context,
-                    ).copyWith(
+                    style: AppTextStyles.bodyMedium(context).copyWith(
                       color: isDark ? AppColors.darkBackground : Colors.white,
                       fontWeight: FontWeight.w600,
                     ),

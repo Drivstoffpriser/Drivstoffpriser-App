@@ -109,7 +109,10 @@ class _BrandFilterSheet extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(context.l10n.searchRadius, style: AppTextStyles.title(context)),
+              Text(
+                context.l10n.searchRadius,
+                style: AppTextStyles.title(context),
+              ),
               const Spacer(),
               Text(
                 _radiusLabel(context, radiusKm),
@@ -140,7 +143,10 @@ class _BrandFilterSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Text(context.l10n.filterByBrand, style: AppTextStyles.title(context)),
+              Text(
+                context.l10n.filterByBrand,
+                style: AppTextStyles.title(context),
+              ),
               const Spacer(),
               if (provider.selectedBrands.isNotEmpty)
                 GestureDetector(
@@ -214,9 +220,7 @@ class _FilterChipState extends State<_FilterChip> {
             duration: const Duration(milliseconds: 120),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: widget.isSelected
-                  ? activeColor
-                  : Colors.transparent,
+              color: widget.isSelected ? activeColor : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: widget.isSelected

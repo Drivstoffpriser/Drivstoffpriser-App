@@ -26,12 +26,12 @@ class ScanResult {
   });
 
   ScanResult copyWithMetadata(ImageMetadata? metadata) => ScanResult(
-        prices: prices,
-        rawText: rawText,
-        cropMethod: cropMethod,
-        shouldOfferManualCrop: shouldOfferManualCrop,
-        imageMetadata: metadata,
-      );
+    prices: prices,
+    rawText: rawText,
+    cropMethod: cropMethod,
+    shouldOfferManualCrop: shouldOfferManualCrop,
+    imageMetadata: metadata,
+  );
 }
 
 class PriceSignScannerService {
@@ -43,7 +43,9 @@ class PriceSignScannerService {
     debugPrint('[$_tag]   Image path: ${imageFile.path}');
 
     final bytes = await imageFile.readAsBytes();
-    debugPrint('[$_tag]   File size: ${(bytes.length / 1024).toStringAsFixed(1)} KB');
+    debugPrint(
+      '[$_tag]   File size: ${(bytes.length / 1024).toStringAsFixed(1)} KB',
+    );
 
     try {
       final prices = await ClaudeVisionService.extractPrices(bytes);

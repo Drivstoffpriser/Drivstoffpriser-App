@@ -52,20 +52,14 @@ class FirestoreService {
     }
 
     // Build aggregate docs
-    batch.set(
-      _db.collection('aggregates').doc('stations'),
-      {
-        'stations': stations.map((s) => s.toJson()).toList(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-    );
-    batch.set(
-      _db.collection('aggregates').doc('prices'),
-      {
-        'prices': prices.map((p) => p.toJson()).toList(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-    );
+    batch.set(_db.collection('aggregates').doc('stations'), {
+      'stations': stations.map((s) => s.toJson()).toList(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(_db.collection('aggregates').doc('prices'), {
+      'prices': prices.map((p) => p.toJson()).toList(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
 
     await batch.commit();
   }
@@ -82,7 +76,9 @@ class FirestoreService {
   /// Rebuild the stations aggregate doc.
   /// If [stations] is provided, uses them directly.
   /// Otherwise falls back to reading all station docs from Firestore.
-  static Future<void> _rebuildStationsAggregate([List<Station>? stations]) async {
+  static Future<void> _rebuildStationsAggregate([
+    List<Station>? stations,
+  ]) async {
     final allStations = stations ?? await _readAllStations();
 
     await _db.collection('aggregates').doc('stations').set({
@@ -105,7 +101,9 @@ class FirestoreService {
   /// Rebuild the prices aggregate doc.
   /// If [prices] is provided, uses them directly (0 reads).
   /// Otherwise falls back to reading all currentPrices docs from Firestore.
-  static Future<void> _rebuildPricesAggregate([List<CurrentPrice>? prices]) async {
+  static Future<void> _rebuildPricesAggregate([
+    List<CurrentPrice>? prices,
+  ]) async {
     final allPrices = prices ?? await _readAllPrices();
 
     await _db.collection('aggregates').doc('prices').set({
@@ -119,13 +117,15 @@ class FirestoreService {
     final aggDoc = await _db.collection('aggregates').doc('prices').get();
     final list = aggDoc.exists
         ? ((aggDoc.data()!['prices'] as List<dynamic>?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList()
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList()
         : <Map<String, dynamic>>[];
 
     // Find existing entry by stationId + fuelType
     final idx = list.indexWhere(
-      (p) => p['stationId'] == price.stationId && p['fuelType'] == price.fuelType.name,
+      (p) =>
+          p['stationId'] == price.stationId &&
+          p['fuelType'] == price.fuelType.name,
     );
 
     if (idx != -1) {
@@ -161,7 +161,9 @@ class FirestoreService {
     final data = doc.data()!;
     final list = (data['stations'] as List<dynamic>?) ?? [];
     return list.map((e) {
-      return Station.fromJson(_normalizeTimestamps(Map<String, dynamic>.from(e as Map)));
+      return Station.fromJson(
+        _normalizeTimestamps(Map<String, dynamic>.from(e as Map)),
+      );
     }).toList();
   }
 
@@ -178,7 +180,9 @@ class FirestoreService {
     final data = doc.data()!;
     final list = (data['prices'] as List<dynamic>?) ?? [];
     return list.map((e) {
-      return CurrentPrice.fromJson(_normalizeTimestamps(Map<String, dynamic>.from(e as Map)));
+      return CurrentPrice.fromJson(
+        _normalizeTimestamps(Map<String, dynamic>.from(e as Map)),
+      );
     }).toList();
   }
 
@@ -386,12 +390,11 @@ class FirestoreService {
 
   /// Create or update a user profile in Firestore.
   static Future<void> setUserProfile(UserProfile profile) async {
-    await _db.collection('users').doc(profile.id).set(
-      profile.toJson(),
-      SetOptions(merge: true),
-    );
+    await _db
+        .collection('users')
+        .doc(profile.id)
+        .set(profile.toJson(), SetOptions(merge: true));
   }
-
 
   // ── Account Deletion ─────────────────────────────────────────────────
 
@@ -435,14 +438,19 @@ class FirestoreService {
   }
 
   /// Fetch all station submissions for a given user.
-  static Future<List<StationSubmission>> getUserStationSubmissions(String uid) async {
+  static Future<List<StationSubmission>> getUserStationSubmissions(
+    String uid,
+  ) async {
     final snapshot = await _db
         .collection('new_stations')
         .where('submittedBy', isEqualTo: uid)
         .get();
 
     return snapshot.docs.map((doc) {
-      return StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+      return StationSubmission.fromJson(
+        doc.id,
+        _normalizeTimestamps(doc.data()),
+      );
     }).toList();
   }
 
@@ -460,7 +468,12 @@ class FirestoreService {
           final feedbackRead = data['feedbackRead'] as bool? ?? false;
           return feedback != null && feedback.isNotEmpty && !feedbackRead;
         })
-        .map((doc) => StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data())))
+        .map(
+          (doc) => StationSubmission.fromJson(
+            doc.id,
+            _normalizeTimestamps(doc.data()),
+          ),
+        )
         .toList();
   }
 
@@ -509,13 +522,19 @@ class FirestoreService {
         .get();
 
     return snapshot.docs.map((doc) {
-      return StationSubmission.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+      return StationSubmission.fromJson(
+        doc.id,
+        _normalizeTimestamps(doc.data()),
+      );
     }).toList();
   }
 
   /// Approve a station submission: copy to stations collection,
   /// update status to approved, rebuild stations aggregate.
-  static Future<void> approveStation(StationSubmission submission, {String? feedback}) async {
+  static Future<void> approveStation(
+    StationSubmission submission, {
+    String? feedback,
+  }) async {
     final stationId = 'user_${submission.id}';
     final station = Station(
       id: stationId,
@@ -530,10 +549,7 @@ class FirestoreService {
     final batch = _db.batch();
 
     // Add to stations collection
-    batch.set(
-      _db.collection('stations').doc(stationId),
-      station.toJson(),
-    );
+    batch.set(_db.collection('stations').doc(stationId), station.toJson());
 
     // Update submission status + optional feedback
     final updateData = <String, dynamic>{'status': 'approved'};
@@ -541,10 +557,7 @@ class FirestoreService {
       updateData['feedback'] = feedback;
       updateData['feedbackRead'] = false;
     }
-    batch.update(
-      _db.collection('new_stations').doc(submission.id),
-      updateData,
-    );
+    batch.update(_db.collection('new_stations').doc(submission.id), updateData);
 
     await batch.commit();
 
@@ -553,8 +566,8 @@ class FirestoreService {
     final aggDoc = await _db.collection('aggregates').doc('stations').get();
     final existing = aggDoc.exists
         ? ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList()
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList()
         : <Map<String, dynamic>>[];
     existing.add(station.toJson());
     await _db.collection('aggregates').doc('stations').set({
@@ -602,24 +615,33 @@ class FirestoreService {
   }
 
   /// Fetch modify requests submitted by a given user.
-  static Future<List<StationModifyRequest>> getUserModifyRequests(String uid) async {
+  static Future<List<StationModifyRequest>> getUserModifyRequests(
+    String uid,
+  ) async {
     final snapshot = await _db
         .collection('station_modify_requests')
         .where('submittedBy', isEqualTo: uid)
         .get();
     return snapshot.docs.map((doc) {
-      return StationModifyRequest.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+      return StationModifyRequest.fromJson(
+        doc.id,
+        _normalizeTimestamps(doc.data()),
+      );
     }).toList();
   }
 
   /// Fetch all pending modify requests (admin only).
-  static Future<List<StationModifyRequest>> getAllPendingModifyRequests() async {
+  static Future<List<StationModifyRequest>>
+  getAllPendingModifyRequests() async {
     final snapshot = await _db
         .collection('station_modify_requests')
         .where('status', isEqualTo: 'pending')
         .get();
     return snapshot.docs.map((doc) {
-      return StationModifyRequest.fromJson(doc.id, _normalizeTimestamps(doc.data()));
+      return StationModifyRequest.fromJson(
+        doc.id,
+        _normalizeTimestamps(doc.data()),
+      );
     }).toList();
   }
 
@@ -629,7 +651,9 @@ class FirestoreService {
     String? feedback,
   }) async {
     final stationRef = _db.collection('stations').doc(request.stationId);
-    final requestRef = _db.collection('station_modify_requests').doc(request.id);
+    final requestRef = _db
+        .collection('station_modify_requests')
+        .doc(request.id);
 
     final batch = _db.batch();
 
@@ -679,7 +703,10 @@ class FirestoreService {
   }
 
   /// Reject a modify request with optional feedback.
-  static Future<void> rejectModifyRequest(String docId, {String? feedback}) async {
+  static Future<void> rejectModifyRequest(
+    String docId, {
+    String? feedback,
+  }) async {
     final data = <String, dynamic>{'status': 'rejected'};
     if (feedback != null && feedback.isNotEmpty) {
       data['feedback'] = feedback;
@@ -696,7 +723,9 @@ class FirestoreService {
   }
 
   /// Fetch modify requests with unread feedback for a given user.
-  static Future<List<StationModifyRequest>> getUnreadModifyFeedback(String uid) async {
+  static Future<List<StationModifyRequest>> getUnreadModifyFeedback(
+    String uid,
+  ) async {
     final snapshot = await _db
         .collection('station_modify_requests')
         .where('submittedBy', isEqualTo: uid)
@@ -708,7 +737,12 @@ class FirestoreService {
           final feedbackRead = data['feedbackRead'] as bool? ?? false;
           return feedback != null && feedback.isNotEmpty && !feedbackRead;
         })
-        .map((doc) => StationModifyRequest.fromJson(doc.id, _normalizeTimestamps(doc.data())))
+        .map(
+          (doc) => StationModifyRequest.fromJson(
+            doc.id,
+            _normalizeTimestamps(doc.data()),
+          ),
+        )
         .toList();
   }
 

@@ -49,7 +49,10 @@ class _StationMarkerState extends State<StationMarker> {
   /// - 6–12hr → yellow/orange
   /// - 13–23hr → red
   /// - 24hr+ → ">1d" gray
-  static ({String label, Color color}) _formatAge(BuildContext context, Duration age) {
+  static ({String label, Color color}) _formatAge(
+    BuildContext context,
+    Duration age,
+  ) {
     final minutes = age.inMinutes;
     final hours = age.inHours;
 
@@ -110,10 +113,7 @@ class _StationMarkerState extends State<StationMarker> {
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 2.5),
                 boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 6,
-                  ),
+                  BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 6),
                 ],
               ),
               child: logoAsset != null
@@ -170,8 +170,9 @@ class _StationMarkerState extends State<StationMarker> {
             boxShadow: [
               BoxShadow(
                 color: widget.isBestPrice
-                    ? AppColors.primaryContainer(context)
-                        .withValues(alpha: 0.35)
+                    ? AppColors.primaryContainer(
+                        context,
+                      ).withValues(alpha: 0.35)
                     : Colors.black.withValues(alpha: 0.1),
                 blurRadius: widget.isBestPrice ? 8 : 4,
               ),

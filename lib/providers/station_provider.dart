@@ -53,7 +53,10 @@ class StationProvider extends ChangeNotifier {
       final radiusMeters = _filterRadiusKm! * 1000;
       result = result.where((s) {
         final d = DistanceService.distanceInMeters(
-          _userLat!, _userLng!, s.latitude, s.longitude,
+          _userLat!,
+          _userLng!,
+          s.latitude,
+          s.longitude,
         );
         return d <= radiusMeters;
       });
@@ -65,7 +68,11 @@ class StationProvider extends ChangeNotifier {
   /// Sorted list of unique brand names from stations within the radius
   /// (independent of brand filter so all chips remain visible).
   List<String> get availableBrands {
-    final brands = _radiusFiltered.map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
+    final brands = _radiusFiltered
+        .map((s) => s.brand)
+        .where((b) => b.isNotEmpty)
+        .toSet()
+        .toList();
     brands.sort();
     return brands;
   }
@@ -200,10 +207,16 @@ class StationProvider extends ChangeNotifier {
         if (userLat != null && userLng != null) {
           all.sort((a, b) {
             final da = DistanceService.distanceInMeters(
-              userLat, userLng, a.latitude, a.longitude,
+              userLat,
+              userLng,
+              a.latitude,
+              a.longitude,
             );
             final db = DistanceService.distanceInMeters(
-              userLat, userLng, b.latitude, b.longitude,
+              userLat,
+              userLng,
+              b.latitude,
+              b.longitude,
             );
             return da.compareTo(db);
           });

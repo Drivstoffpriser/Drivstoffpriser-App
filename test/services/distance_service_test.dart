@@ -11,7 +11,10 @@ void main() {
     test('Oslo to Bergen is approximately 305 km', () {
       // Oslo (59.9139, 10.7522) to Bergen (60.3913, 5.3221)
       final d = DistanceService.distanceInMeters(
-        59.9139, 10.7522, 60.3913, 5.3221,
+        59.9139,
+        10.7522,
+        60.3913,
+        5.3221,
       );
       // Straight-line distance is ~305 km
       expect(d, greaterThan(300000));
@@ -21,7 +24,10 @@ void main() {
     test('short distance is accurate', () {
       // Two points ~1 km apart in Oslo
       final d = DistanceService.distanceInMeters(
-        59.9139, 10.7522, 59.9229, 10.7522,
+        59.9139,
+        10.7522,
+        59.9229,
+        10.7522,
       );
       // ~1000m (purely north, 0.009 degrees latitude)
       expect(d, greaterThan(900));

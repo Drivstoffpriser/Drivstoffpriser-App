@@ -12,9 +12,6 @@ class PriceHistoryPoint {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'price': price,
-    };
+    return {'date': date.toIso8601String(), 'price': price};
   }
 }

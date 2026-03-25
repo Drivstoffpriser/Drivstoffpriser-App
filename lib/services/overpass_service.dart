@@ -30,7 +30,8 @@ class OverpassService {
     int radiusMeters = 50000,
   }) async {
     final brandRegex = _supportedBrands.join('|');
-    final query = '[out:json][timeout:$_timeoutSeconds];'
+    final query =
+        '[out:json][timeout:$_timeoutSeconds];'
         '(node["amenity"="fuel"]["brand"~"$brandRegex"]'
         '(around:$radiusMeters,$lat,$lng););out body;';
 
@@ -45,7 +46,8 @@ class OverpassService {
   static Future<List<Station>> fetchAllNorwayStations() async {
     const timeout = 60;
     final brandRegex = _supportedBrands.join('|');
-    final query = '[out:json][timeout:$timeout];'
+    final query =
+        '[out:json][timeout:$timeout];'
         'area["ISO3166-1"="NO"]->.norway;'
         '(node["amenity"="fuel"]["brand"~"$brandRegex"](area.norway););'
         'out body;';
@@ -117,11 +119,16 @@ class OverpassService {
 
   /// Haversine distance in meters between two coordinates.
   static double _distanceMeters(
-      double lat1, double lon1, double lat2, double lon2) {
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const r = 6371000.0; // Earth radius in meters
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_toRad(lat1)) *
             math.cos(_toRad(lat2)) *
             math.sin(dLon / 2) *
@@ -139,9 +146,8 @@ class OverpassService {
     final street = tags['addr:street'] as String? ?? '';
     final houseNumber = tags['addr:housenumber'] as String? ?? '';
     final address = '$street $houseNumber'.trim();
-    final city = tags['addr:city'] as String? ??
-        tags['addr:postcode'] as String? ??
-        '';
+    final city =
+        tags['addr:city'] as String? ?? tags['addr:postcode'] as String? ?? '';
 
     return Station(
       id: 'osm_$osmId',

@@ -41,11 +41,11 @@ class MockFirebaseAppPlatform extends Fake
 
   @override
   FirebaseOptions get options => const FirebaseOptions(
-        apiKey: 'test',
-        appId: 'test',
-        messagingSenderId: 'test',
-        projectId: 'test',
-      );
+    apiKey: 'test',
+    appId: 'test',
+    messagingSenderId: 'test',
+    projectId: 'test',
+  );
 
   @override
   bool get isAutomaticDataCollectionEnabled => false;

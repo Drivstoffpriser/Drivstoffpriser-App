@@ -81,26 +81,22 @@ class _MapScreenState extends State<MapScreen> {
   void _selectSearchResult(Station station) {
     _searchController.clear();
     _searchFocus.unfocus();
-    _mapController.move(
-      LatLng(station.latitude, station.longitude),
-      15,
-    );
-    Navigator.pushNamed(
-      context,
-      AppRoutes.stationDetail,
-      arguments: station,
-    );
+    _mapController.move(LatLng(station.latitude, station.longitude), 15);
+    Navigator.pushNamed(context, AppRoutes.stationDetail, arguments: station);
   }
 
   List<Station> _searchResults(List<Station> stations) {
     if (_searchQuery.isEmpty) return [];
     final q = _searchQuery.toLowerCase();
-    return stations.where((s) {
-      return s.name.toLowerCase().contains(q) ||
-          s.brand.toLowerCase().contains(q) ||
-          s.city.toLowerCase().contains(q) ||
-          s.address.toLowerCase().contains(q);
-    }).take(8).toList();
+    return stations
+        .where((s) {
+          return s.name.toLowerCase().contains(q) ||
+              s.brand.toLowerCase().contains(q) ||
+              s.city.toLowerCase().contains(q) ||
+              s.address.toLowerCase().contains(q);
+        })
+        .take(8)
+        .toList();
   }
 
   @override
@@ -322,9 +318,9 @@ class _MapScreenState extends State<MapScreen> {
                             textAlignVertical: TextAlignVertical.center,
                             decoration: InputDecoration(
                               hintText: context.l10n.searchStations,
-                              hintStyle: AppTextStyles.body(context).copyWith(
-                                color: AppColors.textMuted(context),
-                              ),
+                              hintStyle: AppTextStyles.body(
+                                context,
+                              ).copyWith(color: AppColors.textMuted(context)),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
@@ -399,8 +395,8 @@ class _MapScreenState extends State<MapScreen> {
               onPressed: locationProvider.isLoading
                   ? null
                   : locationProvider.hasLocation
-                      ? _centerOnUser
-                      : () => _requestLocation(),
+                  ? _centerOnUser
+                  : () => _requestLocation(),
             ),
           ),
 
@@ -415,9 +411,7 @@ class _MapScreenState extends State<MapScreen> {
                 child: Container(
                   constraints: const BoxConstraints(maxHeight: 320),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurface
-                        : Colors.white,
+                    color: isDark ? AppColors.darkSurface : Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: AppColors.border(context),
@@ -456,9 +450,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
 
           // "No results" message
-          if (_isSearching &&
-              _searchQuery.isNotEmpty &&
-              results.isEmpty)
+          if (_isSearching && _searchQuery.isNotEmpty && results.isEmpty)
             Positioned(
               top: topPadding + 60,
               left: 16,
@@ -466,9 +458,7 @@ class _MapScreenState extends State<MapScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurface
-                      : Colors.white,
+                  color: isDark ? AppColors.darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: AppColors.border(context),
@@ -522,9 +512,10 @@ class _SearchResultTile extends StatelessWidget {
                   ),
                   if (station.city.isNotEmpty || station.address.isNotEmpty)
                     Text(
-                      [station.address, station.city]
-                          .where((s) => s.isNotEmpty)
-                          .join(', '),
+                      [
+                        station.address,
+                        station.city,
+                      ].where((s) => s.isNotEmpty).join(', '),
                       style: AppTextStyles.meta(context),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -619,10 +610,7 @@ class _MapActionButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
-  const _MapActionButton({
-    required this.icon,
-    required this.onPressed,
-  });
+  const _MapActionButton({required this.icon, required this.onPressed});
 
   @override
   State<_MapActionButton> createState() => _MapActionButtonState();

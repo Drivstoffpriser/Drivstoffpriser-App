@@ -79,7 +79,10 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text(context.l10n.verifyPrices, style: AppTextStyles.title(context)),
+        title: Text(
+          context.l10n.verifyPrices,
+          style: AppTextStyles.title(context),
+        ),
       ),
       body: SafeArea(
         child: Column(

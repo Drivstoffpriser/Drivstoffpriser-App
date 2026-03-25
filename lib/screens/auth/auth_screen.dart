@@ -205,7 +205,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 Expanded(child: Divider(color: AppColors.border(context))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(context.l10n.or, style: AppTextStyles.label(context)),
+                  child: Text(
+                    context.l10n.or,
+                    style: AppTextStyles.label(context),
+                  ),
                 ),
                 Expanded(child: Divider(color: AppColors.border(context))),
               ],
@@ -277,7 +280,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         )
                       : Text(
-                          _isRegister ? context.l10n.createAccount : context.l10n.signIn,
+                          _isRegister
+                              ? context.l10n.createAccount
+                              : context.l10n.signIn,
                           style: AppTextStyles.bodyMedium(
                             context,
                           ).copyWith(color: Colors.white),

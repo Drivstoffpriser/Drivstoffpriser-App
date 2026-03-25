@@ -93,9 +93,9 @@ class _BugReportScreenState extends State<BugReportScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.bugReportFailed(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.bugReportFailed(e.toString()))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -109,7 +109,10 @@ class _BugReportScreenState extends State<BugReportScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
-        title: Text(context.l10n.bugReportTitle, style: AppTextStyles.title(context)),
+        title: Text(
+          context.l10n.bugReportTitle,
+          style: AppTextStyles.title(context),
+        ),
       ),
       body: Form(
         key: _formKey,

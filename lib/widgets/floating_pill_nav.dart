@@ -25,11 +25,7 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
   int _currentIndex = 0;
   bool _hasCheckedFeedback = false;
 
-  static const _screens = [
-    MapScreen(),
-    StationListScreen(),
-    SettingsScreen(),
-  ];
+  static const _screens = [MapScreen(), StationListScreen(), SettingsScreen()];
 
   @override
   void didChangeDependencies() {
@@ -95,9 +91,9 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
               ),
               child: Text(
                 statusLabel,
-                style: AppTextStyles.labelBold(context).copyWith(
-                  color: statusColor,
-                ),
+                style: AppTextStyles.labelBold(
+                  context,
+                ).copyWith(color: statusColor),
               ),
             ),
             const SizedBox(height: 12),
@@ -147,9 +143,9 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
               ),
               child: Text(
                 statusLabel,
-                style: AppTextStyles.labelBold(context).copyWith(
-                  color: statusColor,
-                ),
+                style: AppTextStyles.labelBold(
+                  context,
+                ).copyWith(color: statusColor),
               ),
             ),
             const SizedBox(height: 12),
@@ -194,7 +190,9 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
                         color: isDark
-                            ? AppColors.darkOutlineVariant.withValues(alpha: 0.5)
+                            ? AppColors.darkOutlineVariant.withValues(
+                                alpha: 0.5,
+                              )
                             : const Color(0xFFDDE1E6),
                         width: 0.5,
                       ),

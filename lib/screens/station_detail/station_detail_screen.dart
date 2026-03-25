@@ -115,10 +115,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: isDark
-                        ? [
-                            AppColors.darkSurfaceHigh,
-                            AppColors.darkBackground,
-                          ]
+                        ? [AppColors.darkSurfaceHigh, AppColors.darkBackground]
                         : [
                             AppColors.lightSurfaceLow,
                             AppColors.lightBackground,
@@ -151,9 +148,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                                   [
                                     widget.station.address,
                                     widget.station.city,
-                                  ]
-                                      .where((s) => s.isNotEmpty)
-                                      .join(', '),
+                                  ].where((s) => s.isNotEmpty).join(', '),
                                   style: AppTextStyles.meta(context),
                                 ),
                               ],
@@ -179,7 +174,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => EditStationScreen(station: widget.station),
+                      builder: (_) =>
+                          EditStationScreen(station: widget.station),
                     ),
                   );
                 },
@@ -189,10 +185,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 padding: const EdgeInsets.only(right: 8),
                 child: IconButton(
                   onPressed: () => _openDirections(context),
-                  icon: Icon(
-                    Icons.directions_outlined,
-                    color: activeColor,
-                  ),
+                  icon: Icon(Icons.directions_outlined, color: activeColor),
                   tooltip: context.l10n.navigate,
                 ),
               ),
@@ -282,7 +275,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 if (priceProvider.isLoading)
                   const LoadingIndicator()
                 else if (priceProvider.reports.isEmpty)
-                  Text(context.l10n.noReportsYet, style: AppTextStyles.label(context))
+                  Text(
+                    context.l10n.noReportsYet,
+                    style: AppTextStyles.label(context),
+                  )
                 else
                   ...priceProvider.reports.take(10).map((report) {
                     return Container(
@@ -331,9 +327,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                           ),
                           Text(
                             '${report.price.toStringAsFixed(2)} ${context.l10n.krSuffix}',
-                            style: AppTextStyles.priceMedium(context).copyWith(
-                              color: activeColor,
-                            ),
+                            style: AppTextStyles.priceMedium(
+                              context,
+                            ).copyWith(color: activeColor),
                           ),
                           if (userProvider.isAdmin) ...[
                             const SizedBox(width: 8),
@@ -344,15 +340,21 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                     title: Text(context.l10n.deleteReportTitle),
-                                    content: Text(context.l10n.deleteReportBody),
+                                    content: Text(
+                                      context.l10n.deleteReportBody,
+                                    ),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
                                         child: Text(context.l10n.cancel),
                                       ),
                                       TextButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
-                                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.red,
+                                        ),
                                         child: Text(context.l10n.delete),
                                       ),
                                     ],
@@ -468,10 +470,9 @@ class _GradientActionButtonState extends State<_GradientActionButton> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: (isDark
-                        ? const Color(0xFF00d1ff)
-                        : const Color(0xFF0056b3))
-                    .withValues(alpha: 0.3),
+                color:
+                    (isDark ? const Color(0xFF00d1ff) : const Color(0xFF0056b3))
+                        .withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

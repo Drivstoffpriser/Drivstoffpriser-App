@@ -34,7 +34,8 @@ class UserProvider extends ChangeNotifier {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return false;
     return firebaseUser.providerData.any(
-      (info) => info.providerId == 'password' || info.providerId == 'google.com',
+      (info) =>
+          info.providerId == 'password' || info.providerId == 'google.com',
     );
   }
 
@@ -43,7 +44,9 @@ class UserProvider extends ChangeNotifier {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return AccountType.anonymous;
 
-    final providers = firebaseUser.providerData.map((i) => i.providerId).toSet();
+    final providers = firebaseUser.providerData
+        .map((i) => i.providerId)
+        .toSet();
     final hasEmail = providers.contains('password');
     final hasGoogle = providers.contains('google.com');
 
@@ -120,7 +123,10 @@ class UserProvider extends ChangeNotifier {
       await currentUser.linkWithCredential(credential);
       await currentUser.updateDisplayName(displayName);
     } else {
-      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       await _auth.currentUser?.updateDisplayName(displayName);
     }
 
@@ -150,7 +156,10 @@ class UserProvider extends ChangeNotifier {
 
   /// Sign in with an existing email/password account.
   Future<void> signInWithEmail(String email, String password) async {
-    final result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    final result = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     await _loadProfile(result.user!);
   }
 
@@ -198,7 +207,8 @@ class UserProvider extends ChangeNotifier {
       );
     }
 
-    final displayName = signedInUser.displayName ?? googleUser.displayName ?? 'User';
+    final displayName =
+        signedInUser.displayName ?? googleUser.displayName ?? 'User';
     // Read existing profile to preserve reportCount/trustScore
     final existing = await FirestoreService.getUserProfile(signedInUser.uid);
     if (existing != null) {

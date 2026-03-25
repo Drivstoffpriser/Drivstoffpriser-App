@@ -14,8 +14,7 @@ class AdminModifyRequestsScreen extends StatefulWidget {
       _AdminModifyRequestsScreenState();
 }
 
-class _AdminModifyRequestsScreenState
-    extends State<AdminModifyRequestsScreen> {
+class _AdminModifyRequestsScreenState extends State<AdminModifyRequestsScreen> {
   List<StationModifyRequest>? _requests;
   bool _isLoading = true;
 
@@ -132,28 +131,30 @@ class _AdminModifyRequestsScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _requests == null || _requests!.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noPendingModifyRequests,
-                    style: AppTextStyles.label(context),
-                  ),
-                )
-              : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    16, 16, 16,
-                    MediaQuery.of(context).padding.bottom + 16,
-                  ),
-                  itemCount: _requests!.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final req = _requests![index];
-                    return _DiffCard(
-                      request: req,
-                      onApprove: () => _approve(req),
-                      onReject: () => _reject(req),
-                    );
-                  },
-                ),
+          ? Center(
+              child: Text(
+                context.l10n.noPendingModifyRequests,
+                style: AppTextStyles.label(context),
+              ),
+            )
+          : ListView.separated(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.of(context).padding.bottom + 16,
+              ),
+              itemCount: _requests!.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final req = _requests![index];
+                return _DiffCard(
+                  request: req,
+                  onApprove: () => _approve(req),
+                  onReject: () => _reject(req),
+                );
+              },
+            ),
     );
   }
 }
@@ -181,10 +182,7 @@ class _DiffCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            request.originalName,
-            style: AppTextStyles.bodyMedium(context),
-          ),
+          Text(request.originalName, style: AppTextStyles.bodyMedium(context)),
           Text(
             context.l10n.stationId(request.stationId),
             style: AppTextStyles.meta(context),
@@ -274,11 +272,20 @@ class _DiffRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.red.withValues(alpha: 0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(6),
+              ),
             ),
             child: Row(
               children: [
-                Text('− ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(
+                  '− ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
                 Expanded(
                   child: Text(
                     oldValue,
@@ -296,17 +303,26 @@ class _DiffRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.green.withValues(alpha: 0.08),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(6)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(6),
+              ),
             ),
             child: Row(
               children: [
-                Text('+ ', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(
+                  '+ ',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
                 Expanded(
                   child: Text(
                     newValue,
-                    style: AppTextStyles.body(context).copyWith(
-                      color: Colors.green,
-                    ),
+                    style: AppTextStyles.body(
+                      context,
+                    ).copyWith(color: Colors.green),
                   ),
                 ),
               ],

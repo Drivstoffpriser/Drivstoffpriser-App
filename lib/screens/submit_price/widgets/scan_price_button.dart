@@ -204,9 +204,9 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       debugPrint('[$_tag] scanCroppedImage() failed: $e\n$stack');
       if (!mounted) return;
       setState(() => _isProcessing = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.failedToProcessImage)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.failedToProcessImage)),
+      );
     }
   }
 
@@ -231,7 +231,10 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
                   Icons.camera_alt_outlined,
                   color: AppColors.textPrimary(context),
                 ),
-                title: Text(context.l10n.takePhoto, style: AppTextStyles.body(context)),
+                title: Text(
+                  context.l10n.takePhoto,
+                  style: AppTextStyles.body(context),
+                ),
                 onTap: _pickFromCamera,
               ),
               ListTile(
@@ -280,7 +283,9 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
               ),
             const SizedBox(width: 8),
             Text(
-              _isProcessing ? context.l10n.analyzing : context.l10n.scanPriceSign,
+              _isProcessing
+                  ? context.l10n.analyzing
+                  : context.l10n.scanPriceSign,
               style: AppTextStyles.bodyMedium(context),
             ),
           ],

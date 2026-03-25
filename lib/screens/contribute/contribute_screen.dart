@@ -59,10 +59,9 @@ class _ContributeScreenState extends State<ContributeScreen> {
               titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               title: Text(
                 context.l10n.contributeData,
-                style: AppTextStyles.sectionHeader(context).copyWith(
-                  fontSize: 14,
-                  color: AppColors.textPrimary(context),
-                ),
+                style: AppTextStyles.sectionHeader(
+                  context,
+                ).copyWith(fontSize: 14, color: AppColors.textPrimary(context)),
               ),
             ),
           ),
@@ -122,7 +121,11 @@ class _StepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
-    final labels = [context.l10n.station, context.l10n.fuelType, context.l10n.price];
+    final labels = [
+      context.l10n.station,
+      context.l10n.fuelType,
+      context.l10n.price,
+    ];
 
     return Row(
       children: List.generate(3, (i) {
@@ -164,8 +167,8 @@ class _StepIndicator extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               color: isActive
                                   ? (isDark
-                                      ? AppColors.darkBackground
-                                      : Colors.white)
+                                        ? AppColors.darkBackground
+                                        : Colors.white)
                                   : AppColors.textMuted(context),
                             ),
                           ),
@@ -212,10 +215,7 @@ class _StationSelectionStep extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildListDelegate([
-          Text(
-            context.l10n.selectStation,
-            style: AppTextStyles.title(context),
-          ),
+          Text(context.l10n.selectStation, style: AppTextStyles.title(context)),
           const SizedBox(height: 4),
           Text(
             context.l10n.chooseStationSubtitle,
@@ -285,10 +285,7 @@ class _StationSelectionCardState extends State<_StationSelectionCard> {
             decoration: BoxDecoration(
               color: AppColors.surface(context),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.border(context),
-                width: 0.5,
-              ),
+              border: Border.all(color: AppColors.border(context), width: 0.5),
             ),
             child: Row(
               children: [
@@ -377,12 +374,12 @@ class _FuelTypeStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text(context.l10n.selectFuelGrade, style: AppTextStyles.title(context)),
-          const SizedBox(height: 4),
           Text(
-            context.l10n.whatFuelType,
-            style: AppTextStyles.meta(context),
+            context.l10n.selectFuelGrade,
+            style: AppTextStyles.title(context),
           ),
+          const SizedBox(height: 4),
+          Text(context.l10n.whatFuelType, style: AppTextStyles.meta(context)),
           const SizedBox(height: 16),
           // 2-column grid
           GridView.count(
@@ -443,19 +440,12 @@ class _FuelTypeCardState extends State<_FuelTypeCard> {
           decoration: BoxDecoration(
             color: AppColors.surface(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.border(context),
-              width: 0.5,
-            ),
+            border: Border.all(color: AppColors.border(context), width: 0.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                widget.icon,
-                size: 28,
-                color: activeColor,
-              ),
+              Icon(widget.icon, size: 28, color: activeColor),
               const SizedBox(height: 8),
               Text(
                 widget.type.localizedName(context),
@@ -541,11 +531,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.check_circle,
-                  size: 18,
-                  color: activeColor,
-                ),
+                Icon(Icons.check_circle, size: 18, color: activeColor),
               ],
             ),
           ),
@@ -561,9 +547,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
               decoration: BoxDecoration(
                 color: activeColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: activeColor.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: activeColor.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -571,10 +555,12 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                   Icon(Icons.info_outline, size: 16, color: activeColor),
                   const SizedBox(width: 8),
                   Text(
-                    context.l10n.currentAvg('${currentPrice.price.toStringAsFixed(2)} ${context.l10n.nok}/${widget.fuelType.unit}'),
-                    style: AppTextStyles.label(context).copyWith(
-                      color: activeColor,
+                    context.l10n.currentAvg(
+                      '${currentPrice.price.toStringAsFixed(2)} ${context.l10n.nok}/${widget.fuelType.unit}',
                     ),
+                    style: AppTextStyles.label(
+                      context,
+                    ).copyWith(color: activeColor),
                   ),
                 ],
               ),
@@ -586,10 +572,7 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
             decoration: BoxDecoration(
               color: AppColors.surface(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.border(context),
-                width: 0.5,
-              ),
+              border: Border.all(color: AppColors.border(context), width: 0.5),
             ),
             child: Column(
               children: [
@@ -605,16 +588,17 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        style: AppTextStyles.priceLarge(context).copyWith(
-                          fontSize: 36,
-                        ),
+                        style: AppTextStyles.priceLarge(
+                          context,
+                        ).copyWith(fontSize: 36),
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
                           hintText: '0.00',
                           hintStyle: AppTextStyles.priceLarge(context).copyWith(
                             fontSize: 36,
-                            color: AppColors.textMuted(context)
-                                .withValues(alpha: 0.3),
+                            color: AppColors.textMuted(
+                              context,
+                            ).withValues(alpha: 0.3),
                           ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -625,17 +609,14 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
                     ),
                     Text(
                       context.l10n.nok,
-                      style: AppTextStyles.title(context).copyWith(
-                        color: AppColors.textMuted(context),
-                      ),
+                      style: AppTextStyles.title(
+                        context,
+                      ).copyWith(color: AppColors.textMuted(context)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  context.l10n.perL,
-                  style: AppTextStyles.meta(context),
-                ),
+                Text(context.l10n.perL, style: AppTextStyles.meta(context)),
               ],
             ),
           ),
@@ -685,22 +666,15 @@ class _GradientButtonState extends State<_GradientButton> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDark
-                  ? [
-                      const Color(0xFF00d1ff),
-                      const Color(0xFF0091b3),
-                    ]
-                  : [
-                      const Color(0xFF0056b3),
-                      const Color(0xFF003f87),
-                    ],
+                  ? [const Color(0xFF00d1ff), const Color(0xFF0091b3)]
+                  : [const Color(0xFF0056b3), const Color(0xFF003f87)],
             ),
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: (isDark
-                        ? const Color(0xFF00d1ff)
-                        : const Color(0xFF0056b3))
-                    .withValues(alpha: 0.3),
+                color:
+                    (isDark ? const Color(0xFF00d1ff) : const Color(0xFF0056b3))
+                        .withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

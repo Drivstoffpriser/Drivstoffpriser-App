@@ -62,24 +62,25 @@ class LocationProvider extends ChangeNotifier {
       }
 
       // Stream live position updates
-      _positionSub = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 50, // Update every 50 meters of movement
-        ),
-      ).listen(
-        (position) {
-          _position = position;
-          _isLoading = false;
-          _error = null;
-          notifyListeners();
-        },
-        onError: (e) {
-          _error = 'Location error: $e';
-          _isLoading = false;
-          notifyListeners();
-        },
-      );
+      _positionSub =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 50, // Update every 50 meters of movement
+            ),
+          ).listen(
+            (position) {
+              _position = position;
+              _isLoading = false;
+              _error = null;
+              notifyListeners();
+            },
+            onError: (e) {
+              _error = 'Location error: $e';
+              _isLoading = false;
+              notifyListeners();
+            },
+          );
     } catch (e) {
       _error = 'Failed to get location: $e';
       _isLoading = false;
