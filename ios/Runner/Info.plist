@@ -45,6 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+        <key>ITSAppUsesNonExemptEncryption</key>
+        <false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs your location to show nearby fuel stations and calculate distances.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
