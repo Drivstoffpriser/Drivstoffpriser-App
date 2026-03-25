@@ -7,10 +7,6 @@ on:
         description: 'Version name (e.g. 1.0.1)'
         required: true
         default: '1.0.0'
-      build_number:
-        description: 'Build number (e.g. 2)'
-        required: true
-        default: '1'
 
 permissions:
   contents: write
@@ -19,10 +15,22 @@ jobs:
   build:
     name: Build Release APK & AAB
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute build number
+        id: build_number
+        run: |
+          # Get the highest build number from existing tags (v*+N)
+          LATEST=$(git tag -l 'v*+*' | sed 's/.*+//' | sort -n | tail -1)
+          NEXT=$(( ${LATEST:-0} + 1 ))
+          echo "value=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Build number: $NEXT (previous: ${LATEST:-none})"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -57,16 +65,16 @@ jobs:
         run: echo "${{ secrets.FIREBASE_OPTIONS_DART }}" | base64 --decode > lib/firebase_options.dart
 
       - name: Build APK
-        run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+        run: flutter build apk --release --build-name=${{ inputs.version }} --build-number=${{ steps.build_number.outputs.value }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: Build AAB
-        run: flutter build appbundle --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build_number }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+        run: flutter build appbundle --release --build-name=${{ inputs.version }} --build-number=${{ steps.build_number.outputs.value }} --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ inputs.version }}+${{ inputs.build_number }}
-          name: Release ${{ inputs.version }} (${{ inputs.build_number }})
+          tag_name: v${{ inputs.version }}+${{ steps.build_number.outputs.value }}
+          name: Release ${{ inputs.version }} (${{ steps.build_number.outputs.value }})
           files: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
