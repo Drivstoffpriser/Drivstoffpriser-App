@@ -76,26 +76,7 @@ class FirestoreService {
     return snapshot.docs.isNotEmpty;
   }
 
-  /// Upsert stations by merging incoming stations with any existing
-  /// stations in the aggregate (e.g. manually added), then rebuilding.
-  /// Costs 1 read (aggregate doc) instead of N reads (individual docs).
-  static Future<void> upsertStations(List<Station> stations) async {
-    if (stations.isEmpty) return;
-
-    // Read existing aggregate (1 read) to preserve manually-added stations
-    final existing = await getStations();
-
-    // Index incoming stations by ID — Overpass data takes priority
-    final mergedById = {for (final s in existing) s.id: s};
-    for (final s in stations) {
-      mergedById[s.id] = s;
-    }
-
-    await _rebuildStationsAggregate(mergedById.values.toList());
-  }
-
   /// Rebuild the aggregate from the stations collection (N reads).
-  /// Use when Overpass is unavailable and the aggregate may be stale.
   static Future<void> rebuildStationsAggregate() => _rebuildStationsAggregate();
 
   /// Rebuild the stations aggregate doc.
@@ -118,6 +99,9 @@ class FirestoreService {
     }).toList();
   }
 
+  /// Rebuild the prices aggregate from the currentPrices collection.
+  static Future<void> rebuildPricesAggregate() => _rebuildPricesAggregate();
+
   /// Rebuild the prices aggregate doc.
   /// If [prices] is provided, uses them directly (0 reads).
   /// Otherwise falls back to reading all currentPrices docs from Firestore.
@@ -126,6 +110,32 @@ class FirestoreService {
 
     await _db.collection('aggregates').doc('prices').set({
       'prices': allPrices.map((p) => p.toJson()).toList(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Update or insert a single price in the prices aggregate (1 read + 1 write).
+  static Future<void> _upsertPriceInAggregate(CurrentPrice price) async {
+    final aggDoc = await _db.collection('aggregates').doc('prices').get();
+    final list = aggDoc.exists
+        ? ((aggDoc.data()!['prices'] as List<dynamic>?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList()
+        : <Map<String, dynamic>>[];
+
+    // Find existing entry by stationId + fuelType
+    final idx = list.indexWhere(
+      (p) => p['stationId'] == price.stationId && p['fuelType'] == price.fuelType.name,
+    );
+
+    if (idx != -1) {
+      list[idx] = price.toJson();
+    } else {
+      list.add(price.toJson());
+    }
+
+    await _db.collection('aggregates').doc('prices').set({
+      'prices': list,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -257,8 +267,16 @@ class FirestoreService {
 
     await batch.commit();
 
-    // Rebuild prices aggregate so other users see updated prices
-    await _rebuildPricesAggregate();
+    // Update just the one price entry in the aggregate (1 read + 1 write)
+    // instead of rebuilding the entire aggregate from currentPrices (N reads).
+    final newPrice = CurrentPrice(
+      stationId: stationId,
+      fuelType: fuelType,
+      price: price,
+      updatedAt: now,
+      reportCount: currentCount + 1,
+    );
+    await _upsertPriceInAggregate(newPrice);
   }
 
   /// Returns the most recent report time for a user+station+fuelType combo,
