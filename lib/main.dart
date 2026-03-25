@@ -26,12 +26,9 @@ void main() async {
   final userProvider = UserProvider();
   userProvider.initialize();
 
-  // Start station loading immediately so data is ready by the time
-  // the map screen renders.  Serves cache first (0 reads), then
-  // falls back to aggregate docs (2 reads), then refreshes from
-  // Overpass in the background.
+  // Load stations from cache or Firestore aggregate (≤2 reads).
   final stationProvider = StationProvider();
-  stationProvider.fetchAllNorwayStations();
+  stationProvider.loadStations();
 
   runApp(
     MultiProvider(
