@@ -42,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isRefreshing = true);
 
     final stationProvider = context.read<StationProvider>();
-    await stationProvider.fetchAllNorwayStations();
+    await stationProvider.refreshStations();
 
     if (mounted) {
       ScaffoldMessenger.of(

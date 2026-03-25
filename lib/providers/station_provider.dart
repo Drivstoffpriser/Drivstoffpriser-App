@@ -1,13 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-import '../config/constants.dart';
 import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/station.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
 import '../services/firestore_service.dart';
-import '../services/overpass_service.dart';
 
 enum SortMode { cheapest, nearest, latest }
 
@@ -98,26 +96,13 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load stations and prices. Reads from local cache first; falls back
-  /// to Firestore aggregate docs (2 reads) if cache is stale or empty.
+  /// Load stations and prices from Firestore aggregate docs (2 reads).
+  /// Called on app startup.
   Future<void> loadStations() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Try local cache first (0 Firestore reads)
-      final cachedStations = await CacheService.getCachedStations();
-      final cachedPrices = await CacheService.getCachedPrices();
-
-      if (cachedStations != null && cachedPrices != null) {
-        _stations = cachedStations;
-        _prices = cachedPrices;
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
-
-      // Cache miss — read from Firestore aggregate docs (2 reads)
       await _fetchFromFirestore();
     } catch (e) {
       debugPrint('Failed to load stations: $e');
@@ -127,7 +112,7 @@ class StationProvider extends ChangeNotifier {
     }
   }
 
-  /// Force-refresh from Firestore aggregate docs, bypassing cache.
+  /// Re-read aggregates from Firestore, bypassing cache (2 reads).
   Future<void> refreshFromFirestore() async {
     _isLoading = true;
     notifyListeners();
@@ -136,6 +121,21 @@ class StationProvider extends ChangeNotifier {
       await _fetchFromFirestore();
     } catch (e) {
       debugPrint('Failed to refresh from Firestore: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Refresh by re-reading aggregates from Firestore, bypassing cache (2 reads).
+  Future<void> refreshStations() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _fetchFromFirestore();
+    } catch (e) {
+      debugPrint('Failed to refresh stations: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -152,58 +152,6 @@ class StationProvider extends ChangeNotifier {
     // Update local cache
     await CacheService.cacheStations(stations);
     await CacheService.cachePrices(prices);
-  }
-
-  /// Fetch stations from Overpass near [lat],[lng] and upsert into Firestore.
-  /// Then refresh local data from Firestore.
-  Future<void> fetchNearbyStations(double lat, double lng) async {
-    try {
-      final stations = await OverpassService.fetchNearbyStations(
-        lat: lat,
-        lng: lng,
-        radiusMeters: AppConstants.defaultSearchRadiusMeters,
-      );
-      if (stations.isNotEmpty) {
-        await FirestoreService.upsertStations(stations);
-      } else {
-        await FirestoreService.seedIfEmpty();
-      }
-    } catch (e) {
-      debugPrint('Failed to fetch nearby stations: $e');
-      await FirestoreService.seedIfEmpty();
-    }
-    await refreshFromFirestore();
-  }
-
-  /// Fetch ALL fuel stations in Norway from Overpass and upsert into Firestore.
-  /// Serves cached/aggregate data immediately (≤2 reads), then refreshes from
-  /// Overpass in the background and updates the UI when done.
-  Future<void> fetchAllNorwayStations() async {
-    // 1. Show cached or aggregate data immediately so the UI isn't empty.
-    if (_stations.isEmpty) {
-      await loadStations();
-    }
-
-    // 2. Fetch from Overpass and update Firestore + local state.
-    try {
-      final stations = await OverpassService.fetchAllNorwayStations();
-      debugPrint('Overpass returned ${stations.length} Norway stations');
-      if (stations.isNotEmpty) {
-        await FirestoreService.upsertStations(stations);
-      } else {
-        // Overpass returned nothing — rebuild aggregate from stations
-        // collection so manually-added stations still appear.
-        await FirestoreService.rebuildStationsAggregate();
-      }
-    } catch (e) {
-      debugPrint('Failed to fetch/save Norway stations: $e');
-      try {
-        await FirestoreService.rebuildStationsAggregate();
-      } catch (e2) {
-        debugPrint('Aggregate rebuild also failed: $e2');
-      }
-    }
-    await refreshFromFirestore();
   }
 
   void setFuelType(FuelType type) {
