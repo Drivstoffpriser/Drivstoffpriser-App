@@ -33,11 +33,45 @@ jobs:
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: Check if secrets are available
+        id: secrets-check
+        run: |
+          if [ -n "${{ secrets.FIREBASE_OPTIONS_DART }}" ]; then
+            echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create google-services.json
+        if: steps.secrets-check.outputs.has_secrets == 'true'
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/google-services.json
 
       - name: Create firebase_options.dart
+        if: steps.secrets-check.outputs.has_secrets == 'true'
         run: echo "${{ secrets.FIREBASE_OPTIONS_DART }}" | base64 --decode > lib/firebase_options.dart
+
+      - name: Create stub firebase_options.dart (fork PRs)
+        if: steps.secrets-check.outputs.has_secrets == 'false'
+        run: |
+          printf '%s\n' \
+            "import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;" \
+            "" \
+            "class DefaultFirebaseOptions {" \
+            "  static FirebaseOptions get currentPlatform {" \
+            "    return const FirebaseOptions(" \
+            "      apiKey: 'stub'," \
+            "      appId: 'stub'," \
+            "      messagingSenderId: 'stub'," \
+            "      projectId: 'stub'," \
+            "    );" \
+            "  }" \
+            "}" > lib/firebase_options.dart
+
+      - name: Create stub google-services.json (fork PRs)
+        if: steps.secrets-check.outputs.has_secrets == 'false'
+        run: |
+          mkdir -p android/app
+          echo '{"project_info":{"project_number":"0","project_id":"stub","storage_bucket":"stub"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:stub","android_client_info":{"package_name":"no.fueltracker.fuel_price_tracker"}},"api_key":[{"current_key":"stub"}]}],"configuration_version":"1"}' > android/app/google-services.json
 
       - name: Analyze
         run: flutter analyze
@@ -46,4 +80,5 @@ jobs:
         run: flutter test
 
       - name: Build APK (debug)
+        if: steps.secrets-check.outputs.has_secrets == 'true'
         run: flutter build apk --debug --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
