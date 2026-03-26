@@ -58,7 +58,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterByBrand => 'Filter by Brand';
 
   @override
+  String get showFavoritesOnly => 'Show favorites only';
+
+  @override
   String get clearAll => 'Clear all';
+
+  @override
+  String get favorites => 'Favorites';
 
   @override
   String get navigate => 'Navigate';

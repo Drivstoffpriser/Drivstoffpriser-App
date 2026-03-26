@@ -5,6 +5,7 @@ import '../models/fuel_type.dart';
 import '../models/station.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
+import '../services/favorite_service.dart';
 import '../services/firestore_service.dart';
 
 enum SortMode { cheapest, nearest, latest }
@@ -16,6 +17,8 @@ class StationProvider extends ChangeNotifier {
   SortMode _sortMode = SortMode.cheapest;
   Set<String> _selectedBrands = {};
   bool _isLoading = false;
+  bool _showFavoritesOnly = false;
+  Set<String> _favoriteStationIds = {};
 
   /// Filter radius in km. null means show all stations (no distance filter).
   double? _filterRadiusKm = 20;
@@ -31,10 +34,34 @@ class StationProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasUserLocation => _userLat != null && _userLng != null;
   double? get filterRadiusKm => _filterRadiusKm;
+  bool get showFavoritesOnly => _showFavoritesOnly;
+  Set<String> get favoriteStationIds => _favoriteStationIds;
 
   /// Set the filter radius in km. Pass null to show all stations.
   void setFilterRadius(double? km) {
     _filterRadiusKm = km;
+    notifyListeners();
+  }
+
+  Future<void> loadFavorites() async {
+    _favoriteStationIds = await FavoriteService.getFavorites();
+    notifyListeners();
+  }
+
+  Future<void> toggleFavorite(String stationId) async {
+    await FavoriteService.toggleFavorite(stationId);
+    if (_favoriteStationIds.contains(stationId)) {
+      _favoriteStationIds.remove(stationId);
+    } else {
+      _favoriteStationIds.add(stationId);
+    }
+    notifyListeners();
+  }
+
+  bool isFavorite(String stationId) => _favoriteStationIds.contains(stationId);
+
+  void setShowFavoritesOnly(bool value) {
+    _showFavoritesOnly = value;
     notifyListeners();
   }
 
@@ -83,6 +110,10 @@ class StationProvider extends ChangeNotifier {
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    if (_showFavoritesOnly) {
+      result = result.where((s) => _favoriteStationIds.contains(s.id));
     }
 
     return result.toList();

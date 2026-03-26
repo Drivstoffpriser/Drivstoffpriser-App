@@ -15,7 +15,9 @@ class BrandFilterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
     final hasFilter =
-        provider.selectedBrands.isNotEmpty || provider.filterRadiusKm != null;
+        provider.selectedBrands.isNotEmpty ||
+        provider.filterRadiusKm != null ||
+        provider.showFavoritesOnly;
     final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
@@ -172,6 +174,36 @@ class _BrandFilterSheet extends StatelessWidget {
                 onTap: () => provider.toggleBrand(brand),
               );
             }).toList(),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Icon(
+                Icons.favorite,
+                size: 20,
+                color: provider.showFavoritesOnly
+                    ? Colors.red
+                    : AppColors.textMuted(context),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.showFavoritesOnly,
+                  style: AppTextStyles.bodyMedium(context),
+                ),
+              ),
+              Switch(
+                value: provider.showFavoritesOnly,
+                onChanged: (v) => provider.setShowFavoritesOnly(v),
+                activeTrackColor: Colors.red.withValues(alpha: 0.5),
+                thumbColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.red;
+                  }
+                  return null;
+                }),
+              ),
+            ],
           ),
         ],
       ),

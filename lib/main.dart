@@ -31,6 +31,7 @@ void main() async {
   // Load stations from cache or Firestore aggregate (≤2 reads).
   final stationProvider = StationProvider();
   stationProvider.loadStations();
+  stationProvider.loadFavorites();
 
   runApp(
     MultiProvider(
