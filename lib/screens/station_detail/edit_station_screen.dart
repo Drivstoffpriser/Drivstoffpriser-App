@@ -82,9 +82,10 @@ class _EditStationScreenState extends State<EditStationScreen> {
         'https://nominatim.openstreetmap.org/reverse'
         '?format=json&lat=${point.latitude}&lon=${point.longitude}&zoom=18&addressdetails=1',
       );
-      final response = await http.get(uri, headers: {
-        'User-Agent': 'TankVenn/1.0',
-      });
+      final response = await http.get(
+        uri,
+        headers: {'User-Agent': 'TankVenn/1.0'},
+      );
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
@@ -92,10 +93,12 @@ class _EditStationScreenState extends State<EditStationScreen> {
         if (address != null) {
           final road = address['road'] as String? ?? '';
           final houseNumber = address['house_number'] as String? ?? '';
-          final street = [road, houseNumber]
-              .where((s) => s.isNotEmpty)
-              .join(' ');
-          final city = address['city'] as String? ??
+          final street = [
+            road,
+            houseNumber,
+          ].where((s) => s.isNotEmpty).join(' ');
+          final city =
+              address['city'] as String? ??
               address['town'] as String? ??
               address['village'] as String? ??
               address['municipality'] as String? ??
@@ -151,9 +154,9 @@ class _EditStationScreenState extends State<EditStationScreen> {
     );
 
     if (!request.hasChanges) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.noChangesToSubmit)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.noChangesToSubmit)));
       return;
     }
 
@@ -168,9 +171,9 @@ class _EditStationScreenState extends State<EditStationScreen> {
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.modifyRequestFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.modifyRequestFailed)));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -195,7 +198,12 @@ class _EditStationScreenState extends State<EditStationScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 32),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
           children: [
             Text(
               context.l10n.addStationTapMap,
@@ -244,8 +252,9 @@ class _EditStationScreenState extends State<EditStationScreen> {
               decoration: InputDecoration(
                 labelText: context.l10n.addStationName,
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.addStationNameRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.addStationNameRequired
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -258,16 +267,18 @@ class _EditStationScreenState extends State<EditStationScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                ..._knownBrands.map((brand) => ChoiceChip(
-                      label: Text(brand),
-                      selected: !_isCustomBrand && _selectedBrand == brand,
-                      onSelected: (selected) {
-                        setState(() {
-                          _isCustomBrand = false;
-                          _selectedBrand = selected ? brand : null;
-                        });
-                      },
-                    )),
+                ..._knownBrands.map(
+                  (brand) => ChoiceChip(
+                    label: Text(brand),
+                    selected: !_isCustomBrand && _selectedBrand == brand,
+                    onSelected: (selected) {
+                      setState(() {
+                        _isCustomBrand = false;
+                        _selectedBrand = selected ? brand : null;
+                      });
+                    },
+                  ),
+                ),
                 ChoiceChip(
                   label: Text(context.l10n.addStationNoChain),
                   selected: _isCustomBrand,
@@ -288,7 +299,8 @@ class _EditStationScreenState extends State<EditStationScreen> {
                 decoration: InputDecoration(
                   labelText: context.l10n.addStationCustomBrand,
                 ),
-                validator: (v) => _isCustomBrand && (v == null || v.trim().isEmpty)
+                validator: (v) =>
+                    _isCustomBrand && (v == null || v.trim().isEmpty)
                     ? context.l10n.addStationBrandRequired
                     : null,
               ),
@@ -311,8 +323,9 @@ class _EditStationScreenState extends State<EditStationScreen> {
                       )
                     : null,
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.addStationAddressRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.addStationAddressRequired
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -322,8 +335,9 @@ class _EditStationScreenState extends State<EditStationScreen> {
               decoration: InputDecoration(
                 labelText: context.l10n.addStationCity,
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.addStationCityRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.addStationCityRequired
+                  : null,
             ),
             const SizedBox(height: 24),
 

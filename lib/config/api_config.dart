@@ -6,8 +6,10 @@
 class AnthropicConfig {
   AnthropicConfig._();
 
-  static const _envKey =
-      String.fromEnvironment('ANTHROPIC_API_KEY', defaultValue: '');
+  static const _envKey = String.fromEnvironment(
+    'ANTHROPIC_API_KEY',
+    defaultValue: '',
+  );
 
   static String _runtimeKey = '';
 
@@ -15,8 +17,7 @@ class AnthropicConfig {
   static void setApiKey(String key) => _runtimeKey = key;
 
   /// The active API key (runtime override takes precedence).
-  static String get apiKey =>
-      _runtimeKey.isNotEmpty ? _runtimeKey : _envKey;
+  static String get apiKey => _runtimeKey.isNotEmpty ? _runtimeKey : _envKey;
 
   /// Whether a usable API key is configured.
   static bool get hasApiKey => apiKey.isNotEmpty;

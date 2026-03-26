@@ -94,36 +94,38 @@ class _MyStationSubmissionsScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _submissions == null || _submissions!.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noSubmissionsYet,
-                    style: AppTextStyles.label(context),
-                  ),
-                )
-              : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    16, 16, 16,
-                    MediaQuery.of(context).padding.bottom + 16,
-                  ),
-                  itemCount: _submissions!.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final sub = _submissions![index];
-                    return _SubmissionCard(
-                      submission: sub,
-                      onFeedbackRead: () async {
-                        await FirestoreService.markFeedbackRead(sub.id);
-                        _load();
-                      },
-                      onEdit: sub.status == SubmissionStatus.pending
-                          ? () => _editSubmission(sub)
-                          : null,
-                      onDelete: sub.status == SubmissionStatus.pending
-                          ? () => _deleteSubmission(sub)
-                          : null,
-                    );
+          ? Center(
+              child: Text(
+                context.l10n.noSubmissionsYet,
+                style: AppTextStyles.label(context),
+              ),
+            )
+          : ListView.separated(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.of(context).padding.bottom + 16,
+              ),
+              itemCount: _submissions!.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final sub = _submissions![index];
+                return _SubmissionCard(
+                  submission: sub,
+                  onFeedbackRead: () async {
+                    await FirestoreService.markFeedbackRead(sub.id);
+                    _load();
                   },
-                ),
+                  onEdit: sub.status == SubmissionStatus.pending
+                      ? () => _editSubmission(sub)
+                      : null,
+                  onDelete: sub.status == SubmissionStatus.pending
+                      ? () => _deleteSubmission(sub)
+                      : null,
+                );
+              },
+            ),
     );
   }
 }
@@ -143,22 +145,26 @@ class _SubmissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (Color color, String label, IconData icon) = switch (submission.status) {
+    final (
+      Color color,
+      String label,
+      IconData icon,
+    ) = switch (submission.status) {
       SubmissionStatus.pending => (
-          Colors.orange,
-          context.l10n.submissionStatusPending,
-          Icons.schedule,
-        ),
+        Colors.orange,
+        context.l10n.submissionStatusPending,
+        Icons.schedule,
+      ),
       SubmissionStatus.approved => (
-          Colors.green,
-          context.l10n.submissionStatusApproved,
-          Icons.check_circle,
-        ),
+        Colors.green,
+        context.l10n.submissionStatusApproved,
+        Icons.check_circle,
+      ),
       SubmissionStatus.rejected => (
-          Colors.red,
-          context.l10n.submissionStatusRejected,
-          Icons.cancel,
-        ),
+        Colors.red,
+        context.l10n.submissionStatusRejected,
+        Icons.cancel,
+      ),
     };
 
     final hasFeedback =
@@ -190,9 +196,10 @@ class _SubmissionCard extends StatelessWidget {
                     if (submission.address.isNotEmpty ||
                         submission.city.isNotEmpty)
                       Text(
-                        [submission.address, submission.city]
-                            .where((s) => s.isNotEmpty)
-                            .join(', '),
+                        [
+                          submission.address,
+                          submission.city,
+                        ].where((s) => s.isNotEmpty).join(', '),
                         style: AppTextStyles.meta(context),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -201,8 +208,10 @@ class _SubmissionCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
@@ -214,10 +223,9 @@ class _SubmissionCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       label,
-                      style: AppTextStyles.meta(context).copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTextStyles.meta(
+                        context,
+                      ).copyWith(color: color, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),

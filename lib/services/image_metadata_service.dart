@@ -14,8 +14,10 @@ class ImageMetadata {
   const ImageMetadata({this.latitude, this.longitude, this.dateTime});
 
   bool get hasLocation =>
-      latitude != null && longitude != null &&
-      !latitude!.isNaN && !longitude!.isNaN;
+      latitude != null &&
+      longitude != null &&
+      !latitude!.isNaN &&
+      !longitude!.isNaN;
   bool get hasDateTime => dateTime != null;
 
   /// Whether the photo was taken within the last 24 hours.
@@ -25,19 +27,29 @@ class ImageMetadata {
   }
 
   /// Whether the photo location is within [maxMeters] of the given station.
-  bool isNearStation(double stationLat, double stationLng,
-      {double maxMeters = 1000}) {
+  bool isNearStation(
+    double stationLat,
+    double stationLng, {
+    double maxMeters = 1000,
+  }) {
     if (!hasLocation) return false;
     final distance = DistanceService.distanceInMeters(
-      latitude!, longitude!, stationLat, stationLng,
+      latitude!,
+      longitude!,
+      stationLat,
+      stationLng,
     );
     return distance <= maxMeters;
   }
 
   /// Full validation: photo has GPS within 1km of station AND taken in last 24h.
-  bool isValidForStation(double stationLat, double stationLng,
-      {double maxMeters = 1000}) {
-    return isTakenWithin24Hours && isNearStation(stationLat, stationLng, maxMeters: maxMeters);
+  bool isValidForStation(
+    double stationLat,
+    double stationLng, {
+    double maxMeters = 1000,
+  }) {
+    return isTakenWithin24Hours &&
+        isNearStation(stationLat, stationLng, maxMeters: maxMeters);
   }
 }
 
@@ -52,7 +64,11 @@ class ImageMetadataService {
       }
 
       final lat = _extractLatLng(tags, 'GPS GPSLatitude', 'GPS GPSLatitudeRef');
-      final lng = _extractLatLng(tags, 'GPS GPSLongitude', 'GPS GPSLongitudeRef');
+      final lng = _extractLatLng(
+        tags,
+        'GPS GPSLongitude',
+        'GPS GPSLongitudeRef',
+      );
       final dateTime = _extractDateTime(tags);
 
       debugPrint('[$_tag] Extracted: lat=$lat, lng=$lng, dateTime=$dateTime');
@@ -65,7 +81,10 @@ class ImageMetadataService {
 
   /// Parse GPS coordinate from EXIF tags (degrees, minutes, seconds → decimal).
   static double? _extractLatLng(
-      Map<String, IfdTag> tags, String coordKey, String refKey) {
+    Map<String, IfdTag> tags,
+    String coordKey,
+    String refKey,
+  ) {
     final coordTag = tags[coordKey];
     final refTag = tags[refKey];
     if (coordTag == null) return null;
@@ -90,7 +109,8 @@ class ImageMetadataService {
 
   /// Parse datetime from EXIF DateTimeOriginal or DateTime tag.
   static DateTime? _extractDateTime(Map<String, IfdTag> tags) {
-    final dateStr = tags['EXIF DateTimeOriginal']?.printable ??
+    final dateStr =
+        tags['EXIF DateTimeOriginal']?.printable ??
         tags['Image DateTime']?.printable;
     if (dateStr == null) return null;
 

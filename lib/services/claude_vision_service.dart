@@ -58,9 +58,7 @@ class ClaudeVisionService {
     }
 
     // Encode as JPEG with reduced quality
-    return Uint8List.fromList(
-      img.encodeJpg(resized, quality: _jpegQuality),
-    );
+    return Uint8List.fromList(img.encodeJpg(resized, quality: _jpegQuality));
   }
 
   /// Send the image to Claude API and extract fuel prices.
@@ -68,11 +66,13 @@ class ClaudeVisionService {
   /// [imageBytes] should be the cropped (and optionally compressed) image.
   /// Compression is applied automatically if not already done.
   static Future<Map<FuelType, double>> extractPrices(
-      Uint8List imageBytes) async {
+    Uint8List imageBytes,
+  ) async {
     if (!AnthropicConfig.hasApiKey) {
       throw Exception(
-          'Anthropic API key not configured. '
-          'Set ANTHROPIC_API_KEY via --dart-define or AnthropicConfig.setApiKey().');
+        'Anthropic API key not configured. '
+        'Set ANTHROPIC_API_KEY via --dart-define or AnthropicConfig.setApiKey().',
+      );
     }
 
     // Compress the image
@@ -110,7 +110,9 @@ class ClaudeVisionService {
       ],
     });
 
-    debugPrint('[$_tag] Sending request to Claude API (${AnthropicConfig.model})...');
+    debugPrint(
+      '[$_tag] Sending request to Claude API (${AnthropicConfig.model})...',
+    );
     final stopwatch = Stopwatch()..start();
 
     final response = await http.post(
@@ -124,11 +126,15 @@ class ClaudeVisionService {
     );
 
     stopwatch.stop();
-    debugPrint('[$_tag] API response: ${response.statusCode} in ${stopwatch.elapsedMilliseconds}ms');
+    debugPrint(
+      '[$_tag] API response: ${response.statusCode} in ${stopwatch.elapsedMilliseconds}ms',
+    );
 
     if (response.statusCode != 200) {
       debugPrint('[$_tag] API error body: ${response.body}');
-      throw Exception('Claude API error: ${response.statusCode} ${response.reasonPhrase}');
+      throw Exception(
+        'Claude API error: ${response.statusCode} ${response.reasonPhrase}',
+      );
     }
 
     // Parse the response
@@ -153,7 +159,9 @@ class ClaudeVisionService {
     // Strip markdown code fences if present
     var text = responseText;
     if (text.startsWith('```')) {
-      text = text.replaceAll(RegExp(r'^```\w*\n?'), '').replaceAll(RegExp(r'\n?```$'), '');
+      text = text
+          .replaceAll(RegExp(r'^```\w*\n?'), '')
+          .replaceAll(RegExp(r'\n?```$'), '');
     }
 
     final Map<String, dynamic> json;

@@ -28,8 +28,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSubmissionCount() async {
     final userProvider = context.read<UserProvider>();
     if (!userProvider.isAuthenticated) return;
-    final submissions =
-        await FirestoreService.getUserStationSubmissions(userProvider.user.id);
+    final submissions = await FirestoreService.getUserStationSubmissions(
+      userProvider.user.id,
+    );
     if (mounted) {
       setState(() {
         _stationSubmissionCount = submissions.length;
@@ -114,7 +115,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.bar_chart_rounded, size: 20, color: activeColor),
+                            Icon(
+                              Icons.bar_chart_rounded,
+                              size: 20,
+                              color: activeColor,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               context.l10n.totalContributions,
@@ -128,7 +133,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Price reports
                             Expanded(
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(minHeight: 80),
+                                constraints: const BoxConstraints(
+                                  minHeight: 80,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
@@ -136,14 +143,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         '${user.reportCount}',
-                                        style: AppTextStyles.priceLarge(context).copyWith(
-                                          fontSize: 24,
-                                        ),
+                                        style: AppTextStyles.priceLarge(
+                                          context,
+                                        ).copyWith(fontSize: 24),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
@@ -159,7 +167,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Station submissions — clickable
                             Expanded(
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(minHeight: 80),
+                                constraints: const BoxConstraints(
+                                  minHeight: 80,
+                                ),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(10),
                                   onTap: () async {
@@ -177,22 +187,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Row(
                                           children: [
                                             Text(
                                               '$_stationSubmissionCount',
-                                              style: AppTextStyles.priceLarge(context).copyWith(
-                                                fontSize: 24,
-                                              ),
+                                              style: AppTextStyles.priceLarge(
+                                                context,
+                                              ).copyWith(fontSize: 24),
                                             ),
                                             const Spacer(),
                                             Icon(
                                               Icons.chevron_right,
                                               size: 18,
-                                              color: AppColors.textMuted(context),
+                                              color: AppColors.textMuted(
+                                                context,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -213,13 +227,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Trust score bar
                         Row(
                           children: [
-                            Text(context.l10n.trustScore, style: AppTextStyles.label(context)),
+                            Text(
+                              context.l10n.trustScore,
+                              style: AppTextStyles.label(context),
+                            ),
                             const Spacer(),
                             Text(
                               '${(user.trustScore * 100).toStringAsFixed(0)}%',
-                              style: AppTextStyles.labelBold(context).copyWith(
-                                color: activeColor,
-                              ),
+                              style: AppTextStyles.labelBold(
+                                context,
+                              ).copyWith(color: activeColor),
                             ),
                           ],
                         ),
@@ -230,7 +247,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             value: user.trustScore,
                             minHeight: 6,
                             backgroundColor: AppColors.surfaceLow(context),
-                            valueColor: AlwaysStoppedAnimation<Color>(activeColor),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              activeColor,
+                            ),
                           ),
                         ),
                       ],
@@ -367,9 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           applicationVersion:
                               '${info.version}+${info.buildNumber}',
                           children: [
-                            Text(
-                              context.l10n.aboutDescription,
-                            ),
+                            Text(context.l10n.aboutDescription),
                             const SizedBox(height: 16),
                             OutlinedButton.icon(
                               icon: ClipOval(
@@ -451,7 +468,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     foregroundColor: const Color(0xFFDC2626),
                                   ),
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  child: Text(ctx.l10n.deleteAccountConfirmButton),
+                                  child: Text(
+                                    ctx.l10n.deleteAccountConfirmButton,
+                                  ),
                                 ),
                               ],
                             ),
@@ -461,13 +480,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             await userProvider.deleteAccount();
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(context.l10n.accountDeleted)),
+                              SnackBar(
+                                content: Text(context.l10n.accountDeleted),
+                              ),
                             );
                           } on FirebaseAuthException catch (e) {
                             if (!context.mounted) return;
                             if (e.code == 'requires-recent-login') {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.l10n.deleteAccountReauth)),
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.deleteAccountReauth,
+                                  ),
+                                ),
                               );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -526,14 +551,8 @@ class _ProfileHero extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [
-                  AppColors.darkSurfaceHigh,
-                  AppColors.darkSurface,
-                ]
-              : [
-                  AppColors.lightSurfaceLow,
-                  AppColors.lightSurface,
-                ],
+              ? [AppColors.darkSurfaceHigh, AppColors.darkSurface]
+              : [AppColors.lightSurfaceLow, AppColors.lightSurface],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -610,10 +629,12 @@ class _ProfileHero extends StatelessWidget {
                   ),
                   child: Text(
                     switch (userProvider.accountType) {
-                      AccountType.anonymous => context.l10n.anonymousBrowsingOnly,
+                      AccountType.anonymous =>
+                        context.l10n.anonymousBrowsingOnly,
                       AccountType.email => context.l10n.emailAccount,
                       AccountType.google => context.l10n.googleAccount,
-                      AccountType.googleEmail => context.l10n.googleEmailAccount,
+                      AccountType.googleEmail =>
+                        context.l10n.googleEmailAccount,
                     },
                     style: TextStyle(
                       fontSize: 11,
@@ -737,10 +758,11 @@ class _ActionCardState extends State<_ActionCard> {
               boxShadow: widget.isPrimary
                   ? [
                       BoxShadow(
-                        color: (isDark
-                                ? const Color(0xFF00d1ff)
-                                : const Color(0xFF0056b3))
-                            .withValues(alpha: 0.3),
+                        color:
+                            (isDark
+                                    ? const Color(0xFF00d1ff)
+                                    : const Color(0xFF0056b3))
+                                .withValues(alpha: 0.3),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
@@ -778,8 +800,8 @@ class _ActionCardState extends State<_ActionCard> {
                         style: AppTextStyles.bodyMedium(context).copyWith(
                           color: widget.isPrimary
                               ? (isDark
-                                  ? AppColors.darkBackground
-                                  : Colors.white)
+                                    ? AppColors.darkBackground
+                                    : Colors.white)
                               : null,
                         ),
                       ),
@@ -789,9 +811,9 @@ class _ActionCardState extends State<_ActionCard> {
                         style: AppTextStyles.meta(context).copyWith(
                           color: widget.isPrimary
                               ? (isDark
-                                      ? AppColors.darkBackground
-                                      : Colors.white)
-                                  .withValues(alpha: 0.8)
+                                        ? AppColors.darkBackground
+                                        : Colors.white)
+                                    .withValues(alpha: 0.8)
                               : null,
                         ),
                       ),
@@ -803,7 +825,7 @@ class _ActionCardState extends State<_ActionCard> {
                   size: 14,
                   color: widget.isPrimary
                       ? (isDark ? AppColors.darkBackground : Colors.white)
-                          .withValues(alpha: 0.8)
+                            .withValues(alpha: 0.8)
                       : AppColors.textMuted(context),
                 ),
               ],
@@ -940,7 +962,9 @@ class _ThemeModeTile extends StatelessWidget {
     final userProvider = context.read<UserProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
-    final iconColor = isDark ? const Color(0xFFa4e6ff) : const Color(0xFFF59E0B);
+    final iconColor = isDark
+        ? const Color(0xFFa4e6ff)
+        : const Color(0xFFF59E0B);
 
     final IconData icon;
     final String subtitle;
@@ -967,16 +991,17 @@ class _ThemeModeTile extends StatelessWidget {
               color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(
-              child: Icon(icon, size: 20, color: iconColor),
-            ),
+            child: Center(child: Icon(icon, size: 20, color: iconColor)),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.appearance, style: AppTextStyles.bodyMedium(context)),
+                Text(
+                  context.l10n.appearance,
+                  style: AppTextStyles.bodyMedium(context),
+                ),
                 const SizedBox(height: 2),
                 Text(subtitle, style: AppTextStyles.meta(context)),
               ],
@@ -1092,7 +1117,9 @@ class _LanguageTile extends StatelessWidget {
     final userProvider = context.read<UserProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
-    final iconColor = isDark ? const Color(0xFFa4e6ff) : const Color(0xFF6366F1);
+    final iconColor = isDark
+        ? const Color(0xFFa4e6ff)
+        : const Color(0xFF6366F1);
 
     final String subtitle;
     switch (locale?.languageCode) {
@@ -1124,7 +1151,10 @@ class _LanguageTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.language, style: AppTextStyles.bodyMedium(context)),
+                Text(
+                  context.l10n.language,
+                  style: AppTextStyles.bodyMedium(context),
+                ),
                 const SizedBox(height: 2),
                 Text(subtitle, style: AppTextStyles.meta(context)),
               ],
@@ -1225,14 +1255,18 @@ class _LanguageOption extends StatelessWidget {
               ? Icon(
                   icon,
                   size: 16,
-                  color: isSelected ? Colors.white : AppColors.textMuted(context),
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.textMuted(context),
                 )
               : Text(
                   label!,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textMuted(context),
+                    color: isSelected
+                        ? Colors.white
+                        : AppColors.textMuted(context),
                   ),
                 ),
         ),

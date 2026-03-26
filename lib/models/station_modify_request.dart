@@ -53,9 +53,14 @@ class StationModifyRequest {
   bool get addressChanged => originalAddress != proposedAddress;
   bool get cityChanged => originalCity != proposedCity;
   bool get locationChanged =>
-      originalLatitude != proposedLatitude || originalLongitude != proposedLongitude;
+      originalLatitude != proposedLatitude ||
+      originalLongitude != proposedLongitude;
   bool get hasChanges =>
-      nameChanged || brandChanged || addressChanged || cityChanged || locationChanged;
+      nameChanged ||
+      brandChanged ||
+      addressChanged ||
+      cityChanged ||
+      locationChanged;
 
   factory StationModifyRequest.fromJson(String id, Map<String, dynamic> json) {
     return StationModifyRequest(

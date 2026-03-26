@@ -60,9 +60,7 @@ void main() {
         'id': 999,
         'lat': 60.0,
         'lon': 5.0,
-        'tags': {
-          'brand': 'Shell',
-        },
+        'tags': {'brand': 'Shell'},
       };
 
       final station = parseNode(node);
@@ -88,10 +86,7 @@ void main() {
         'id': 777,
         'lat': 60.0,
         'lon': 5.0,
-        'tags': {
-          'brand': 'Esso',
-          'name': 'Esso Sentrum',
-        },
+        'tags': {'brand': 'Esso', 'name': 'Esso Sentrum'},
       };
 
       final station = parseNode(node);
@@ -116,11 +111,7 @@ void main() {
     });
 
     test('handles missing tags map', () {
-      final node = {
-        'id': 555,
-        'lat': 60.0,
-        'lon': 5.0,
-      };
+      final node = {'id': 555, 'lat': 60.0, 'lon': 5.0};
 
       final station = parseNode(node);
       expect(station.brand, 'Unknown');

@@ -132,39 +132,40 @@ class _AdminSubmissionsScreenState extends State<AdminSubmissionsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _submissions == null || _submissions!.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noPendingSubmissions,
-                    style: AppTextStyles.label(context),
-                  ),
-                )
-              : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    16, 16, 16,
-                    MediaQuery.of(context).padding.bottom + 16,
-                  ),
-                  itemCount: _submissions!.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final sub = _submissions![index];
-                    return _AdminSubmissionCard(
-                      submission: sub,
-                      onApprove: () => _approve(sub),
-                      onReject: () => _reject(sub),
-                      onTap: () async {
-                        final result = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AdminSubmissionDetailScreen(
-                              submission: sub,
-                            ),
-                          ),
-                        );
-                        if (result == true) _load();
-                      },
+          ? Center(
+              child: Text(
+                context.l10n.noPendingSubmissions,
+                style: AppTextStyles.label(context),
+              ),
+            )
+          : ListView.separated(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.of(context).padding.bottom + 16,
+              ),
+              itemCount: _submissions!.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final sub = _submissions![index];
+                return _AdminSubmissionCard(
+                  submission: sub,
+                  onApprove: () => _approve(sub),
+                  onReject: () => _reject(sub),
+                  onTap: () async {
+                    final result = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AdminSubmissionDetailScreen(submission: sub),
+                      ),
                     );
+                    if (result == true) _load();
                   },
-                ),
+                );
+              },
+            ),
     );
   }
 }
@@ -188,61 +189,61 @@ class _AdminSubmissionCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border(context), width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              BrandLogo(brand: submission.brand, radius: 18),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      submission.name,
-                      style: AppTextStyles.bodyMedium(context),
-                    ),
-                    Text(
-                      '${submission.brand} — ${submission.city}',
-                      style: AppTextStyles.meta(context),
-                    ),
-                    if (submission.address.isNotEmpty)
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border(context), width: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                BrandLogo(brand: submission.brand, radius: 18),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        submission.address,
+                        submission.name,
+                        style: AppTextStyles.bodyMedium(context),
+                      ),
+                      Text(
+                        '${submission.brand} — ${submission.city}',
                         style: AppTextStyles.meta(context),
                       ),
-                  ],
+                      if (submission.address.isNotEmpty)
+                        Text(
+                          submission.address,
+                          style: AppTextStyles.meta(context),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: onReject,
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                icon: const Icon(Icons.close, size: 18),
-                label: Text(context.l10n.reject),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: onApprove,
-                icon: const Icon(Icons.check, size: 18),
-                label: Text(context.l10n.approve),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: onReject,
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  icon: const Icon(Icons.close, size: 18),
+                  label: Text(context.l10n.reject),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: onApprove,
+                  icon: const Icon(Icons.check, size: 18),
+                  label: Text(context.l10n.approve),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

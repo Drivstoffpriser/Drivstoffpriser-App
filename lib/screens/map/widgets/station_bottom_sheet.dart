@@ -119,12 +119,15 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryContainer(context)
-                                .withValues(alpha: 0.15),
+                            color: AppColors.primaryContainer(
+                              context,
+                            ).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            stationProvider.selectedFuelType.localizedName(context),
+                            stationProvider.selectedFuelType.localizedName(
+                              context,
+                            ),
                             style: AppTextStyles.label(context).copyWith(
                               color: AppColors.primaryContainer(context),
                               fontWeight: FontWeight.w500,
@@ -153,8 +156,10 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                context.l10n.sortLabel(switch (stationProvider.sortMode) {
-                                  SortMode.cheapest => context.l10n.sortCheapest,
+                                context.l10n.sortLabel(switch (stationProvider
+                                    .sortMode) {
+                                  SortMode.cheapest =>
+                                    context.l10n.sortCheapest,
                                   SortMode.nearest => context.l10n.sortNearest,
                                   SortMode.latest => context.l10n.sortLatest,
                                 }),
@@ -185,7 +190,7 @@ class _StationBottomSheetState extends State<StationBottomSheet>
                                 padding: EdgeInsets.only(
                                   bottom:
                                       MediaQuery.of(context).padding.bottom +
-                                          100,
+                                      100,
                                 ),
                                 itemCount: sorted.length,
                                 itemBuilder: (context, index) =>

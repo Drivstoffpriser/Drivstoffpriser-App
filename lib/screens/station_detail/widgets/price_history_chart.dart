@@ -100,127 +100,138 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           child: Stack(
             children: [
               LineChart(
-            LineChartData(
-              minY: yMin,
-              maxY: yMax,
-              minX: 0,
-              maxX: dateRange,
-              gridData: FlGridData(
-                horizontalInterval:
-                    ((yMax - yMin) / 4).ceilToDouble().clamp(1, 10),
-                getDrawingHorizontalLine: (value) => FlLine(
-                  color: gridColor,
-                  strokeWidth: 0.5,
-                ),
-                getDrawingVerticalLine: (value) => FlLine(
-                  color: gridColor,
-                  strokeWidth: 0.5,
+                LineChartData(
+                  minY: yMin,
+                  maxY: yMax,
+                  minX: 0,
+                  maxX: dateRange,
+                  gridData: FlGridData(
+                    horizontalInterval: ((yMax - yMin) / 4)
+                        .ceilToDouble()
+                        .clamp(1, 10),
+                    getDrawingHorizontalLine: (value) =>
+                        FlLine(color: gridColor, strokeWidth: 0.5),
+                    getDrawingVerticalLine: (value) =>
+                        FlLine(color: gridColor, strokeWidth: 0.5),
+                  ),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 7,
+                        getTitlesWidget: (value, _) {
+                          final date = earliest!.add(
+                            Duration(days: value.toInt()),
+                          );
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              dateFormat.format(date),
+                              style: TextStyle(fontSize: 10, color: labelColor),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 44,
+                        getTitlesWidget: (value, _) {
+                          return Text(
+                            '${value.toStringAsFixed(1)} ${context.l10n.krSuffix}',
+                            style: TextStyle(fontSize: 10, color: labelColor),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineTouchData: LineTouchData(
+                    handleBuiltInTouches: true,
+                    touchCallback: (event, response) {
+                      setState(() {
+                        if (response?.lineBarSpots != null &&
+                            response!.lineBarSpots!.isNotEmpty) {
+                          _touchedSpots = response.lineBarSpots;
+                        } else if (event is FlLongPressEnd ||
+                            event is FlPanEndEvent ||
+                            event is FlTapUpEvent) {
+                          _touchedSpots = null;
+                        }
+                      });
+                    },
+                    touchTooltipData: LineTouchTooltipData(
+                      // Hide the built-in tooltip — we draw our own
+                      getTooltipColor: (_) => Colors.transparent,
+                      getTooltipItems: (spots) =>
+                          spots.map((_) => null).toList(),
+                    ),
+                  ),
+                  lineBarsData: widget.history.entries
+                      .where((e) => _visible.contains(e.key))
+                      .map((entry) {
+                        final color = _fuelColor(entry.key, context);
+                        return LineChartBarData(
+                          spots: entry.value.map((pt) {
+                            final x = pt.date
+                                .difference(earliest!)
+                                .inDays
+                                .toDouble();
+                            return FlSpot(
+                              x,
+                              double.parse(pt.price.toStringAsFixed(2)),
+                            );
+                          }).toList(),
+                          isCurved: true,
+                          curveSmoothness: 0.2,
+                          color: color,
+                          barWidth: 2.5,
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, bar, index) {
+                              final isTouched =
+                                  _touchedSpots?.any(
+                                    (s) => s.x == spot.x && s.y == spot.y,
+                                  ) ??
+                                  false;
+                              return FlDotCirclePainter(
+                                radius: isTouched ? 5 : 0,
+                                color: color,
+                                strokeWidth: isTouched ? 2 : 0,
+                                strokeColor: isDark
+                                    ? AppColors.darkBackground
+                                    : Colors.white,
+                              );
+                            },
+                          ),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: color.withAlpha(25),
+                          ),
+                        );
+                      })
+                      .toList(),
                 ),
               ),
-              titlesData: FlTitlesData(
-                topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 7,
-                    getTitlesWidget: (value, _) {
-                      final date =
-                          earliest!.add(Duration(days: value.toInt()));
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          dateFormat.format(date),
-                          style: TextStyle(fontSize: 10, color: labelColor),
-                        ),
-                      );
-                    },
+              // Static tooltip overlay — top-left inside chart
+              if (_touchedSpots != null && _touchedSpots!.isNotEmpty)
+                Positioned(
+                  top: 0,
+                  left: 44, // right of the y-axis labels
+                  child: _buildStaticTooltip(
+                    earliest,
+                    dateFormat,
+                    isDark,
+                    visibleFuelTypes,
                   ),
                 ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 44,
-                    getTitlesWidget: (value, _) {
-                      return Text(
-                        '${value.toStringAsFixed(1)} ${context.l10n.krSuffix}',
-                        style: TextStyle(fontSize: 10, color: labelColor),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              lineTouchData: LineTouchData(
-                handleBuiltInTouches: true,
-                touchCallback: (event, response) {
-                  setState(() {
-                    if (response?.lineBarSpots != null &&
-                        response!.lineBarSpots!.isNotEmpty) {
-                      _touchedSpots = response.lineBarSpots;
-                    } else if (event is FlLongPressEnd ||
-                        event is FlPanEndEvent ||
-                        event is FlTapUpEvent) {
-                      _touchedSpots = null;
-                    }
-                  });
-                },
-                touchTooltipData: LineTouchTooltipData(
-                  // Hide the built-in tooltip — we draw our own
-                  getTooltipColor: (_) => Colors.transparent,
-                  getTooltipItems: (spots) =>
-                      spots.map((_) => null).toList(),
-                ),
-              ),
-              lineBarsData: widget.history.entries
-                  .where((e) => _visible.contains(e.key))
-                  .map((entry) {
-                final color = _fuelColor(entry.key, context);
-                return LineChartBarData(
-                  spots: entry.value.map((pt) {
-                    final x =
-                        pt.date.difference(earliest!).inDays.toDouble();
-                    return FlSpot(
-                        x, double.parse(pt.price.toStringAsFixed(2)));
-                  }).toList(),
-                  isCurved: true,
-                  curveSmoothness: 0.2,
-                  color: color,
-                  barWidth: 2.5,
-                  dotData: FlDotData(
-                    show: true,
-                    getDotPainter: (spot, percent, bar, index) {
-                      final isTouched = _touchedSpots?.any(
-                              (s) => s.x == spot.x && s.y == spot.y) ??
-                          false;
-                      return FlDotCirclePainter(
-                        radius: isTouched ? 5 : 0,
-                        color: color,
-                        strokeWidth: isTouched ? 2 : 0,
-                        strokeColor: isDark
-                            ? AppColors.darkBackground
-                            : Colors.white,
-                      );
-                    },
-                  ),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: color.withAlpha(25),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          // Static tooltip overlay — top-left inside chart
-          if (_touchedSpots != null && _touchedSpots!.isNotEmpty)
-            Positioned(
-              top: 0,
-              left: 44, // right of the y-axis labels
-              child: _buildStaticTooltip(
-                  earliest, dateFormat, isDark, visibleFuelTypes),
-            ),
             ],
           ),
         ),
@@ -288,10 +299,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceHighest : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: AppColors.border(context),
-          width: 0.5,
-        ),
+        border: Border.all(color: AppColors.border(context), width: 0.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -306,9 +314,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         children: [
           Text(
             dateFormat.format(date),
-            style: AppTextStyles.meta(context).copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextStyles.meta(
+              context,
+            ).copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           for (final spot in spots)
@@ -323,7 +331,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                       height: 8,
                       decoration: BoxDecoration(
                         color: _fuelColor(
-                            visibleFuelTypes[spot.barIndex], context),
+                          visibleFuelTypes[spot.barIndex],
+                          context,
+                        ),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -334,7 +344,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: _fuelColor(
-                            visibleFuelTypes[spot.barIndex], context),
+                          visibleFuelTypes[spot.barIndex],
+                          context,
+                        ),
                       ),
                     ),
                   ],

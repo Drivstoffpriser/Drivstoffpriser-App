@@ -89,8 +89,8 @@ class _FuelChipState extends State<_FuelChip> {
               color: widget.isSelected
                   ? activeColor
                   : (isDark
-                      ? AppColors.darkSurfaceHigh
-                      : AppColors.lightSurfaceLow),
+                        ? AppColors.darkSurfaceHigh
+                        : AppColors.lightSurfaceLow),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: widget.isSelected

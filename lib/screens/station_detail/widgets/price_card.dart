@@ -20,10 +20,7 @@ class PriceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border(context),
-          width: 0.5,
-        ),
+        border: Border.all(color: AppColors.border(context), width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,10 +35,9 @@ class PriceCard extends StatelessWidget {
                 ),
                 child: Text(
                   price.fuelType.localizedName(context),
-                  style: AppTextStyles.label(context).copyWith(
-                    color: activeColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTextStyles.label(
+                    context,
+                  ).copyWith(color: activeColor, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -49,10 +45,9 @@ class PriceCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             price.price.toStringAsFixed(2),
-            style: AppTextStyles.priceLarge(context).copyWith(
-              fontSize: 24,
-              color: AppColors.textPrimary(context),
-            ),
+            style: AppTextStyles.priceLarge(
+              context,
+            ).copyWith(fontSize: 24, color: AppColors.textPrimary(context)),
           ),
           Text(
             context.l10n.krPerUnit(price.fuelType.unit),

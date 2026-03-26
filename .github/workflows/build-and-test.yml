@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
       - name: Check if secrets are available
         id: secrets-check
         run: |

@@ -64,6 +64,10 @@ TankVenn trenger frivillige bidragsytere! Spesielt folk med erfaring innen backe
 
 Sjekk issues, åpne en PR, eller bli med på [Discord](link).
 
+#### Husk å formatere koden
+
+CI-pipelinen kjører et **Check formatting**-steg på alle PRer. Det feiler hvis koden ikke er formatert. Kjør `dart format .` før du åpner en PR.
+
 ### Lisens
 
 Open-source — se [LICENSE](LICENSE) for detaljer.
@@ -142,6 +146,10 @@ Not available yet. Need help with Apple developer account and publishing.
 TankVenn needs volunteer contributors! Especially people with experience in backend and mobile development. The goal is that I'm just a user, not the owner — the app belongs to the community.
 
 Check issues, open a PR, or join the [Discord](link).
+
+#### Remember to format your code
+
+The CI pipeline runs a **Check formatting** step on all PRs. It will fail if the code is not formatted. Run `dart format .` before opening a PR.
 
 ### License
 

@@ -34,7 +34,9 @@ class CacheService {
     final json = prefs.getString(_stationsKey);
     if (json == null) return null;
     final list = jsonDecode(json) as List;
-    return list.map((e) => Station.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Station.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   static Future<List<CurrentPrice>?> getCachedPrices() async {
@@ -43,7 +45,9 @@ class CacheService {
     final json = prefs.getString(_pricesKey);
     if (json == null) return null;
     final list = jsonDecode(json) as List;
-    return list.map((e) => CurrentPrice.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => CurrentPrice.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   static bool _isFresh(SharedPreferences prefs, String tsKey) {
