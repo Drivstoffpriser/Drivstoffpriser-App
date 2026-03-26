@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
       - name: Create google-services.json
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/google-services.json
 
@@ -38,9 +41,6 @@ jobs:
 
       - name: Analyze
         run: flutter analyze
-
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed .
 
       - name: Run tests
         run: flutter test
