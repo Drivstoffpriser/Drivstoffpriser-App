@@ -33,7 +33,7 @@ class FuelFilterBar extends StatelessWidget {
                       onTap: () => provider.setFuelType(type),
                     ),
                   );
-                }).toList(),
+                }),
                 if (provider.favoriteStationIds.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 4),
