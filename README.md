@@ -132,6 +132,28 @@ Not available yet. Need help with Apple developer account and publishing.
     ```
 
 3. **Configure Firebase**
+    Install Firebase CLI
+    
+    ```bash
+    npm install -g firebase-tools
+    ```
+
+    Ask a maintainer on Discord to be added to the Firebase project.
+
+    Login to Firebase CLI
+
+    ```bash
+    firebase login
+    ```
+    
+    Install Flutterfire CLI
+
+    ```bash
+    flutter pub global activate flutterfire_cli
+    ```
+
+    Add it to your PATH, then run:
+
     ```bash
     flutterfire configure
     ```
@@ -140,6 +162,11 @@ Not available yet. Need help with Apple developer account and publishing.
     ```bash
     flutter run
     ```
+
+5. **Choose target**
+    Choose target platform (Android, iOS, or Web) and run the app.
+    For native platforms you can connect your own device or use a simulator, Xcode for iOS and Android Studio for Android.
+
 
 ### Contributing
 
