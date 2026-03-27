@@ -72,6 +72,18 @@ CI-pipelinen kjører et **Check formatting**-steg på alle PRer. Det feiler hvis
 
 Open-source — se [LICENSE](LICENSE) for detaljer.
 
+## Licensing
+
+**The Source Code is licensed under GPL-3.0 and the Crowdsourced Database is licensed under ODbL-1.0.**
+
+### Note on Relicensing
+
+Versions of this project prior to March 2026 remain available under the MIT License in the Git history.
+
+## Data Contributions
+
+By submitting fuel prices to TankVenn, you agree to share that data under the **ODbL (Open Database License) 1.0 — Share-Alike** terms. This ensures the Norwegian fuel market remains transparent and the crowdsourced database stays open and accessible to everyone.
+
 ---
 
 ## English
@@ -154,3 +166,15 @@ The CI pipeline runs a **Check formatting** step on all PRs. It will fail if the
 ### License
 
 Open-source — see [LICENSE](LICENSE) for details.
+
+## Licensing
+
+**The Source Code is licensed under GPL-3.0 and the Crowdsourced Database is licensed under ODbL-1.0.**
+
+### Note on Relicensing
+
+Versions of this project prior to March 2026 remain available under the MIT License in the Git history.
+
+## Data Contributions
+
+By submitting fuel prices to TankVenn, you agree to share that data under the **ODbL (Open Database License) 1.0 — Share-Alike** terms. This ensures the Norwegian fuel market remains transparent and the crowdsourced database stays open and accessible to everyone.
