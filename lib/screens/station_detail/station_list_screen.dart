@@ -107,46 +107,49 @@ class StationListScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: stationProvider.isLoading
+            child: stationProvider.isLoading && stationProvider.stations.isEmpty
                 ? const LoadingIndicator()
-                : ListView.builder(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 100,
-                    ),
-                    itemCount: sorted.length,
-                    itemBuilder: (context, index) {
-                      final station = sorted[index];
-                      final price = stationProvider.getPriceForStation(
-                        station.id,
-                      );
-
-                      String? distanceStr;
-                      if (locationProvider.hasLocation) {
-                        final meters = DistanceService.distanceInMeters(
-                          locationProvider.position!.latitude,
-                          locationProvider.position!.longitude,
-                          station.latitude,
-                          station.longitude,
+                : RefreshIndicator(
+                    onRefresh: stationProvider.refreshStations,
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom + 100,
+                      ),
+                      itemCount: sorted.length,
+                      itemBuilder: (context, index) {
+                        final station = sorted[index];
+                        final price = stationProvider.getPriceForStation(
+                          station.id,
                         );
-                        distanceStr = DistanceService.formatDistance(meters);
-                      }
 
-                      return _StationListTile(
-                        name: station.name,
-                        brand: station.brand,
-                        city: station.city,
-                        distance: distanceStr,
-                        price: price?.price,
-                        lastUpdated: price?.updatedAt,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.stationDetail,
-                            arguments: station,
+                        String? distanceStr;
+                        if (locationProvider.hasLocation) {
+                          final meters = DistanceService.distanceInMeters(
+                            locationProvider.position!.latitude,
+                            locationProvider.position!.longitude,
+                            station.latitude,
+                            station.longitude,
                           );
-                        },
-                      );
-                    },
+                          distanceStr = DistanceService.formatDistance(meters);
+                        }
+
+                        return _StationListTile(
+                          name: station.name,
+                          brand: station.brand,
+                          city: station.city,
+                          distance: distanceStr,
+                          price: price?.price,
+                          lastUpdated: price?.updatedAt,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.stationDetail,
+                              arguments: station,
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
           ),
         ],
