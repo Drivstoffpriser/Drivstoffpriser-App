@@ -45,7 +45,7 @@ class App extends StatelessWidget {
     final userProvider = context.watch<UserProvider>();
 
     return MaterialApp(
-      title: 'TankVenn',
+      title: 'Drivstoffpriser',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
