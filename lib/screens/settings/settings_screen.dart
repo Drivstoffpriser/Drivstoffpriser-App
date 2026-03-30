@@ -30,6 +30,7 @@ import '../../l10n/l10n_helper.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../widgets/onboarding_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -378,6 +379,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _SettingsCard(
                     children: [
+                      _SettingsTile(
+                        icon: Icons.lightbulb_outline,
+                        iconColor: isDark
+                            ? const Color(0xFFffd166)
+                            : const Color(0xFFF59E0B),
+                        title: context.l10n.tips,
+                        subtitle: context.l10n.tipsSubtitle,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted(context),
+                        ),
+                        onTap: () => showOnboarding(context),
+                      ),
+                      const _CardDivider(),
                       _SettingsTile(
                         icon: Icons.bug_report_outlined,
                         iconColor: isDark

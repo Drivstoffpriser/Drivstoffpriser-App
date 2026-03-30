@@ -31,6 +31,7 @@ import '../screens/map/map_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/station_detail/station_list_screen.dart';
 import '../services/firestore_service.dart';
+import 'onboarding_dialog.dart';
 
 class FloatingPillNav extends StatefulWidget {
   const FloatingPillNav({super.key});
@@ -50,7 +51,10 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
     super.didChangeDependencies();
     if (!_hasCheckedFeedback) {
       _hasCheckedFeedback = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _checkForFeedback());
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await showOnboardingIfNeeded(context);
+        if (mounted) await _checkForFeedback();
+      });
     }
   }
 

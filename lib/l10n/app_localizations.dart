@@ -1573,6 +1573,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID: {id}'**
   String stationId(String id);
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Drivstoffpriser!'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingRadiusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Radius & Brand'**
+  String get onboardingRadiusTitle;
+
+  /// No description provided for @onboardingRadiusBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the filter button to set a search radius and select which fuel brands to show on the map.'**
+  String get onboardingRadiusBody;
+
+  /// No description provided for @onboardingAddStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Missing Station'**
+  String get onboardingAddStationTitle;
+
+  /// No description provided for @onboardingAddStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If a station is missing, tap and hold on the map to place it, then fill in the details and submit.'**
+  String get onboardingAddStationBody;
+
+  /// No description provided for @onboardingEditStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Station Info'**
+  String get onboardingEditStationTitle;
+
+  /// No description provided for @onboardingEditStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If something is wrong with a station, open it and tap the edit button to suggest changes.'**
+  String get onboardingEditStationBody;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @tips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get tips;
+
+  /// No description provided for @tipsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn about app features'**
+  String get tipsSubtitle;
+
+  /// No description provided for @onboardingStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String onboardingStepOf(int current, int total);
 }
 
 class _AppLocalizationsDelegate
