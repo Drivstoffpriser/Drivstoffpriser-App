@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'TankVenn'**
+  /// **'Drivstoffpriser'**
   String get appTitle;
 
   /// No description provided for @navMap.
@@ -935,7 +935,7 @@ abstract class AppLocalizations {
   /// No description provided for @noInternetBody.
   ///
   /// In en, this message translates to:
-  /// **'TankVenn requires an active Wi-Fi or mobile data connection to show fuel prices and station data.'**
+  /// **'Drivstoffpriser requires an active Wi-Fi or mobile data connection to show fuel prices and station data.'**
   String get noInternetBody;
 
   /// No description provided for @stillNoConnection.

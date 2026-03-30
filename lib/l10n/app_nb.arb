@@ -1,7 +1,7 @@
 {
   "@@locale": "nb",
 
-  "appTitle": "TankVenn",
+  "appTitle": "Drivstoffpriser",
 
   "navMap": "Kart",
   "navStations": "Stasjoner",
@@ -154,7 +154,7 @@
   "bugReportFailed": "Kunne ikke sende rapport: {error}",
 
   "noInternetTitle": "Ingen internettilkobling",
-  "noInternetBody": "TankVenn krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.",
+  "noInternetBody": "Drivstoffpriser krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.",
   "stillNoConnection": "Fortsatt ingen tilkobling",
   "tryAgain": "Prøv igjen",
   "retry": "Prøv igjen",

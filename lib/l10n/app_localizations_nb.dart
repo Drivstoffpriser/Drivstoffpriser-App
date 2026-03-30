@@ -9,7 +9,7 @@ class AppLocalizationsNb extends AppLocalizations {
   AppLocalizationsNb([String locale = 'nb']) : super(locale);
 
   @override
-  String get appTitle => 'TankVenn';
+  String get appTitle => 'Drivstoffpriser';
 
   @override
   String get navMap => 'Kart';
@@ -467,7 +467,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get noInternetBody =>
-      'TankVenn krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.';
+      'Drivstoffpriser krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.';
 
   @override
   String get stillNoConnection => 'Fortsatt ingen tilkobling';

@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appTitle": "TankVenn",
+  "appTitle": "Drivstoffpriser",
 
   "navMap": "Map",
   "navStations": "Stations",
@@ -167,7 +167,7 @@
   "@bugReportFailed": { "placeholders": { "error": { "type": "String" } } },
 
   "noInternetTitle": "No internet connection",
-  "noInternetBody": "TankVenn requires an active Wi-Fi or mobile data connection to show fuel prices and station data.",
+  "noInternetBody": "Drivstoffpriser requires an active Wi-Fi or mobile data connection to show fuel prices and station data.",
   "stillNoConnection": "Still no connection",
   "tryAgain": "Try again",
   "retry": "Retry",
