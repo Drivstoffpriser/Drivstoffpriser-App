@@ -82,4 +82,13 @@ class AppColors {
 
   static Color primaryContainer(BuildContext context) =>
       _isDark(context) ? darkPrimaryContainer : lightPrimaryContainer;
+
+  /// Color indicating how fresh a price update is.
+  static Color freshness(Duration age) {
+    final hours = age.inHours;
+    if (hours <= 5) return Colors.green;
+    if (hours <= 12) return Colors.orange;
+    if (hours <= 23) return Colors.red;
+    return Colors.grey;
+  }
 }
