@@ -110,7 +110,26 @@ class StationListScreen extends StatelessWidget {
             child: stationProvider.isLoading && stationProvider.stations.isEmpty
                 ? const LoadingIndicator()
                 : RefreshIndicator(
-                    onRefresh: stationProvider.refreshStations,
+                    onRefresh: () async {
+                      try {
+                        await stationProvider.refreshStations();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.l10n.stationsRefreshed),
+                            ),
+                          );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.l10n.refreshFailed),
+                            ),
+                          );
+                        }
+                      }
+                    },
                     child: ListView.builder(
                       padding: EdgeInsets.only(
                         bottom: MediaQuery.of(context).padding.bottom + 100,

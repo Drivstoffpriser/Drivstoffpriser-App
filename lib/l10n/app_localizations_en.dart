@@ -151,6 +151,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationsRefreshed => 'Stations refreshed';
 
   @override
+  String get refreshFailed => 'Failed to refresh stations. Please try again.';
+
+  @override
   String get support => 'SUPPORT';
 
   @override

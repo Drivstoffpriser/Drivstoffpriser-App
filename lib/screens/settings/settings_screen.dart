@@ -61,13 +61,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isRefreshing = true);
 
     final stationProvider = context.read<StationProvider>();
-    await stationProvider.refreshStations();
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.stationsRefreshed)));
-      setState(() => _isRefreshing = false);
+    try {
+      await stationProvider.refreshStations();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.stationsRefreshed)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.refreshFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
     }
   }
 
@@ -85,7 +93,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: _refreshStations,
+        child: CustomScrollView(
         slivers: [
           SliverAppBar(
             backgroundColor: AppColors.background(context),
@@ -541,6 +551,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

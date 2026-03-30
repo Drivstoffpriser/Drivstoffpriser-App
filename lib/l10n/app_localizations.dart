@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Stations refreshed'**
   String get stationsRefreshed;
 
+  /// No description provided for @refreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to refresh stations. Please try again.'**
+  String get refreshFailed;
+
   /// No description provided for @support.
   ///
   /// In en, this message translates to:
