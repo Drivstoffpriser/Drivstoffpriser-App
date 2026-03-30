@@ -35,9 +35,10 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  firebase_core: ^4.6.0
-  cloud_firestore: ^6.2.0
-  firebase_auth: ^6.3.0
+  firebase_core: ^3.12.1
+  cloud_firestore: ^5.6.5
+  firebase_auth: ^5.5.1
+  firebase_app_check: ^0.3.2+10
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   geolocator: ^14.0.2
