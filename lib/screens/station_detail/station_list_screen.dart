@@ -235,14 +235,34 @@ class _StationListTileState extends State<_StationListTile> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        [
-                          if (widget.city.isNotEmpty) widget.city,
-                          if (widget.distance != null) widget.distance,
-                          if (widget.lastUpdated != null)
-                            timeago.format(widget.lastUpdated!),
-                        ].join(' · '),
-                        style: AppTextStyles.meta(context),
+                      Text.rich(
+                        TextSpan(
+                          style: AppTextStyles.meta(context),
+                          children: [
+                            if (widget.city.isNotEmpty)
+                              TextSpan(text: widget.city),
+                            if (widget.city.isNotEmpty &&
+                                (widget.distance != null ||
+                                    widget.lastUpdated != null))
+                              const TextSpan(text: ' · '),
+                            if (widget.distance != null)
+                              TextSpan(text: widget.distance),
+                            if (widget.distance != null &&
+                                widget.lastUpdated != null)
+                              const TextSpan(text: ' · '),
+                            if (widget.lastUpdated != null)
+                              TextSpan(
+                                text: timeago.format(widget.lastUpdated!),
+                                style: TextStyle(
+                                  color: AppColors.freshness(
+                                    DateTime.now().difference(
+                                      widget.lastUpdated!,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
