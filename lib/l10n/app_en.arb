@@ -56,6 +56,7 @@
   "refreshStations": "Refresh Stations",
   "updateNearbyStations": "Update nearby fuel stations",
   "stationsRefreshed": "Stations refreshed",
+  "refreshFailed": "Failed to refresh stations. Please try again.",
   "support": "SUPPORT",
   "reportABug": "Report a Bug",
   "foundIssue": "Found an issue? Let us know",

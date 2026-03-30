@@ -152,6 +152,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get stationsRefreshed => 'Stasjoner oppdatert';
 
   @override
+  String get refreshFailed => 'Kunne ikke oppdatere stasjoner. Prøv igjen.';
+
+  @override
   String get support => 'STØTTE';
 
   @override

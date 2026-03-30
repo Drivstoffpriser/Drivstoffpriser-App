@@ -161,6 +161,7 @@ class StationProvider extends ChangeNotifier {
       await _fetchFromFirestore();
     } catch (e) {
       debugPrint('Failed to refresh stations: $e');
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

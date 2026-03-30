@@ -51,6 +51,7 @@
   "refreshStations": "Oppdater stasjoner",
   "updateNearbyStations": "Oppdater nærliggende stasjoner",
   "stationsRefreshed": "Stasjoner oppdatert",
+  "refreshFailed": "Kunne ikke oppdatere stasjoner. Prøv igjen.",
   "support": "STØTTE",
   "reportABug": "Rapporter en feil",
   "foundIssue": "Fant du et problem? Gi oss beskjed",
