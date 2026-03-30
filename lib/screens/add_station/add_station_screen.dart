@@ -128,7 +128,7 @@ class _AddStationScreenState extends State<AddStationScreen> {
       );
       final response = await http.get(
         uri,
-        headers: {'User-Agent': 'TankVenn/1.0'},
+        headers: {'User-Agent': 'Drivstoffpriser/1.0'},
       );
       if (!mounted) return;
       if (response.statusCode == 200) {

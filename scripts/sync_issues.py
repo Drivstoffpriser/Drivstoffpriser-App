@@ -14,7 +14,7 @@ def sync_reports():
 
     # 2. Get GitHub info
     github_token = os.environ.get('GITHUB_TOKEN')
-    repo_name = os.environ.get('GITHUB_REPOSITORY') # e.g. "tsotnek/fuelpriceapp"
+    repo_name = os.environ.get('GITHUB_REPOSITORY') # e.g. "Drivstoffpriser/Drivstoffpriser-App"
     headers = {
         "Authorization": f"token {github_token}",
         "Accept": "application/vnd.github.v3+json"
