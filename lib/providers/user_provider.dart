@@ -28,7 +28,7 @@ import '../services/firestore_service.dart';
 
 class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   StreamSubscription<User?>? _authSub;
 
   UserProfile _user = const UserProfile(
@@ -184,17 +184,18 @@ class UserProvider extends ChangeNotifier {
   /// Sign in with Google. Links to anonymous account when possible;
   /// falls back to direct sign-in if the credential is already used.
   Future<void> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) {
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
       throw FirebaseAuthException(
         code: 'sign-in-cancelled',
-        message: 'Google sign-in was cancelled.',
+        message: 'Google sign-in failed: ${e.code}',
       );
     }
 
-    final googleAuth = await googleUser.authentication;
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
