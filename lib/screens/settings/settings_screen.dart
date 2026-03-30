@@ -418,7 +418,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onPressed: () {
                                 launchUrl(
                                   Uri.parse(
-                                    'https://github.com/tsotnek/tankvenn',
+                                    'https://github.com/Drivstoffpriser/Drivstoffpriser-App',
                                   ),
                                   mode: LaunchMode.externalApplication,
                                 );
@@ -444,7 +444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () {
                         launchUrl(
                           Uri.parse(
-                            'https://tsotnek.github.io/tankvenn/privacy-policy.html',
+                            'https://drivstoffpriser.github.io/Drivstoffpriser-App/privacy-policy.html',
                           ),
                           mode: LaunchMode.externalApplication,
                         );

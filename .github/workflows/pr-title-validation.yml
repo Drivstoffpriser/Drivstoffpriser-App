@@ -13,8 +13,9 @@ jobs:
       - name: Check PR title prefix
         run: |
           TITLE="${{ github.event.pull_request.title }}"
-          if [[ ! "$TITLE" =~ ^(KAN|TANK)-[0-9]+\ -\  ]]; then
-            echo "::error::PR title must start with 'KAN-{number} - ' or 'TANK-{number} - '. Got: '$TITLE'"
+          PATTERN='^(KAN|TANK|DRIV)-[0-9]+ - '
+          if [[ ! "$TITLE" =~ $PATTERN ]]; then
+            echo "::error::PR title must start with 'KAN-{number} - ', 'TANK-{number} - ', or 'DRIV-{number} - '. Got: '$TITLE'"
             exit 1
           fi
           echo "PR title is valid: $TITLE"

@@ -14,7 +14,7 @@ def sync_reports():
 
     # 2. Get GitHub info
     github_token = os.environ.get('GITHUB_TOKEN')
-    repo_name = os.environ.get('GITHUB_REPOSITORY') # e.g. "tsotnek/fuelpriceapp"
+    repo_name = os.environ.get('GITHUB_REPOSITORY') # e.g. "Drivstoffpriser/Drivstoffpriser-App"
     headers = {
         "Authorization": f"token {github_token}",
         "Accept": "application/vnd.github.v3+json"
@@ -47,19 +47,25 @@ def sync_reports():
 {description}
         """
 
-        # 4. Create GitHub Issue
+        # 4. Create GitHub Issue (without labels, so adding them triggers 'labeled' event)
         issue_url = f"https://api.github.com/repos/{repo_name}/issues"
         issue_data = {
             "title": f"[App Report] {title}",
             "body": body,
-            "labels": ["bug", "in-app-report"]
         }
-        
+
         response = requests.post(issue_url, headers=headers, json=issue_data)
-        
+
         if response.status_code == 201:
-            print(f"Successfully synced report {report_id} to GitHub.")
-            # 5. Mark as synced in Firestore
+            issue_number = response.json()["number"]
+            # 5. Add labels separately to trigger the 'labeled' workflow event
+            labels_url = f"https://api.github.com/repos/{repo_name}/issues/{issue_number}/labels"
+            labels_response = requests.post(labels_url, headers=headers, json={"labels": ["bug", "in-app-report"]})
+            if labels_response.status_code == 200:
+                print(f"Successfully synced report {report_id} to GitHub issue #{issue_number}.")
+            else:
+                print(f"Issue #{issue_number} created but failed to add labels. Status: {labels_response.status_code}")
+            # 6. Mark as synced in Firestore
             reports_ref.document(report_id).update({'synced': True})
         else:
             print(f"Failed to sync report {report_id}. Status: {response.status_code}")

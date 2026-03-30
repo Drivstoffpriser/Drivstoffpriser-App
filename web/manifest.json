@@ -1,6 +1,6 @@
 {
-    "name": "TankVenn",
-    "short_name": "TankVenn",
+    "name": "Drivstoffpriser",
+    "short_name": "Drivstoffpriser",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
