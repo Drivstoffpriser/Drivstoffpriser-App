@@ -2,112 +2,136 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helper: check if user is admin ──
+    // ── Helpers ──────────────────────────────────────────────────
+    function isAppChecked() {
+      return request.appcheck.token != null;
+    }
+
     function isAdmin() {
       return request.auth != null
              && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
+    function isSignedIn() {
+      return request.auth != null
+             && !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+    }
+
     // ── Stations ──────────────────────────────────────────────────
-    // Anyone can read stations. Admins can write (for approving new stations).
+    // Anyone can read. Only admins can write (approve/edit/delete).
     match /stations/{stationId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAppChecked() && isAdmin();
 
       // ── Price Reports (subcollection) ───────────────────────────
-      // Anyone can read reports.
-      // Only authenticated (non-anonymous) users can create reports.
-      // Admins can delete reports.
+      // Anyone can read. Authenticated non-anonymous users can create.
+      // Reports are immutable once created. Admins can delete.
       match /reports/{reportId} {
         allow read: if true;
-        allow create: if request.auth != null
-                      && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+        allow create: if isAppChecked()
+                      && isSignedIn()
                       && request.resource.data.userId == request.auth.uid
-                      && request.resource.data.keys().hasAll(['stationId', 'fuelType', 'price', 'userId', 'reportedAt'])
+                      && request.resource.data.stationId == stationId
+                      && request.resource.data.keys().hasAll(['id', 'stationId', 'fuelType', 'price', 'userId', 'reportedAt'])
                       && request.resource.data.price is number
                       && request.resource.data.price > 0
-                      && request.resource.data.price < 100;
+                      && request.resource.data.price < 100
+                      && request.resource.data.fuelType is string
+                      && request.resource.data.reportedAt is string;
         allow update: if false;
-        allow delete: if isAdmin();
+        allow delete: if isAppChecked() && isAdmin();
       }
     }
 
     // ── Current Prices ────────────────────────────────────────────
-    // Anyone can read current prices.
-    // Only authenticated (non-anonymous) users can update (via submitReport).
+    // Anyone can read. Authenticated non-anonymous users can create/update.
+    // Validates required fields and value ranges.
     match /currentPrices/{docId} {
       allow read: if true;
-      allow create, update: if request.auth != null
-                            && !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+      allow create, update: if isAppChecked()
+                            && isSignedIn()
+                            && request.resource.data.keys().hasAll(['stationId', 'fuelType', 'price', 'updatedAt', 'reportCount'])
+                            && request.resource.data.price is number
+                            && request.resource.data.price > 0
+                            && request.resource.data.price < 100
+                            && request.resource.data.reportCount is int
+                            && request.resource.data.reportCount > 0;
       allow delete: if false;
     }
 
     // ── User Profiles ─────────────────────────────────────────────
-    // Users can read and write their own profile, but cannot set isAdmin.
-    // isAdmin is only settable via Firebase Console.
+    // Users can read/write their own profile. Cannot set isAdmin or
+    // trustScore from the client. reportCount can only increase by 1.
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null
+      allow create: if isAppChecked()
+                    && request.auth != null
                     && request.auth.uid == uid
-                    && !request.resource.data.keys().hasAny(['isAdmin']);
-      allow update: if request.auth != null
+                    && !request.resource.data.keys().hasAny(['isAdmin', 'trustScore']);
+      allow update: if isAppChecked()
+                    && request.auth != null
                     && request.auth.uid == uid
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']);
-      allow delete: if request.auth != null && request.auth.uid == uid;
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'trustScore'])
+                    // reportCount can only go up by 1 at a time
+                    && (
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reportCount'])
+                      || request.resource.data.reportCount == resource.data.reportCount + 1
+                    );
+      allow delete: if isAppChecked() && request.auth != null && request.auth.uid == uid;
     }
 
     // ── Bug Reports ───────────────────────────────────────────────
-    // Any authenticated user (including anonymous) can submit bug reports.
-    // No one can read or modify them from the client.
+    // Any authenticated user (including anonymous) can submit.
+    // No client reads or modifications.
     match /bug_reports/{reportId} {
-      allow create: if request.auth != null;
+      allow create: if isAppChecked() && request.auth != null;
       allow read, update, delete: if false;
     }
 
     // ── New Station Submissions ────────────────────────────────────
-    // Only authenticated (non-anonymous) users can submit new stations.
+    // Authenticated non-anonymous users can submit new stations.
     // Users can read/edit/delete their own pending submissions.
     // Users can mark feedback as read on any of their submissions.
     // Admins can read all and update status/feedback.
     match /new_stations/{docId} {
-      allow create: if request.auth != null
-                    && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+      allow create: if isAppChecked()
+                    && isSignedIn()
                     && request.resource.data.keys().hasAll(['name', 'brand', 'address', 'city', 'latitude', 'longitude', 'submittedBy', 'status'])
                     && request.resource.data.submittedBy == request.auth.uid
                     && request.resource.data.status == 'pending';
       allow read: if request.auth != null
                   && (resource.data.submittedBy == request.auth.uid || isAdmin());
-      allow update: if request.auth != null
+      allow update: if isAppChecked()
+                    && request.auth != null
                     && (
-                      // Admins can update any field (approve/reject/feedback)
                       isAdmin()
-                      // Users can mark feedback as read
                       || (resource.data.submittedBy == request.auth.uid
                           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackRead']))
-                      // Users can edit own pending submissions
                       || (resource.data.submittedBy == request.auth.uid
                           && resource.data.status == 'pending'
                           && request.resource.data.submittedBy == request.auth.uid
                           && request.resource.data.status == 'pending')
                     );
-      allow delete: if request.auth != null
+      allow delete: if isAppChecked()
+                    && request.auth != null
                     && resource.data.submittedBy == request.auth.uid
                     && resource.data.status == 'pending';
     }
 
     // ── Station Modify Requests ─────────────────────────────────────
-    // Authenticated users can submit modify requests for existing stations.
+    // Authenticated non-anonymous users can submit modify requests.
     // Users can read their own requests and mark feedback as read.
     // Admins can read all and approve/reject.
     match /station_modify_requests/{docId} {
-      allow create: if request.auth != null
-                    && !request.auth.token.firebase.sign_in_provider.matches('anonymous')
+      allow create: if isAppChecked()
+                    && isSignedIn()
                     && request.resource.data.submittedBy == request.auth.uid
                     && request.resource.data.status == 'pending';
       allow read: if request.auth != null
                   && (resource.data.submittedBy == request.auth.uid || isAdmin());
-      allow update: if request.auth != null
+      allow update: if isAppChecked()
+                    && request.auth != null
                     && (
                       isAdmin()
                       || (resource.data.submittedBy == request.auth.uid
@@ -117,11 +141,14 @@ service cloud.firestore {
     }
 
     // ── Aggregates ─────────────────────────────────────────────────
-    // Anyone can read aggregate docs (stations + prices in single docs).
-    // Writes happen from client after upsert/submit — allow for authed users.
+    // Anyone can read. Only admins can write the stations aggregate.
+    // Authenticated non-anonymous users can write the prices aggregate
+    // (updated after each price submission).
     match /aggregates/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAppChecked()
+                   && ((docId == 'prices' && isSignedIn())
+                       || (docId == 'stations' && isAdmin()));
     }
 
     // ── Deny everything else ──────────────────────────────────────
