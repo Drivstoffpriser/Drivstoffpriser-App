@@ -123,9 +123,7 @@ class StationListScreen extends StatelessWidget {
                       } catch (_) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(context.l10n.refreshFailed),
-                            ),
+                            SnackBar(content: Text(context.l10n.refreshFailed)),
                           );
                         }
                       }
