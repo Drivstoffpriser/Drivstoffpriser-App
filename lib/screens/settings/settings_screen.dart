@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -400,7 +418,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onPressed: () {
                                 launchUrl(
                                   Uri.parse(
-                                    'https://github.com/tsotnek/tankvenn',
+                                    'https://github.com/Drivstoffpriser/Drivstoffpriser-App',
                                   ),
                                   mode: LaunchMode.externalApplication,
                                 );
@@ -426,7 +444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () {
                         launchUrl(
                           Uri.parse(
-                            'https://tsotnek.github.io/tankvenn/privacy-policy.html',
+                            'https://drivstoffpriser.github.io/Drivstoffpriser-App/privacy-policy.html',
                           ),
                           mode: LaunchMode.externalApplication,
                         );

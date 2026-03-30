@@ -2,7 +2,7 @@ name: Discord Issue Notifications
 
 on:
   issues:
-    types: [opened, closed]
+    types: [closed, labeled]
 
 jobs:
   notify-bug:
@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       contains(github.event.issue.labels.*.name, 'feature') ||
+      contains(github.event.issue.labels.*.name, 'task') ||
       contains(github.event.issue.labels.*.name, 'documentation') ||
       contains(github.event.issue.labels.*.name, 'good first issue')
     steps:
@@ -50,6 +51,10 @@ jobs:
             echo "emoji=✨" >> "$GITHUB_OUTPUT"
             echo "type=Feature" >> "$GITHUB_OUTPUT"
             echo "color=5763719" >> "$GITHUB_OUTPUT"
+          elif echo "$LABELS" | jq -e 'index("task")' > /dev/null 2>&1; then
+            echo "emoji=📋" >> "$GITHUB_OUTPUT"
+            echo "type=Task" >> "$GITHUB_OUTPUT"
+            echo "color=15105570" >> "$GITHUB_OUTPUT"
           elif echo "$LABELS" | jq -e 'index("documentation")' > /dev/null 2>&1; then
             echo "emoji=📄" >> "$GITHUB_OUTPUT"
             echo "type=Documentation" >> "$GITHUB_OUTPUT"
