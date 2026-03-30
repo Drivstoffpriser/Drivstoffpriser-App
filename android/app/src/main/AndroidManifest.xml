@@ -4,7 +4,7 @@
     <!-- Required to read GPS metadata from gallery images via setRequireOriginal -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <application
-        android:label="TankVenn"
+        android:label="Drivstoffpriser"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

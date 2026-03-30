@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +28,7 @@ import '../services/firestore_service.dart';
 
 class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   StreamSubscription<User?>? _authSub;
 
   UserProfile _user = const UserProfile(
@@ -166,17 +184,18 @@ class UserProvider extends ChangeNotifier {
   /// Sign in with Google. Links to anonymous account when possible;
   /// falls back to direct sign-in if the credential is already used.
   Future<void> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) {
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
       throw FirebaseAuthException(
         code: 'sign-in-cancelled',
-        message: 'Google sign-in was cancelled.',
+        message: 'Google sign-in failed: ${e.code}',
       );
     }
 
-    final googleAuth = await googleUser.authentication;
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
