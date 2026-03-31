@@ -76,10 +76,10 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/logos/Logo.png"
+  image_path: "assets/logos/logo.png"
   web:
     generate: true
-    image_path: "assets/logos/Logo.png"
+    image_path: "assets/logos/logo.png"
     background_color: "#ffffff"
     theme_color: "#0175C2"
 
