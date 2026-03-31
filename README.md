@@ -1,7 +1,7 @@
 # Drivstoffpriser
 
 <p align="center">
-  <img src="assets/logos/Logo.png" alt="Drivstoffpriser Logo" width="200"/>
+  <img src="assets/logos/logo.png" alt="Drivstoffpriser Logo" width="200"/>
 </p>
 
 En open-source, fellesskapsbasert app for å finne billigst drivstoff i nærheten.
