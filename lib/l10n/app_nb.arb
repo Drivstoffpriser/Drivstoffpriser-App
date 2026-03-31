@@ -272,5 +272,18 @@
   "modifyRequestsSubtitle": "Gjennomgå foreslåtte stasjonsendringer",
   "noPendingModifyRequests": "Ingen ventende endringsforslag",
   "approveModifyBody": "Dette vil bruke de foreslåtte endringene på stasjonen.",
-  "stationId": "ID: {id}"
+  "stationId": "ID: {id}",
+
+  "onboardingTitle": "Velkommen til Drivstoffpriser!",
+  "onboardingRadiusTitle": "Filtrer etter radius og merke",
+  "onboardingRadiusBody": "Trykk på filterknappen for å angi søkeradius og velge hvilke drivstoffmerker som vises på kartet.",
+  "onboardingAddStationTitle": "Legg til en manglende stasjon",
+  "onboardingAddStationBody": "Hvis en stasjon mangler, trykk og hold på kartet for å plassere den, fyll ut detaljene og send inn.",
+  "onboardingEditStationTitle": "Rediger stasjonsinformasjon",
+  "onboardingEditStationBody": "Hvis noe er feil med en stasjon, åpne den og trykk på redigeringsknappen for å foreslå endringer.",
+  "onboardingNext": "Neste",
+  "tips": "Tips",
+  "tipsSubtitle": "Lær om appens funksjoner",
+  "onboardingStepOf": "{current} av {total}",
+  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } }
 }

@@ -817,4 +817,42 @@ class AppLocalizationsNb extends AppLocalizations {
   String stationId(String id) {
     return 'ID: $id';
   }
+
+  @override
+  String get onboardingTitle => 'Velkommen til Drivstoffpriser!';
+
+  @override
+  String get onboardingRadiusTitle => 'Filtrer etter radius og merke';
+
+  @override
+  String get onboardingRadiusBody =>
+      'Trykk på filterknappen for å angi søkeradius og velge hvilke drivstoffmerker som vises på kartet.';
+
+  @override
+  String get onboardingAddStationTitle => 'Legg til en manglende stasjon';
+
+  @override
+  String get onboardingAddStationBody =>
+      'Hvis en stasjon mangler, trykk og hold på kartet for å plassere den, fyll ut detaljene og send inn.';
+
+  @override
+  String get onboardingEditStationTitle => 'Rediger stasjonsinformasjon';
+
+  @override
+  String get onboardingEditStationBody =>
+      'Hvis noe er feil med en stasjon, åpne den og trykk på redigeringsknappen for å foreslå endringer.';
+
+  @override
+  String get onboardingNext => 'Neste';
+
+  @override
+  String get tips => 'Tips';
+
+  @override
+  String get tipsSubtitle => 'Lær om appens funksjoner';
+
+  @override
+  String onboardingStepOf(int current, int total) {
+    return '$current av $total';
+  }
 }
