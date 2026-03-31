@@ -1,21 +1,3 @@
-/*
-* A crowdsourced platform for real-time fuel price monitoring in Norway
-* Copyright (C) 2026  Tsotne Karchava & Contributors
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -119,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'TankVenn'**
+  /// **'Drivstoffpriser'**
   String get appTitle;
 
   /// No description provided for @navMap.
@@ -379,6 +361,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stations refreshed'**
   String get stationsRefreshed;
+
+  /// No description provided for @refreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to refresh stations. Please try again.'**
+  String get refreshFailed;
 
   /// No description provided for @support.
   ///
@@ -953,7 +941,7 @@ abstract class AppLocalizations {
   /// No description provided for @noInternetBody.
   ///
   /// In en, this message translates to:
-  /// **'TankVenn requires an active Wi-Fi or mobile data connection to show fuel prices and station data.'**
+  /// **'Drivstoffpriser requires an active Wi-Fi or mobile data connection to show fuel prices and station data.'**
   String get noInternetBody;
 
   /// No description provided for @stillNoConnection.
@@ -1585,6 +1573,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID: {id}'**
   String stationId(String id);
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Drivstoffpriser!'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingRadiusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Radius & Brand'**
+  String get onboardingRadiusTitle;
+
+  /// No description provided for @onboardingRadiusBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the filter button to set a search radius and select which fuel brands to show on the map.'**
+  String get onboardingRadiusBody;
+
+  /// No description provided for @onboardingAddStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Missing Station'**
+  String get onboardingAddStationTitle;
+
+  /// No description provided for @onboardingAddStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If a station is missing, tap and hold on the map to place it, then fill in the details and submit.'**
+  String get onboardingAddStationBody;
+
+  /// No description provided for @onboardingEditStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Station Info'**
+  String get onboardingEditStationTitle;
+
+  /// No description provided for @onboardingEditStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If something is wrong with a station, open it and tap the edit button to suggest changes.'**
+  String get onboardingEditStationBody;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @tips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get tips;
+
+  /// No description provided for @tipsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn about app features'**
+  String get tipsSubtitle;
+
+  /// No description provided for @onboardingStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String onboardingStepOf(int current, int total);
 }
 
 class _AppLocalizationsDelegate

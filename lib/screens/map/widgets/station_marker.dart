@@ -74,19 +74,14 @@ class _StationMarkerState extends State<StationMarker> {
     final minutes = age.inMinutes;
     final hours = age.inHours;
 
+    final color = AppColors.freshness(age);
     if (minutes < 60) {
-      return (label: context.l10n.ageMinutes(minutes), color: Colors.green);
-    }
-    if (hours <= 5) {
-      return (label: context.l10n.ageHours(hours), color: Colors.green);
-    }
-    if (hours <= 12) {
-      return (label: context.l10n.ageHours(hours), color: Colors.orange);
+      return (label: context.l10n.ageMinutes(minutes), color: color);
     }
     if (hours <= 23) {
-      return (label: context.l10n.ageHours(hours), color: Colors.red);
+      return (label: context.l10n.ageHours(hours), color: color);
     }
-    return (label: context.l10n.ageOver1Day, color: Colors.grey);
+    return (label: context.l10n.ageOver1Day, color: color);
   }
 
   @override

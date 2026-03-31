@@ -30,6 +30,7 @@ import '../../l10n/l10n_helper.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../widgets/onboarding_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -61,13 +62,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isRefreshing = true);
 
     final stationProvider = context.read<StationProvider>();
-    await stationProvider.refreshStations();
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.stationsRefreshed)));
-      setState(() => _isRefreshing = false);
+    try {
+      await stationProvider.refreshStations();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.stationsRefreshed)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.refreshFailed)));
+      }
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
     }
   }
 
@@ -85,119 +94,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.background(context),
-            surfaceTintColor: Colors.transparent,
-            pinned: true,
-            expandedHeight: 100,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-              title: Text(
-                context.l10n.profile,
-                style: AppTextStyles.heading(context).copyWith(fontSize: 28),
+      body: RefreshIndicator(
+        onRefresh: _refreshStations,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: AppColors.background(context),
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              expandedHeight: 100,
+              flexibleSpace: FlexibleSpaceBar(
+                titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
+                title: Text(
+                  context.l10n.profile,
+                  style: AppTextStyles.heading(context).copyWith(fontSize: 28),
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 100,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // ── Profile Hero ──
-                _ProfileHero(
-                  user: user,
-                  isAuthenticated: isAuth,
-                  userProvider: userProvider,
-                ),
-                const SizedBox(height: 20),
+            SliverPadding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 100,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // ── Profile Hero ──
+                  _ProfileHero(
+                    user: user,
+                    isAuthenticated: isAuth,
+                    userProvider: userProvider,
+                  ),
+                  const SizedBox(height: 20),
 
-                // ── Contributions Card ──
-                if (isAuth) ...[
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface(context),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.border(context),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.bar_chart_rounded,
-                              size: 20,
-                              color: activeColor,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              context.l10n.totalContributions,
-                              style: AppTextStyles.bodyMedium(context),
-                            ),
-                          ],
+                  // ── Contributions Card ──
+                  if (isAuth) ...[
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface(context),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.border(context),
+                          width: 0.5,
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            // Price reports
-                            Expanded(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  minHeight: 80,
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surfaceLow(context),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '${user.reportCount}',
-                                        style: AppTextStyles.priceLarge(
-                                          context,
-                                        ).copyWith(fontSize: 24),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        context.l10n.priceReportsSubmitted,
-                                        style: AppTextStyles.meta(context),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.bar_chart_rounded,
+                                size: 20,
+                                color: activeColor,
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            // Station submissions — clickable
-                            Expanded(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  minHeight: 80,
-                                ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(10),
-                                  onTap: () async {
-                                    await Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.myStationSubmissions,
-                                    );
-                                    _hasLoadedCount = false;
-                                    _loadSubmissionCount();
-                                  },
+                              const SizedBox(width: 8),
+                              Text(
+                                context.l10n.totalContributions,
+                                style: AppTextStyles.bodyMedium(context),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              // Price reports
+                              Expanded(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minHeight: 80,
+                                  ),
                                   child: Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
@@ -210,27 +177,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              '$_stationSubmissionCount',
-                                              style: AppTextStyles.priceLarge(
-                                                context,
-                                              ).copyWith(fontSize: 24),
-                                            ),
-                                            const Spacer(),
-                                            Icon(
-                                              Icons.chevron_right,
-                                              size: 18,
-                                              color: AppColors.textMuted(
-                                                context,
-                                              ),
-                                            ),
-                                          ],
+                                        Text(
+                                          '${user.reportCount}',
+                                          style: AppTextStyles.priceLarge(
+                                            context,
+                                          ).copyWith(fontSize: 24),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          context.l10n.stationsSubmitted,
+                                          context.l10n.priceReportsSubmitted,
                                           style: AppTextStyles.meta(context),
                                         ),
                                       ],
@@ -238,309 +193,384 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 10),
+                              // Station submissions — clickable
+                              Expanded(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minHeight: 80,
+                                  ),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(10),
+                                    onTap: () async {
+                                      await Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.myStationSubmissions,
+                                      );
+                                      _hasLoadedCount = false;
+                                      _loadSubmissionCount();
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceLow(context),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '$_stationSubmissionCount',
+                                                style: AppTextStyles.priceLarge(
+                                                  context,
+                                                ).copyWith(fontSize: 24),
+                                              ),
+                                              const Spacer(),
+                                              Icon(
+                                                Icons.chevron_right,
+                                                size: 18,
+                                                color: AppColors.textMuted(
+                                                  context,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            context.l10n.stationsSubmitted,
+                                            style: AppTextStyles.meta(context),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Trust score bar
+                          Row(
+                            children: [
+                              Text(
+                                context.l10n.trustScore,
+                                style: AppTextStyles.label(context),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '${(user.trustScore * 100).toStringAsFixed(0)}%',
+                                style: AppTextStyles.labelBold(
+                                  context,
+                                ).copyWith(color: activeColor),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: user.trustScore,
+                              minHeight: 6,
+                              backgroundColor: AppColors.surfaceLow(context),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                activeColor,
+                              ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // ── Sign In / Create Account ──
+                  if (!isAuth) ...[
+                    _ActionCard(
+                      icon: Icons.person_add_rounded,
+                      iconColor: activeColor,
+                      title: context.l10n.createAccount,
+                      subtitle: context.l10n.signUpSubtitle,
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.auth),
+                      isPrimary: true,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // ── Admin Panel ──
+                  if (userProvider.isAdmin) ...[
+                    Text(
+                      context.l10n.adminSection,
+                      style: AppTextStyles.sectionHeader(context),
+                    ),
+                    const SizedBox(height: 12),
+                    _SettingsCard(
+                      children: [
+                        _SettingsTile(
+                          icon: Icons.admin_panel_settings_outlined,
+                          iconColor: Colors.orange,
+                          title: context.l10n.adminPanel,
+                          subtitle: context.l10n.adminPanelSubtitle,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.adminSubmissions,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        // Trust score bar
-                        Row(
-                          children: [
-                            Text(
-                              context.l10n.trustScore,
-                              style: AppTextStyles.label(context),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '${(user.trustScore * 100).toStringAsFixed(0)}%',
-                              style: AppTextStyles.labelBold(
-                                context,
-                              ).copyWith(color: activeColor),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: user.trustScore,
-                            minHeight: 6,
-                            backgroundColor: AppColors.surfaceLow(context),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              activeColor,
-                            ),
+                        const _CardDivider(),
+                        _SettingsTile(
+                          icon: Icons.edit_note_outlined,
+                          iconColor: Colors.orange,
+                          title: context.l10n.modifyRequests,
+                          subtitle: context.l10n.modifyRequestsSubtitle,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.adminModifyRequests,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 24),
+                  ],
 
-                // ── Sign In / Create Account ──
-                if (!isAuth) ...[
-                  _ActionCard(
-                    icon: Icons.person_add_rounded,
-                    iconColor: activeColor,
-                    title: context.l10n.createAccount,
-                    subtitle: context.l10n.signUpSubtitle,
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.auth),
-                    isPrimary: true,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // ── Admin Panel ──
-                if (userProvider.isAdmin) ...[
+                  // ── Map Preferences ──
                   Text(
-                    context.l10n.adminSection,
+                    context.l10n.mapPreferences,
                     style: AppTextStyles.sectionHeader(context),
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
                     children: [
-                      _SettingsTile(
-                        icon: Icons.admin_panel_settings_outlined,
-                        iconColor: Colors.orange,
-                        title: context.l10n.adminPanel,
-                        subtitle: context.l10n.adminPanelSubtitle,
-                        onTap: () => Navigator.pushNamed(
-                          context,
-                          AppRoutes.adminSubmissions,
-                        ),
-                      ),
+                      _ThemeModeTile(themeMode: userProvider.themeMode),
+                      const _CardDivider(),
+                      _LanguageTile(locale: userProvider.locale),
                       const _CardDivider(),
                       _SettingsTile(
-                        icon: Icons.edit_note_outlined,
-                        iconColor: Colors.orange,
-                        title: context.l10n.modifyRequests,
-                        subtitle: context.l10n.modifyRequestsSubtitle,
-                        onTap: () => Navigator.pushNamed(
-                          context,
-                          AppRoutes.adminModifyRequests,
-                        ),
+                        icon: Icons.my_location_outlined,
+                        iconColor: isDark
+                            ? const Color(0xFF6fddaa)
+                            : const Color(0xFF10B981),
+                        title: context.l10n.refreshStations,
+                        subtitle: context.l10n.updateNearbyStations,
+                        trailing: _isRefreshing
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: activeColor,
+                                ),
+                              )
+                            : null,
+                        onTap: _isRefreshing ? null : _refreshStations,
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                ],
 
-                // ── Map Preferences ──
-                Text(
-                  context.l10n.mapPreferences,
-                  style: AppTextStyles.sectionHeader(context),
-                ),
-                const SizedBox(height: 12),
-                _SettingsCard(
-                  children: [
-                    _ThemeModeTile(themeMode: userProvider.themeMode),
-                    const _CardDivider(),
-                    _LanguageTile(locale: userProvider.locale),
-                    const _CardDivider(),
-                    _SettingsTile(
-                      icon: Icons.my_location_outlined,
-                      iconColor: isDark
-                          ? const Color(0xFF6fddaa)
-                          : const Color(0xFF10B981),
-                      title: context.l10n.refreshStations,
-                      subtitle: context.l10n.updateNearbyStations,
-                      trailing: _isRefreshing
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: activeColor,
-                              ),
-                            )
-                          : null,
-                      onTap: _isRefreshing ? null : _refreshStations,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // ── Support ──
-                Text(
-                  context.l10n.support,
-                  style: AppTextStyles.sectionHeader(context),
-                ),
-                const SizedBox(height: 12),
-                _SettingsCard(
-                  children: [
-                    _SettingsTile(
-                      icon: Icons.bug_report_outlined,
-                      iconColor: isDark
-                          ? const Color(0xFFffd166)
-                          : const Color(0xFFF59E0B),
-                      title: context.l10n.reportABug,
-                      subtitle: context.l10n.foundIssue,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: AppColors.textMuted(context),
-                      ),
-                      onTap: () =>
-                          Navigator.pushNamed(context, AppRoutes.bugReport),
-                    ),
-                    const _CardDivider(),
-                    _SettingsTile(
-                      icon: Icons.info_outline,
-                      iconColor: isDark
-                          ? const Color(0xFFa4e6ff)
-                          : const Color(0xFF6366F1),
-                      title: context.l10n.about,
-                      subtitle: AppConstants.appName,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: AppColors.textMuted(context),
-                      ),
-                      onTap: () async {
-                        final info = await PackageInfo.fromPlatform();
-                        if (!context.mounted) return;
-                        showAboutDialog(
-                          context: context,
-                          applicationName: AppConstants.appName,
-                          applicationVersion:
-                              '${info.version}+${info.buildNumber}',
-                          children: [
-                            Text(context.l10n.aboutDescription),
-                            const SizedBox(height: 16),
-                            OutlinedButton.icon(
-                              icon: ClipOval(
-                                child: Image.asset(
-                                  'assets/logos/github.png',
-                                  width: 18,
-                                  height: 18,
-                                ),
-                              ),
-                              label: Text(context.l10n.viewOnGithub),
-                              onPressed: () {
-                                launchUrl(
-                                  Uri.parse(
-                                    'https://github.com/tsotnek/tankvenn',
-                                  ),
-                                  mode: LaunchMode.externalApplication,
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const _CardDivider(),
-                    _SettingsTile(
-                      icon: Icons.privacy_tip_outlined,
-                      iconColor: isDark
-                          ? const Color(0xFF6fddaa)
-                          : const Color(0xFF10B981),
-                      title: context.l10n.privacyPolicy,
-                      subtitle: context.l10n.privacyPolicySubtitle,
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: AppColors.textMuted(context),
-                      ),
-                      onTap: () {
-                        launchUrl(
-                          Uri.parse(
-                            'https://tsotnek.github.io/tankvenn/privacy-policy.html',
-                          ),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // ── Account Management ──
-                if (isAuth) ...[
+                  // ── Support ──
                   Text(
-                    context.l10n.account,
+                    context.l10n.support,
                     style: AppTextStyles.sectionHeader(context),
                   ),
                   const SizedBox(height: 12),
                   _SettingsCard(
                     children: [
                       _SettingsTile(
-                        icon: Icons.delete_forever_rounded,
+                        icon: Icons.lightbulb_outline,
                         iconColor: isDark
-                            ? AppColors.darkError
-                            : const Color(0xFFDC2626),
-                        title: context.l10n.deleteAccount,
-                        subtitle: context.l10n.deleteAccountSubtitle,
+                            ? const Color(0xFFffd166)
+                            : const Color(0xFFF59E0B),
+                        title: context.l10n.tips,
+                        subtitle: context.l10n.tipsSubtitle,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted(context),
+                        ),
+                        onTap: () => showOnboarding(context),
+                      ),
+                      const _CardDivider(),
+                      _SettingsTile(
+                        icon: Icons.bug_report_outlined,
+                        iconColor: isDark
+                            ? const Color(0xFFffd166)
+                            : const Color(0xFFF59E0B),
+                        title: context.l10n.reportABug,
+                        subtitle: context.l10n.foundIssue,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted(context),
+                        ),
+                        onTap: () =>
+                            Navigator.pushNamed(context, AppRoutes.bugReport),
+                      ),
+                      const _CardDivider(),
+                      _SettingsTile(
+                        icon: Icons.info_outline,
+                        iconColor: isDark
+                            ? const Color(0xFFa4e6ff)
+                            : const Color(0xFF6366F1),
+                        title: context.l10n.about,
+                        subtitle: AppConstants.appName,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted(context),
+                        ),
                         onTap: () async {
-                          final confirmed = await showDialog<bool>(
+                          final info = await PackageInfo.fromPlatform();
+                          if (!context.mounted) return;
+                          showAboutDialog(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text(ctx.l10n.deleteAccountConfirmTitle),
-                              content: Text(ctx.l10n.deleteAccountConfirmBody),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: Text(ctx.l10n.cancel),
-                                ),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFFDC2626),
-                                  ),
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: Text(
-                                    ctx.l10n.deleteAccountConfirmButton,
+                            applicationName: AppConstants.appName,
+                            applicationVersion:
+                                '${info.version}+${info.buildNumber}',
+                            children: [
+                              Text(context.l10n.aboutDescription),
+                              const SizedBox(height: 16),
+                              OutlinedButton.icon(
+                                icon: ClipOval(
+                                  child: Image.asset(
+                                    'assets/logos/github.png',
+                                    width: 18,
+                                    height: 18,
                                   ),
                                 ),
-                              ],
-                            ),
+                                label: Text(context.l10n.viewOnGithub),
+                                onPressed: () {
+                                  launchUrl(
+                                    Uri.parse(
+                                      'https://github.com/Drivstoffpriser/Drivstoffpriser-App',
+                                    ),
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                },
+                              ),
+                            ],
                           );
-                          if (confirmed != true || !context.mounted) return;
-                          try {
-                            await userProvider.deleteAccount();
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(context.l10n.accountDeleted),
+                        },
+                      ),
+                      const _CardDivider(),
+                      _SettingsTile(
+                        icon: Icons.privacy_tip_outlined,
+                        iconColor: isDark
+                            ? const Color(0xFF6fddaa)
+                            : const Color(0xFF10B981),
+                        title: context.l10n.privacyPolicy,
+                        subtitle: context.l10n.privacyPolicySubtitle,
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted(context),
+                        ),
+                        onTap: () {
+                          launchUrl(
+                            Uri.parse(
+                              'https://drivstoffpriser.github.io/Drivstoffpriser-App/privacy-policy.html',
+                            ),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ── Account Management ──
+                  if (isAuth) ...[
+                    Text(
+                      context.l10n.account,
+                      style: AppTextStyles.sectionHeader(context),
+                    ),
+                    const SizedBox(height: 12),
+                    _SettingsCard(
+                      children: [
+                        _SettingsTile(
+                          icon: Icons.delete_forever_rounded,
+                          iconColor: isDark
+                              ? AppColors.darkError
+                              : const Color(0xFFDC2626),
+                          title: context.l10n.deleteAccount,
+                          subtitle: context.l10n.deleteAccountSubtitle,
+                          onTap: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text(ctx.l10n.deleteAccountConfirmTitle),
+                                content: Text(
+                                  ctx.l10n.deleteAccountConfirmBody,
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text(ctx.l10n.cancel),
+                                  ),
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: const Color(0xFFDC2626),
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text(
+                                      ctx.l10n.deleteAccountConfirmButton,
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
-                          } on FirebaseAuthException catch (e) {
-                            if (!context.mounted) return;
-                            if (e.code == 'requires-recent-login') {
+                            if (confirmed != true || !context.mounted) return;
+                            try {
+                              await userProvider.deleteAccount();
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                    context.l10n.deleteAccountReauth,
-                                  ),
+                                  content: Text(context.l10n.accountDeleted),
                                 ),
                               );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.message ?? e.code)),
-                              );
+                            } on FirebaseAuthException catch (e) {
+                              if (!context.mounted) return;
+                              if (e.code == 'requires-recent-login') {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      context.l10n.deleteAccountReauth,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.message ?? e.code)),
+                                );
+                              }
                             }
-                          }
-                        },
-                      ),
-                      const _CardDivider(),
-                      _SettingsTile(
-                        icon: Icons.logout_rounded,
-                        iconColor: isDark
-                            ? AppColors.darkError
-                            : const Color(0xFFDC2626),
-                        title: context.l10n.signOut,
-                        subtitle: context.l10n.signOutSubtitle,
-                        onTap: () async {
-                          await userProvider.signOut();
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                          },
+                        ),
+                        const _CardDivider(),
+                        _SettingsTile(
+                          icon: Icons.logout_rounded,
+                          iconColor: isDark
+                              ? AppColors.darkError
+                              : const Color(0xFFDC2626),
+                          title: context.l10n.signOut,
+                          subtitle: context.l10n.signOutSubtitle,
+                          onTap: () async {
+                            await userProvider.signOut();
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
 
-                const SizedBox(height: 32),
-              ]),
+                  const SizedBox(height: 32),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,21 +1,3 @@
-/*
-* A crowdsourced platform for real-time fuel price monitoring in Norway
-* Copyright (C) 2026  Tsotne Karchava & Contributors
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -27,7 +9,7 @@ class AppLocalizationsNb extends AppLocalizations {
   AppLocalizationsNb([String locale = 'nb']) : super(locale);
 
   @override
-  String get appTitle => 'TankVenn';
+  String get appTitle => 'Drivstoffpriser';
 
   @override
   String get navMap => 'Kart';
@@ -168,6 +150,9 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get stationsRefreshed => 'Stasjoner oppdatert';
+
+  @override
+  String get refreshFailed => 'Kunne ikke oppdatere stasjoner. Prøv igjen.';
 
   @override
   String get support => 'STØTTE';
@@ -485,7 +470,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get noInternetBody =>
-      'TankVenn krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.';
+      'Drivstoffpriser krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.';
 
   @override
   String get stillNoConnection => 'Fortsatt ingen tilkobling';
@@ -831,5 +816,43 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get onboardingTitle => 'Velkommen til Drivstoffpriser!';
+
+  @override
+  String get onboardingRadiusTitle => 'Filtrer etter radius og merke';
+
+  @override
+  String get onboardingRadiusBody =>
+      'Trykk på filterknappen for å angi søkeradius og velge hvilke drivstoffmerker som vises på kartet.';
+
+  @override
+  String get onboardingAddStationTitle => 'Legg til en manglende stasjon';
+
+  @override
+  String get onboardingAddStationBody =>
+      'Hvis en stasjon mangler, trykk og hold på kartet for å plassere den, fyll ut detaljene og send inn.';
+
+  @override
+  String get onboardingEditStationTitle => 'Rediger stasjonsinformasjon';
+
+  @override
+  String get onboardingEditStationBody =>
+      'Hvis noe er feil med en stasjon, åpne den og trykk på redigeringsknappen for å foreslå endringer.';
+
+  @override
+  String get onboardingNext => 'Neste';
+
+  @override
+  String get tips => 'Tips';
+
+  @override
+  String get tipsSubtitle => 'Lær om appens funksjoner';
+
+  @override
+  String onboardingStepOf(int current, int total) {
+    return '$current av $total';
   }
 }

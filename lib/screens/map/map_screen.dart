@@ -186,6 +186,19 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: AppConstants.defaultMapCenter,
                 initialZoom: AppConstants.defaultMapZoom,
+                onMapReady: () {
+                  // Nudge tiles to load — flutter_map may not render
+                  // tiles when built behind a dialog or IndexedStack.
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (!mounted) return;
+                    final cam = _mapController.camera;
+                    _mapController.move(cam.center, cam.zoom + 0.001);
+                    Future.delayed(const Duration(milliseconds: 50), () {
+                      if (!mounted) return;
+                      _mapController.move(cam.center, cam.zoom);
+                    });
+                  });
+                },
                 onTap: (_, _) {
                   if (_isSearching) _searchFocus.unfocus();
                 },
@@ -235,6 +248,7 @@ class _MapScreenState extends State<MapScreen> {
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(50),
                     maxZoom: 15,
+                    showPolygon: false,
                     markers: filtered.map((station) {
                       final price = stationProvider.getPriceForStation(
                         station.id,

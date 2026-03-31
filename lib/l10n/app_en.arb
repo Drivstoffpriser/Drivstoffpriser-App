@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appTitle": "TankVenn",
+  "appTitle": "Drivstoffpriser",
 
   "navMap": "Map",
   "navStations": "Stations",
@@ -56,6 +56,7 @@
   "refreshStations": "Refresh Stations",
   "updateNearbyStations": "Update nearby fuel stations",
   "stationsRefreshed": "Stations refreshed",
+  "refreshFailed": "Failed to refresh stations. Please try again.",
   "support": "SUPPORT",
   "reportABug": "Report a Bug",
   "foundIssue": "Found an issue? Let us know",
@@ -167,7 +168,7 @@
   "@bugReportFailed": { "placeholders": { "error": { "type": "String" } } },
 
   "noInternetTitle": "No internet connection",
-  "noInternetBody": "TankVenn requires an active Wi-Fi or mobile data connection to show fuel prices and station data.",
+  "noInternetBody": "Drivstoffpriser requires an active Wi-Fi or mobile data connection to show fuel prices and station data.",
   "stillNoConnection": "Still no connection",
   "tryAgain": "Try again",
   "retry": "Retry",
@@ -294,5 +295,18 @@
   "noPendingModifyRequests": "No pending edit requests",
   "approveModifyBody": "This will apply the proposed changes to the station.",
   "stationId": "ID: {id}",
-  "@stationId": { "placeholders": { "id": { "type": "String" } } }
+  "@stationId": { "placeholders": { "id": { "type": "String" } } },
+
+  "onboardingTitle": "Welcome to Drivstoffpriser!",
+  "onboardingRadiusTitle": "Filter by Radius & Brand",
+  "onboardingRadiusBody": "Tap the filter button to set a search radius and select which fuel brands to show on the map.",
+  "onboardingAddStationTitle": "Add a Missing Station",
+  "onboardingAddStationBody": "If a station is missing, tap and hold on the map to place it, then fill in the details and submit.",
+  "onboardingEditStationTitle": "Edit Station Info",
+  "onboardingEditStationBody": "If something is wrong with a station, open it and tap the edit button to suggest changes.",
+  "onboardingNext": "Next",
+  "tips": "Tips",
+  "tipsSubtitle": "Learn about app features",
+  "onboardingStepOf": "{current} of {total}",
+  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } }
 }
