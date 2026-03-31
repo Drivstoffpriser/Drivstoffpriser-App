@@ -186,6 +186,19 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: AppConstants.defaultMapCenter,
                 initialZoom: AppConstants.defaultMapZoom,
+                onMapReady: () {
+                  // Nudge tiles to load — flutter_map may not render
+                  // tiles when built behind a dialog or IndexedStack.
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (!mounted) return;
+                    final cam = _mapController.camera;
+                    _mapController.move(cam.center, cam.zoom + 0.001);
+                    Future.delayed(const Duration(milliseconds: 50), () {
+                      if (!mounted) return;
+                      _mapController.move(cam.center, cam.zoom);
+                    });
+                  });
+                },
                 onTap: (_, _) {
                   if (_isSearching) _searchFocus.unfocus();
                 },
