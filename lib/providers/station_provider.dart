@@ -106,6 +106,18 @@ class StationProvider extends ChangeNotifier {
     return result.toList();
   }
 
+  /// Stations filtered by brand only (no radius filter).
+  /// Used by the map to show all stations in the visible viewport.
+  List<Station> get brandFilteredStations {
+    Iterable<Station> result = _stations;
+
+    if (_selectedBrands.isNotEmpty) {
+      result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    return result.toList();
+  }
+
   void toggleBrand(String brand) {
     _selectedBrands = Set.of(_selectedBrands);
     if (_selectedBrands.contains(brand)) {
