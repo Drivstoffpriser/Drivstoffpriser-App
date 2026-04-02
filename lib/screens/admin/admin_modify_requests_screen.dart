@@ -23,6 +23,7 @@ import '../../config/app_text_styles.dart';
 import '../../l10n/l10n_helper.dart';
 import '../../models/station_modify_request.dart';
 import '../../services/firestore_service.dart';
+import '../../widgets/proposed_logo_preview.dart';
 
 class AdminModifyRequestsScreen extends StatefulWidget {
   const AdminModifyRequestsScreen({super.key});
@@ -239,6 +240,14 @@ class _DiffCard extends StatelessWidget {
                   '${request.originalLatitude.toStringAsFixed(5)}, ${request.originalLongitude.toStringAsFixed(5)}',
               newValue:
                   '${request.proposedLatitude.toStringAsFixed(5)}, ${request.proposedLongitude.toStringAsFixed(5)}',
+            ),
+          if (request.logoChanged)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: ProposedLogoPreview(
+                logoUrl: request.proposedLogoUrl!,
+                brand: request.proposedBrand,
+              ),
             ),
 
           const SizedBox(height: 12),

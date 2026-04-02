@@ -1262,6 +1262,48 @@ abstract class AppLocalizations {
   /// **'Please enter a brand name'**
   String get addStationBrandRequired;
 
+  /// No description provided for @stationLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Station Logo'**
+  String get stationLogo;
+
+  /// No description provided for @logoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — will apply to all stations of this brand'**
+  String get logoHint;
+
+  /// No description provided for @uploadLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Logo'**
+  String get uploadLogo;
+
+  /// No description provided for @changeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Logo'**
+  String get changeLogo;
+
+  /// No description provided for @removeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Logo'**
+  String get removeLogo;
+
+  /// No description provided for @proposedLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed Logo'**
+  String get proposedLogo;
+
+  /// No description provided for @logoAppliesToBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Will apply to all \"{brand}\" stations'**
+  String logoAppliesToBrand(String brand);
+
   /// No description provided for @addStationAddress.
   ///
   /// In en, this message translates to:

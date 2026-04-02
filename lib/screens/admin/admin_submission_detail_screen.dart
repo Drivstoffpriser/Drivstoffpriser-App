@@ -27,6 +27,7 @@ import '../../l10n/l10n_helper.dart';
 import '../../models/station_submission.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/brand_logo.dart';
+import '../../widgets/proposed_logo_preview.dart';
 
 class AdminSubmissionDetailScreen extends StatelessWidget {
   final StationSubmission submission;
@@ -117,7 +118,11 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    BrandLogo(brand: submission.brand, radius: 22),
+                    BrandLogo(
+                      brand: submission.brand,
+                      radius: 22,
+                      logoUrl: submission.logoUrl,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -161,6 +166,15 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
               ],
             ),
           ),
+
+          // Proposed logo preview
+          if (submission.logoUrl != null) ...[
+            const SizedBox(height: 16),
+            ProposedLogoPreview(
+              logoUrl: submission.logoUrl!,
+              brand: submission.brand,
+            ),
+          ],
           const SizedBox(height: 24),
 
           // Approve / Reject buttons

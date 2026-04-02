@@ -645,6 +645,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addStationBrandRequired => 'Please enter a brand name';
 
   @override
+  String get stationLogo => 'Station Logo';
+
+  @override
+  String get logoHint => 'Optional — will apply to all stations of this brand';
+
+  @override
+  String get uploadLogo => 'Upload Logo';
+
+  @override
+  String get changeLogo => 'Change Logo';
+
+  @override
+  String get removeLogo => 'Remove Logo';
+
+  @override
+  String get proposedLogo => 'Proposed Logo';
+
+  @override
+  String logoAppliesToBrand(String brand) {
+    return 'Will apply to all \"$brand\" stations';
+  }
+
+  @override
   String get addStationAddress => 'Address';
 
   @override
