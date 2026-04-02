@@ -218,7 +218,11 @@ class _AdminSubmissionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                BrandLogo(brand: submission.brand, radius: 18),
+                BrandLogo(
+                  brand: submission.brand,
+                  radius: 18,
+                  logoUrl: submission.logoUrl,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

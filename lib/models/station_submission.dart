@@ -31,6 +31,7 @@ class StationSubmission {
   final SubmissionStatus status;
   final String? feedback;
   final bool feedbackRead;
+  final String? logoUrl;
 
   const StationSubmission({
     required this.id,
@@ -45,6 +46,7 @@ class StationSubmission {
     this.status = SubmissionStatus.pending,
     this.feedback,
     this.feedbackRead = false,
+    this.logoUrl,
   });
 
   factory StationSubmission.fromJson(String id, Map<String, dynamic> json) {
@@ -66,6 +68,7 @@ class StationSubmission {
       ),
       feedback: json['feedback'] as String?,
       feedbackRead: json['feedbackRead'] as bool? ?? false,
+      logoUrl: json['logoUrl'] as String?,
     );
   }
 }
