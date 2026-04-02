@@ -23,7 +23,9 @@ import '../models/fuel_type.dart';
 import '../models/station.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
+import '../services/favorite_service.dart';
 import '../services/firestore_service.dart';
+import '../widgets/brand_logo.dart';
 
 enum SortMode { cheapest, nearest, latest }
 
@@ -34,9 +36,14 @@ class StationProvider extends ChangeNotifier {
   SortMode _sortMode = SortMode.cheapest;
   Set<String> _selectedBrands = {};
   bool _isLoading = false;
+  bool _showFavoritesOnly = false;
+  Set<String> _favoriteStationIds = {};
 
-  /// Filter radius in km. null means show all stations (no distance filter).
-  double? _filterRadiusKm = 20;
+  /// Map radius in km. null means show all stations ("All of Norway").
+  double? _mapRadiusKm;
+
+  /// Station list radius in km. null means show all stations.
+  double? _listRadiusKm = 20;
 
   double? _userLat;
   double? _userLng;
@@ -48,11 +55,42 @@ class StationProvider extends ChangeNotifier {
   Set<String> get selectedBrands => _selectedBrands;
   bool get isLoading => _isLoading;
   bool get hasUserLocation => _userLat != null && _userLng != null;
-  double? get filterRadiusKm => _filterRadiusKm;
+  double? get mapRadiusKm => _mapRadiusKm;
+  double? get listRadiusKm => _listRadiusKm;
+  bool get showFavoritesOnly => _showFavoritesOnly;
+  Set<String> get favoriteStationIds => _favoriteStationIds;
 
-  /// Set the filter radius in km. Pass null to show all stations.
-  void setFilterRadius(double? km) {
-    _filterRadiusKm = km;
+  /// Set the map filter radius in km. Pass null to show all stations.
+  void setMapRadius(double? km) {
+    _mapRadiusKm = km;
+    notifyListeners();
+  }
+
+  /// Set the station list filter radius in km. Pass null to show all stations.
+  void setListRadius(double? km) {
+    _listRadiusKm = km;
+    notifyListeners();
+  }
+
+  Future<void> loadFavorites() async {
+    _favoriteStationIds = await FavoriteService.getFavorites();
+    notifyListeners();
+  }
+
+  Future<void> toggleFavorite(String stationId) async {
+    await FavoriteService.toggleFavorite(stationId);
+    if (_favoriteStationIds.contains(stationId)) {
+      _favoriteStationIds.remove(stationId);
+    } else {
+      _favoriteStationIds.add(stationId);
+    }
+    notifyListeners();
+  }
+
+  bool isFavorite(String stationId) => _favoriteStationIds.contains(stationId);
+
+  void setShowFavoritesOnly(bool value) {
+    _showFavoritesOnly = value;
     notifyListeners();
   }
 
@@ -63,12 +101,12 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Stations filtered by radius only (before brand filter).
-  Iterable<Station> get _radiusFiltered {
+  /// Filter stations by a given radius in km.
+  Iterable<Station> _filterByRadius(double? radiusKm) {
     Iterable<Station> result = _stations;
 
-    if (_filterRadiusKm != null && _userLat != null && _userLng != null) {
-      final radiusMeters = _filterRadiusKm! * 1000;
+    if (radiusKm != null && _userLat != null && _userLng != null) {
+      final radiusMeters = radiusKm * 1000;
       result = result.where((s) {
         final d = DistanceService.distanceInMeters(
           _userLat!,
@@ -83,24 +121,46 @@ class StationProvider extends ChangeNotifier {
     return result;
   }
 
-  /// Sorted list of unique brand names from stations within the radius
-  /// (independent of brand filter so all chips remain visible).
-  List<String> get availableBrands {
-    final brands = _radiusFiltered
-        .map((s) => s.brand)
-        .where((b) => b.isNotEmpty)
-        .toSet()
-        .toList();
+  /// Brands available within the map radius.
+  List<String> get mapAvailableBrands {
+    final brands = _filterByRadius(
+      _mapRadiusKm,
+    ).map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
     brands.sort();
     return brands;
   }
 
-  /// Stations filtered by radius (if set) and selected brands.
+  /// Brands available within the station list radius.
+  List<String> get listAvailableBrands {
+    final brands = _filterByRadius(
+      _listRadiusKm,
+    ).map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
+    brands.sort();
+    return brands;
+  }
+
+  /// Stations filtered by station list radius and selected brands.
   List<Station> get filteredStations {
-    Iterable<Station> result = _radiusFiltered;
+    Iterable<Station> result = _filterByRadius(_listRadiusKm);
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    return result.toList();
+  }
+
+  /// Stations filtered by map radius and selected brands.
+  /// Used by the map to show stations.
+  List<Station> get brandFilteredStations {
+    Iterable<Station> result = _filterByRadius(_mapRadiusKm);
+
+    if (_selectedBrands.isNotEmpty) {
+      result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    if (_showFavoritesOnly) {
+      result = result.where((s) => _favoriteStationIds.contains(s.id));
     }
 
     return result.toList();
@@ -178,6 +238,14 @@ class StationProvider extends ChangeNotifier {
     // Update local cache
     await CacheService.cacheStations(stations);
     await CacheService.cachePrices(prices);
+
+    // Load remote brand logos and update BrandLogo cache
+    try {
+      final logos = await FirestoreService.getBrandLogos();
+      BrandLogo.setRemoteLogos(logos);
+    } catch (_) {
+      // Non-critical — local assets still work
+    }
   }
 
   void setFuelType(FuelType type) {

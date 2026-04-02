@@ -58,7 +58,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterByBrand => 'Filter by Brand';
 
   @override
+  String get showFavoritesOnly => 'Show favorites only';
+
+  @override
   String get clearAll => 'Clear all';
+
+  @override
+  String get favorites => 'Favorites';
 
   @override
   String get navigate => 'Navigate';
@@ -643,6 +649,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addStationBrandRequired => 'Please enter a brand name';
+
+  @override
+  String get stationLogo => 'Station Logo';
+
+  @override
+  String get logoHint => 'Optional — will apply to all stations of this brand';
+
+  @override
+  String get uploadLogo => 'Upload Logo';
+
+  @override
+  String get changeLogo => 'Change Logo';
+
+  @override
+  String get removeLogo => 'Remove Logo';
+
+  @override
+  String get proposedLogo => 'Proposed Logo';
+
+  @override
+  String logoAppliesToBrand(String brand) {
+    return 'Will apply to all \"$brand\" stations';
+  }
 
   @override
   String get addStationAddress => 'Address';

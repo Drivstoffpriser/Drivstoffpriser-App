@@ -22,6 +22,7 @@ import '../../../config/app_colors.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../models/current_price.dart';
 import '../../../models/station.dart';
+import '../../../widgets/brand_logo.dart';
 
 class StationMarker extends StatefulWidget {
   final Station station;
@@ -53,12 +54,65 @@ class _StationMarkerState extends State<StationMarker> {
     'St1': 'assets/logos/st1.png',
     'YX Truck': 'assets/logos/yx-truck.png',
     'Tanken': 'assets/logos/tanken.png',
+    'Bunker Oil': 'assets/logos/bunker.png',
   };
 
   String? _getLogoAsset() {
     final brand = widget.station.brand;
     if (brand.isEmpty) return null;
     return _brandLogoAssets[brand];
+  }
+
+  String? _getRemoteLogoUrl() {
+    final brand = widget.station.brand;
+    if (brand.isEmpty) return null;
+    return BrandLogo.remoteLogoUrl(brand);
+  }
+
+  Widget _buildBrandImage(
+    BuildContext context, {
+    required double size,
+    BoxFit fit = BoxFit.contain,
+    EdgeInsets padding = EdgeInsets.zero,
+  }) {
+    final logoAsset = _getLogoAsset();
+    final remoteUrl = _getRemoteLogoUrl();
+
+    if (remoteUrl != null) {
+      return ClipOval(
+        child: Padding(
+          padding: padding,
+          child: Image.network(
+            remoteUrl,
+            width: size,
+            height: size,
+            fit: fit,
+            errorBuilder: (_, _, _) => logoAsset != null
+                ? Image.asset(
+                    logoAsset,
+                    fit: fit,
+                    errorBuilder: (_, _, _) => _buildFallbackLogo(context),
+                  )
+                : _buildFallbackLogo(context),
+          ),
+        ),
+      );
+    }
+
+    if (logoAsset != null) {
+      return ClipOval(
+        child: Padding(
+          padding: padding,
+          child: Image.asset(
+            logoAsset,
+            fit: fit,
+            errorBuilder: (_, _, _) => _buildFallbackLogo(context),
+          ),
+        ),
+      );
+    }
+
+    return _buildFallbackLogo(context);
   }
 
   /// Format age label and pick color:
@@ -107,7 +161,6 @@ class _StationMarkerState extends State<StationMarker> {
   Widget _buildLogoWithPrice(BuildContext context) {
     final price = widget.price!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final logoAsset = _getLogoAsset();
     final age = DateTime.now().difference(price.updatedAt);
     final (:label, :color) = _formatAge(context, age);
 
@@ -129,19 +182,11 @@ class _StationMarkerState extends State<StationMarker> {
                   BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 6),
                 ],
               ),
-              child: logoAsset != null
-                  ? ClipOval(
-                      child: Padding(
-                        padding: const EdgeInsets.all(3),
-                        child: Image.asset(
-                          logoAsset,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) =>
-                              _buildFallbackLogo(context),
-                        ),
-                      ),
-                    )
-                  : _buildFallbackLogo(context),
+              child: _buildBrandImage(
+                context,
+                size: 34,
+                padding: const EdgeInsets.all(3),
+              ),
             ),
             // Time badge — top right
             Positioned(
@@ -222,8 +267,6 @@ class _StationMarkerState extends State<StationMarker> {
 
   /// No price — plain circle with logo or initials.
   Widget _buildCircleMarker(BuildContext context) {
-    final logoAsset = _getLogoAsset();
-
     return AnimatedOpacity(
       opacity: _isPressed ? 0.85 : 1.0,
       duration: const Duration(milliseconds: 80),
@@ -252,20 +295,11 @@ class _StationMarkerState extends State<StationMarker> {
                 ],
               ),
             ),
-            if (logoAsset != null)
-              ClipOval(
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: Image.asset(
-                    logoAsset,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => _buildFallbackLogo(context),
-                  ),
-                ),
-              )
-            else
-              _buildFallbackLogo(context),
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: _buildBrandImage(context, size: 32),
+            ),
           ],
         ),
       ),

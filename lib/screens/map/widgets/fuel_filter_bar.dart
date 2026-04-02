@@ -40,17 +40,37 @@ class FuelFilterBar extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: FuelType.values.map((type) {
-                final selected = provider.selectedFuelType == type;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _FuelChip(
-                    label: type.localizedName(context),
-                    isSelected: selected,
-                    onTap: () => provider.setFuelType(type),
+              children: [
+                ...FuelType.values.map((type) {
+                  final selected = provider.selectedFuelType == type;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _FuelChip(
+                      label: type.localizedName(context),
+                      isSelected: selected,
+                      onTap: () => provider.setFuelType(type),
+                    ),
+                  );
+                }),
+                if (provider.favoriteStationIds.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: GestureDetector(
+                      onTap: () => provider.setShowFavoritesOnly(
+                        !provider.showFavoritesOnly,
+                      ),
+                      child: Icon(
+                        provider.showFavoritesOnly
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 20,
+                        color: provider.showFavoritesOnly
+                            ? Colors.red
+                            : AppColors.textMuted(context),
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
+              ],
             ),
           ),
         ),
