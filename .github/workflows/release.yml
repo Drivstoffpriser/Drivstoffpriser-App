@@ -18,19 +18,26 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
-      - name: Compute build number
+      - name: Compute build number from commit count
         id: build_number
+        # +1 accounts for the pubspec update commit at the end of this workflow
         run: |
-          # Get the highest build number from existing tags (v*+N)
-          LATEST=$(git tag -l 'v*+*' | sed 's/.*+//' | sort -n | tail -1)
-          NEXT=$(( ${LATEST:-0} + 1 ))
-          echo "value=$NEXT" >> "$GITHUB_OUTPUT"
-          echo "Build number: $NEXT (previous: ${LATEST:-none})"
+          BUILD=$(( $(git rev-list --count HEAD) + 1 ))
+          echo "value=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "Build number: $BUILD"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -79,3 +86,14 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
           generate_release_notes: true
+
+      - name: Update pubspec.yaml version
+        run: |
+          NEW_VERSION="${{ inputs.version }}+${{ steps.build_number.outputs.value }}"
+          sed -i "s/^version: .*$/version: ${NEW_VERSION}/" pubspec.yaml
+          git config user.name "drivstoffpriser-bot[bot]"
+          git config user.email "drivstoffpriser-bot[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: release ${NEW_VERSION} [release]"
+          git push
