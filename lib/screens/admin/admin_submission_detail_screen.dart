@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -9,6 +27,7 @@ import '../../l10n/l10n_helper.dart';
 import '../../models/station_submission.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/brand_logo.dart';
+import '../../widgets/proposed_logo_preview.dart';
 
 class AdminSubmissionDetailScreen extends StatelessWidget {
   final StationSubmission submission;
@@ -99,7 +118,11 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    BrandLogo(brand: submission.brand, radius: 22),
+                    BrandLogo(
+                      brand: submission.brand,
+                      radius: 22,
+                      logoUrl: submission.logoUrl,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -143,6 +166,15 @@ class AdminSubmissionDetailScreen extends StatelessWidget {
               ],
             ),
           ),
+
+          // Proposed logo preview
+          if (submission.logoUrl != null) ...[
+            const SizedBox(height: 16),
+            ProposedLogoPreview(
+              logoUrl: submission.logoUrl!,
+              brand: submission.brand,
+            ),
+          ],
           const SizedBox(height: 24),
 
           // Approve / Reject buttons

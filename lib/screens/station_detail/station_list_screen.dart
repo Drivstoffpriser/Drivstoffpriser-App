@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -115,47 +133,67 @@ class StationListScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: stationProvider.isLoading
+            child: stationProvider.isLoading && stationProvider.stations.isEmpty
                 ? const LoadingIndicator()
-                : ListView.builder(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 100,
-                    ),
-                    itemCount: sorted.length,
-                    itemBuilder: (context, index) {
-                      final station = sorted[index];
-                      final price = stationProvider.getPriceForStation(
-                        station.id,
-                      );
-
-                      String? distanceStr;
-                      if (locationProvider.hasLocation) {
-                        final meters = DistanceService.distanceInMeters(
-                          locationProvider.position!.latitude,
-                          locationProvider.position!.longitude,
-                          station.latitude,
-                          station.longitude,
-                        );
-                        distanceStr = DistanceService.formatDistance(meters);
-                      }
-
-                      return _StationListTile(
-                        stationId: station.id,
-                        name: station.name,
-                        brand: station.brand,
-                        city: station.city,
-                        distance: distanceStr,
-                        price: price?.price,
-                        lastUpdated: price?.updatedAt,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.stationDetail,
-                            arguments: station,
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      try {
+                        await stationProvider.refreshStations();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.l10n.stationsRefreshed),
+                            ),
                           );
-                        },
-                      );
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(context.l10n.refreshFailed)),
+                          );
+                        }
+                      }
                     },
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom + 100,
+                      ),
+                      itemCount: sorted.length,
+                      itemBuilder: (context, index) {
+                        final station = sorted[index];
+                        final price = stationProvider.getPriceForStation(
+                          station.id,
+                        );
+
+                        String? distanceStr;
+                        if (locationProvider.hasLocation) {
+                          final meters = DistanceService.distanceInMeters(
+                            locationProvider.position!.latitude,
+                            locationProvider.position!.longitude,
+                            station.latitude,
+                            station.longitude,
+                          );
+                          distanceStr = DistanceService.formatDistance(meters);
+                        }
+
+                        return _StationListTile(
+                          stationId: station.id,
+                          name: station.name,
+                          brand: station.brand,
+                          city: station.city,
+                          distance: distanceStr,
+                          price: price?.price,
+                          lastUpdated: price?.updatedAt,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.stationDetail,
+                              arguments: station,
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
           ),
         ],
@@ -226,14 +264,34 @@ class _StationListTileState extends State<_StationListTile> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        [
-                          if (widget.city.isNotEmpty) widget.city,
-                          if (widget.distance != null) widget.distance,
-                          if (widget.lastUpdated != null)
-                            timeago.format(widget.lastUpdated!),
-                        ].join(' · '),
-                        style: AppTextStyles.meta(context),
+                      Text.rich(
+                        TextSpan(
+                          style: AppTextStyles.meta(context),
+                          children: [
+                            if (widget.city.isNotEmpty)
+                              TextSpan(text: widget.city),
+                            if (widget.city.isNotEmpty &&
+                                (widget.distance != null ||
+                                    widget.lastUpdated != null))
+                              const TextSpan(text: ' · '),
+                            if (widget.distance != null)
+                              TextSpan(text: widget.distance),
+                            if (widget.distance != null &&
+                                widget.lastUpdated != null)
+                              const TextSpan(text: ' · '),
+                            if (widget.lastUpdated != null)
+                              TextSpan(
+                                text: timeago.format(widget.lastUpdated!),
+                                style: TextStyle(
+                                  color: AppColors.freshness(
+                                    DateTime.now().difference(
+                                      widget.lastUpdated!,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

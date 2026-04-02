@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 enum ModifyRequestStatus { pending, approved, rejected }
 
 class StationModifyRequest {
@@ -25,6 +43,7 @@ class StationModifyRequest {
   final ModifyRequestStatus status;
   final String? feedback;
   final bool feedbackRead;
+  final String? proposedLogoUrl;
 
   const StationModifyRequest({
     required this.id,
@@ -46,6 +65,7 @@ class StationModifyRequest {
     this.status = ModifyRequestStatus.pending,
     this.feedback,
     this.feedbackRead = false,
+    this.proposedLogoUrl,
   });
 
   bool get nameChanged => originalName != proposedName;
@@ -55,12 +75,14 @@ class StationModifyRequest {
   bool get locationChanged =>
       originalLatitude != proposedLatitude ||
       originalLongitude != proposedLongitude;
+  bool get logoChanged => proposedLogoUrl != null;
   bool get hasChanges =>
       nameChanged ||
       brandChanged ||
       addressChanged ||
       cityChanged ||
-      locationChanged;
+      locationChanged ||
+      logoChanged;
 
   factory StationModifyRequest.fromJson(String id, Map<String, dynamic> json) {
     return StationModifyRequest(
@@ -88,6 +110,7 @@ class StationModifyRequest {
       ),
       feedback: json['feedback'] as String?,
       feedbackRead: json['feedbackRead'] as bool? ?? false,
+      proposedLogoUrl: json['proposedLogoUrl'] as String?,
     );
   }
 
@@ -108,6 +131,7 @@ class StationModifyRequest {
       'proposedLongitude': proposedLongitude,
       'submittedBy': submittedBy,
       'status': status.name,
+      'proposedLogoUrl': ?proposedLogoUrl,
     };
   }
 }

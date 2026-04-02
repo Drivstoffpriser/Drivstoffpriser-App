@@ -1,9 +1,28 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'package:flutter/material.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../models/current_price.dart';
 import '../../../models/station.dart';
+import '../../../widgets/brand_logo.dart';
 
 class StationMarker extends StatefulWidget {
   final Station station;
@@ -35,12 +54,65 @@ class _StationMarkerState extends State<StationMarker> {
     'St1': 'assets/logos/st1.png',
     'YX Truck': 'assets/logos/yx-truck.png',
     'Tanken': 'assets/logos/tanken.png',
+    'Bunker Oil': 'assets/logos/bunker.png',
   };
 
   String? _getLogoAsset() {
     final brand = widget.station.brand;
     if (brand.isEmpty) return null;
     return _brandLogoAssets[brand];
+  }
+
+  String? _getRemoteLogoUrl() {
+    final brand = widget.station.brand;
+    if (brand.isEmpty) return null;
+    return BrandLogo.remoteLogoUrl(brand);
+  }
+
+  Widget _buildBrandImage(
+    BuildContext context, {
+    required double size,
+    BoxFit fit = BoxFit.contain,
+    EdgeInsets padding = EdgeInsets.zero,
+  }) {
+    final logoAsset = _getLogoAsset();
+    final remoteUrl = _getRemoteLogoUrl();
+
+    if (remoteUrl != null) {
+      return ClipOval(
+        child: Padding(
+          padding: padding,
+          child: Image.network(
+            remoteUrl,
+            width: size,
+            height: size,
+            fit: fit,
+            errorBuilder: (_, _, _) => logoAsset != null
+                ? Image.asset(
+                    logoAsset,
+                    fit: fit,
+                    errorBuilder: (_, _, _) => _buildFallbackLogo(context),
+                  )
+                : _buildFallbackLogo(context),
+          ),
+        ),
+      );
+    }
+
+    if (logoAsset != null) {
+      return ClipOval(
+        child: Padding(
+          padding: padding,
+          child: Image.asset(
+            logoAsset,
+            fit: fit,
+            errorBuilder: (_, _, _) => _buildFallbackLogo(context),
+          ),
+        ),
+      );
+    }
+
+    return _buildFallbackLogo(context);
   }
 
   /// Format age label and pick color:
@@ -56,19 +128,14 @@ class _StationMarkerState extends State<StationMarker> {
     final minutes = age.inMinutes;
     final hours = age.inHours;
 
+    final color = AppColors.freshness(age);
     if (minutes < 60) {
-      return (label: context.l10n.ageMinutes(minutes), color: Colors.green);
-    }
-    if (hours <= 5) {
-      return (label: context.l10n.ageHours(hours), color: Colors.green);
-    }
-    if (hours <= 12) {
-      return (label: context.l10n.ageHours(hours), color: Colors.orange);
+      return (label: context.l10n.ageMinutes(minutes), color: color);
     }
     if (hours <= 23) {
-      return (label: context.l10n.ageHours(hours), color: Colors.red);
+      return (label: context.l10n.ageHours(hours), color: color);
     }
-    return (label: context.l10n.ageOver1Day, color: Colors.grey);
+    return (label: context.l10n.ageOver1Day, color: color);
   }
 
   @override
@@ -94,7 +161,6 @@ class _StationMarkerState extends State<StationMarker> {
   Widget _buildLogoWithPrice(BuildContext context) {
     final price = widget.price!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final logoAsset = _getLogoAsset();
     final age = DateTime.now().difference(price.updatedAt);
     final (:label, :color) = _formatAge(context, age);
 
@@ -116,19 +182,11 @@ class _StationMarkerState extends State<StationMarker> {
                   BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 6),
                 ],
               ),
-              child: logoAsset != null
-                  ? ClipOval(
-                      child: Padding(
-                        padding: const EdgeInsets.all(3),
-                        child: Image.asset(
-                          logoAsset,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) =>
-                              _buildFallbackLogo(context),
-                        ),
-                      ),
-                    )
-                  : _buildFallbackLogo(context),
+              child: _buildBrandImage(
+                context,
+                size: 34,
+                padding: const EdgeInsets.all(3),
+              ),
             ),
             // Time badge — top right
             Positioned(
@@ -209,8 +267,6 @@ class _StationMarkerState extends State<StationMarker> {
 
   /// No price — plain circle with logo or initials.
   Widget _buildCircleMarker(BuildContext context) {
-    final logoAsset = _getLogoAsset();
-
     return AnimatedOpacity(
       opacity: _isPressed ? 0.85 : 1.0,
       duration: const Duration(milliseconds: 80),
@@ -239,20 +295,11 @@ class _StationMarkerState extends State<StationMarker> {
                 ],
               ),
             ),
-            if (logoAsset != null)
-              ClipOval(
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: Image.asset(
-                    logoAsset,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => _buildFallbackLogo(context),
-                  ),
-                ),
-              )
-            else
-              _buildFallbackLogo(context),
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: _buildBrandImage(context, size: 32),
+            ),
           ],
         ),
       ),

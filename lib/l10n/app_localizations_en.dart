@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'TankVenn';
+  String get appTitle => 'Drivstoffpriser';
 
   @override
   String get navMap => 'Map';
@@ -155,6 +155,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationsRefreshed => 'Stations refreshed';
+
+  @override
+  String get refreshFailed => 'Failed to refresh stations. Please try again.';
 
   @override
   String get support => 'SUPPORT';
@@ -470,7 +473,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noInternetBody =>
-      'TankVenn requires an active Wi-Fi or mobile data connection to show fuel prices and station data.';
+      'Drivstoffpriser requires an active Wi-Fi or mobile data connection to show fuel prices and station data.';
 
   @override
   String get stillNoConnection => 'Still no connection';
@@ -648,6 +651,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addStationBrandRequired => 'Please enter a brand name';
 
   @override
+  String get stationLogo => 'Station Logo';
+
+  @override
+  String get logoHint => 'Optional — will apply to all stations of this brand';
+
+  @override
+  String get uploadLogo => 'Upload Logo';
+
+  @override
+  String get changeLogo => 'Change Logo';
+
+  @override
+  String get removeLogo => 'Remove Logo';
+
+  @override
+  String get proposedLogo => 'Proposed Logo';
+
+  @override
+  String logoAppliesToBrand(String brand) {
+    return 'Will apply to all \"$brand\" stations';
+  }
+
+  @override
   String get addStationAddress => 'Address';
 
   @override
@@ -814,5 +840,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get onboardingTitle => 'Welcome to Drivstoffpriser!';
+
+  @override
+  String get onboardingRadiusTitle => 'Filter by Radius & Brand';
+
+  @override
+  String get onboardingRadiusBody =>
+      'Tap the filter button to set a search radius and select which fuel brands to show on the map.';
+
+  @override
+  String get onboardingAddStationTitle => 'Add a Missing Station';
+
+  @override
+  String get onboardingAddStationBody =>
+      'If a station is missing, tap and hold on the map to place it, then fill in the details and submit.';
+
+  @override
+  String get onboardingEditStationTitle => 'Edit Station Info';
+
+  @override
+  String get onboardingEditStationBody =>
+      'If something is wrong with a station, open it and tap the edit button to suggest changes.';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get tips => 'Tips';
+
+  @override
+  String get tipsSubtitle => 'Learn about app features';
+
+  @override
+  String onboardingStepOf(int current, int total) {
+    return '$current of $total';
   }
 }

@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -168,6 +186,19 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: AppConstants.defaultMapCenter,
                 initialZoom: AppConstants.defaultMapZoom,
+                onMapReady: () {
+                  // Nudge tiles to load — flutter_map may not render
+                  // tiles when built behind a dialog or IndexedStack.
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (!mounted) return;
+                    final cam = _mapController.camera;
+                    _mapController.move(cam.center, cam.zoom + 0.001);
+                    Future.delayed(const Duration(milliseconds: 50), () {
+                      if (!mounted) return;
+                      _mapController.move(cam.center, cam.zoom);
+                    });
+                  });
+                },
                 onTap: (_, _) {
                   if (_isSearching) _searchFocus.unfocus();
                 },
@@ -217,6 +248,7 @@ class _MapScreenState extends State<MapScreen> {
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(50),
                     maxZoom: 15,
+                    showPolygon: false,
                     markers: filtered.map((station) {
                       final price = stationProvider.getPriceForStation(
                         station.id,

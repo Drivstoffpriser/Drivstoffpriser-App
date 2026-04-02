@@ -1,4 +1,23 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -14,6 +33,8 @@ import '../../models/station.dart';
 import '../../models/station_modify_request.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../services/logo_service.dart';
+import '../../widgets/brand_logo.dart';
 
 class EditStationScreen extends StatefulWidget {
   final Station station;
@@ -37,6 +58,7 @@ class _EditStationScreenState extends State<EditStationScreen> {
   bool _isCustomBrand = false;
   bool _isSubmitting = false;
   bool _isGeocodingLoading = false;
+  File? _pickedLogo;
 
   static const _knownBrands = [
     'Circle K',
@@ -47,6 +69,7 @@ class _EditStationScreenState extends State<EditStationScreen> {
     'St1',
     'YX Truck',
     'Tanken',
+    'Bunker Oil',
   ];
 
   @override
@@ -84,7 +107,7 @@ class _EditStationScreenState extends State<EditStationScreen> {
       );
       final response = await http.get(
         uri,
-        headers: {'User-Agent': 'TankVenn/1.0'},
+        headers: {'User-Agent': 'Drivstoffpriser/1.0'},
       );
       if (!mounted) return;
       if (response.statusCode == 200) {
@@ -119,6 +142,13 @@ class _EditStationScreenState extends State<EditStationScreen> {
     _reverseGeocode(point);
   }
 
+  Future<void> _pickLogo() async {
+    final file = await LogoService.pickLogo();
+    if (file != null && mounted) {
+      setState(() => _pickedLogo = file);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -134,6 +164,26 @@ class _EditStationScreenState extends State<EditStationScreen> {
 
     final userProvider = context.read<UserProvider>();
     final s = widget.station;
+
+    // Upload logo if one was picked
+    String? logoUrl;
+    if (_pickedLogo != null) {
+      setState(() => _isSubmitting = true);
+      try {
+        final processed = await LogoService.processLogo(_pickedLogo!);
+        logoUrl = await LogoService.uploadLogo(
+          brand: brand,
+          imageBytes: processed,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.modifyRequestFailed)),
+        );
+        setState(() => _isSubmitting = false);
+        return;
+      }
+    }
 
     final request = StationModifyRequest(
       id: '',
@@ -151,9 +201,11 @@ class _EditStationScreenState extends State<EditStationScreen> {
       proposedLatitude: _selectedLocation.latitude,
       proposedLongitude: _selectedLocation.longitude,
       submittedBy: userProvider.user.id,
+      proposedLogoUrl: logoUrl,
     );
 
     if (!request.hasChanges) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(context.l10n.noChangesToSubmit)));
@@ -305,6 +357,67 @@ class _EditStationScreenState extends State<EditStationScreen> {
                     : null,
               ),
             ],
+            const SizedBox(height: 16),
+
+            // Logo picker
+            Text(
+              context.l10n.stationLogo,
+              style: AppTextStyles.labelBold(context),
+            ),
+            const SizedBox(height: 4),
+            Text(context.l10n.logoHint, style: AppTextStyles.meta(context)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                if (_pickedLogo != null)
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.border(context),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.file(
+                        _pickedLogo!,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                else
+                  BrandLogo(
+                    brand: _isCustomBrand
+                        ? (_customBrandController.text.trim().isNotEmpty
+                              ? _customBrandController.text.trim()
+                              : '?')
+                        : (_selectedBrand ?? widget.station.brand),
+                    radius: 28,
+                  ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: _pickLogo,
+                  icon: const Icon(Icons.image_outlined, size: 18),
+                  label: Text(
+                    _pickedLogo != null
+                        ? context.l10n.changeLogo
+                        : context.l10n.uploadLogo,
+                  ),
+                ),
+                if (_pickedLogo != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () => setState(() => _pickedLogo = null),
+                    icon: const Icon(Icons.close, size: 18),
+                    tooltip: context.l10n.removeLogo,
+                  ),
+                ],
+              ],
+            ),
             const SizedBox(height: 16),
 
             TextFormField(

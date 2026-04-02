@@ -9,7 +9,7 @@ class AppLocalizationsNb extends AppLocalizations {
   AppLocalizationsNb([String locale = 'nb']) : super(locale);
 
   @override
-  String get appTitle => 'TankVenn';
+  String get appTitle => 'Drivstoffpriser';
 
   @override
   String get navMap => 'Kart';
@@ -156,6 +156,9 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get stationsRefreshed => 'Stasjoner oppdatert';
+
+  @override
+  String get refreshFailed => 'Kunne ikke oppdatere stasjoner. Prøv igjen.';
 
   @override
   String get support => 'STØTTE';
@@ -473,7 +476,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get noInternetBody =>
-      'TankVenn krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.';
+      'Drivstoffpriser krever en aktiv Wi-Fi- eller mobildatatilkobling for å vise drivstoffpriser og stasjonsdata.';
 
   @override
   String get stillNoConnection => 'Fortsatt ingen tilkobling';
@@ -652,6 +655,30 @@ class AppLocalizationsNb extends AppLocalizations {
   String get addStationBrandRequired => 'Vennligst skriv inn et merkenavn';
 
   @override
+  String get stationLogo => 'Stasjonslogo';
+
+  @override
+  String get logoHint =>
+      'Valgfritt — gjelder for alle stasjoner med dette merket';
+
+  @override
+  String get uploadLogo => 'Last opp logo';
+
+  @override
+  String get changeLogo => 'Endre logo';
+
+  @override
+  String get removeLogo => 'Fjern logo';
+
+  @override
+  String get proposedLogo => 'Foreslått logo';
+
+  @override
+  String logoAppliesToBrand(String brand) {
+    return 'Gjelder for alle «$brand»-stasjoner';
+  }
+
+  @override
   String get addStationAddress => 'Adresse';
 
   @override
@@ -819,5 +846,43 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get onboardingTitle => 'Velkommen til Drivstoffpriser!';
+
+  @override
+  String get onboardingRadiusTitle => 'Filtrer etter radius og merke';
+
+  @override
+  String get onboardingRadiusBody =>
+      'Trykk på filterknappen for å angi søkeradius og velge hvilke drivstoffmerker som vises på kartet.';
+
+  @override
+  String get onboardingAddStationTitle => 'Legg til en manglende stasjon';
+
+  @override
+  String get onboardingAddStationBody =>
+      'Hvis en stasjon mangler, trykk og hold på kartet for å plassere den, fyll ut detaljene og send inn.';
+
+  @override
+  String get onboardingEditStationTitle => 'Rediger stasjonsinformasjon';
+
+  @override
+  String get onboardingEditStationBody =>
+      'Hvis noe er feil med en stasjon, åpne den og trykk på redigeringsknappen for å foreslå endringer.';
+
+  @override
+  String get onboardingNext => 'Neste';
+
+  @override
+  String get tips => 'Tips';
+
+  @override
+  String get tipsSubtitle => 'Lær om appens funksjoner';
+
+  @override
+  String onboardingStepOf(int current, int total) {
+    return '$current av $total';
   }
 }

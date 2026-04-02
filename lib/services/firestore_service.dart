@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/bug_report.dart';
@@ -413,6 +431,36 @@ class FirestoreService {
 
   // ── New Station Submissions ─────────────────────────────────────────
 
+  // ── Brand Logos ──────────────────────────────────────────────────────
+
+  /// Load the brand logos aggregate (brand name → download URL).
+  static Future<Map<String, String>> getBrandLogos() async {
+    final doc = await _db.collection('aggregates').doc('brand_logos').get();
+    if (!doc.exists) return {};
+    final data = doc.data()!;
+    final logos = data['logos'] as Map<String, dynamic>? ?? {};
+    return logos.map((k, v) => MapEntry(k, v as String));
+  }
+
+  /// Save a brand logo URL to the brand_logos aggregate.
+  /// Applies to all stations of that brand automatically.
+  static Future<void> saveBrandLogo(String brand, String logoUrl) async {
+    final ref = _db.collection('aggregates').doc('brand_logos');
+    final doc = await ref.get();
+    final existing = doc.exists
+        ? Map<String, dynamic>.from(
+            doc.data()!['logos'] as Map<dynamic, dynamic>? ?? {},
+          )
+        : <String, dynamic>{};
+    existing[brand] = logoUrl;
+    await ref.set({
+      'logos': existing,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ── New Station Submissions ─────────────────────────────────────────
+
   /// Submit a new station for admin approval.
   /// Writes to the `new_stations` collection (not the main `stations`).
   static Future<void> submitNewStation({
@@ -423,6 +471,7 @@ class FirestoreService {
     required double latitude,
     required double longitude,
     required String submittedBy,
+    String? logoUrl,
   }) async {
     await _db.collection('new_stations').add({
       'name': name,
@@ -434,6 +483,7 @@ class FirestoreService {
       'submittedBy': submittedBy,
       'submittedAt': FieldValue.serverTimestamp(),
       'status': 'pending',
+      'logoUrl': ?logoUrl,
     });
   }
 
@@ -487,6 +537,7 @@ class FirestoreService {
     required double latitude,
     required double longitude,
     required String submittedBy,
+    String? logoUrl,
   }) async {
     await _db.collection('new_stations').doc(docId).update({
       'name': name,
@@ -497,6 +548,7 @@ class FirestoreService {
       'longitude': longitude,
       'submittedBy': submittedBy,
       'status': 'pending',
+      'logoUrl': ?logoUrl,
     });
   }
 
@@ -561,36 +613,49 @@ class FirestoreService {
 
     await batch.commit();
 
-    // Append the new station to the aggregate directly
-    // (avoids race condition with batch write propagation)
-    final aggDoc = await _db.collection('aggregates').doc('stations').get();
-    final existing = aggDoc.exists
-        ? ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .toList()
-        : <Map<String, dynamic>>[];
-    existing.add(station.toJson());
-    await _db.collection('aggregates').doc('stations').set({
-      'stations': existing,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    // Append the new station to the aggregate directly.
+    // Falls back to a full rebuild if the patch fails.
+    try {
+      final aggDoc = await _db.collection('aggregates').doc('stations').get();
+      final existing = aggDoc.exists
+          ? ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList()
+          : <Map<String, dynamic>>[];
+      existing.add(station.toJson());
+      await _db.collection('aggregates').doc('stations').set({
+        'stations': existing,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      await _rebuildStationsAggregate();
+    }
+
+    // Save brand logo if the submission included one
+    if (submission.logoUrl != null) {
+      await saveBrandLogo(submission.brand, submission.logoUrl!);
+    }
   }
 
   /// Delete a station from the stations collection and remove from aggregate.
   static Future<void> deleteStation(String stationId) async {
     await _db.collection('stations').doc(stationId).delete();
 
-    // Remove from aggregate
-    final aggDoc = await _db.collection('aggregates').doc('stations').get();
-    if (aggDoc.exists) {
-      final list = ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .where((s) => s['id'] != stationId)
-          .toList();
-      await _db.collection('aggregates').doc('stations').set({
-        'stations': list,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    // Remove from aggregate. Falls back to a full rebuild if the patch fails.
+    try {
+      final aggDoc = await _db.collection('aggregates').doc('stations').get();
+      if (aggDoc.exists) {
+        final list = ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .where((s) => s['id'] != stationId)
+            .toList();
+        await _db.collection('aggregates').doc('stations').set({
+          'stations': list,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (_) {
+      await _rebuildStationsAggregate();
     }
   }
 
@@ -677,28 +742,38 @@ class FirestoreService {
 
     await batch.commit();
 
-    // Update the aggregate — replace the station in-place
-    final aggDoc = await _db.collection('aggregates').doc('stations').get();
-    if (aggDoc.exists) {
-      final list = ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList();
-      final idx = list.indexWhere((s) => s['id'] == request.stationId);
-      if (idx != -1) {
-        list[idx] = {
-          'id': request.stationId,
-          'name': request.proposedName,
-          'brand': request.proposedBrand,
-          'address': request.proposedAddress,
-          'city': request.proposedCity,
-          'latitude': request.proposedLatitude,
-          'longitude': request.proposedLongitude,
-        };
+    // Update the aggregate — replace the station in-place.
+    // Falls back to a full rebuild if the patch fails.
+    try {
+      final aggDoc = await _db.collection('aggregates').doc('stations').get();
+      if (aggDoc.exists) {
+        final list = ((aggDoc.data()!['stations'] as List<dynamic>?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        final idx = list.indexWhere((s) => s['id'] == request.stationId);
+        if (idx != -1) {
+          list[idx] = {
+            'id': request.stationId,
+            'name': request.proposedName,
+            'brand': request.proposedBrand,
+            'address': request.proposedAddress,
+            'city': request.proposedCity,
+            'latitude': request.proposedLatitude,
+            'longitude': request.proposedLongitude,
+          };
+        }
+        await _db.collection('aggregates').doc('stations').set({
+          'stations': list,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
-      await _db.collection('aggregates').doc('stations').set({
-        'stations': list,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    } catch (_) {
+      await _rebuildStationsAggregate();
+    }
+
+    // Save brand logo if the modify request included one
+    if (request.proposedLogoUrl != null) {
+      await saveBrandLogo(request.proposedBrand, request.proposedLogoUrl!);
     }
   }
 

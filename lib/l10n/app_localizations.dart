@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'TankVenn'**
+  /// **'Drivstoffpriser'**
   String get appTitle;
 
   /// No description provided for @navMap.
@@ -373,6 +373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stations refreshed'**
   String get stationsRefreshed;
+
+  /// No description provided for @refreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to refresh stations. Please try again.'**
+  String get refreshFailed;
 
   /// No description provided for @support.
   ///
@@ -947,7 +953,7 @@ abstract class AppLocalizations {
   /// No description provided for @noInternetBody.
   ///
   /// In en, this message translates to:
-  /// **'TankVenn requires an active Wi-Fi or mobile data connection to show fuel prices and station data.'**
+  /// **'Drivstoffpriser requires an active Wi-Fi or mobile data connection to show fuel prices and station data.'**
   String get noInternetBody;
 
   /// No description provided for @stillNoConnection.
@@ -1268,6 +1274,48 @@ abstract class AppLocalizations {
   /// **'Please enter a brand name'**
   String get addStationBrandRequired;
 
+  /// No description provided for @stationLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Station Logo'**
+  String get stationLogo;
+
+  /// No description provided for @logoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — will apply to all stations of this brand'**
+  String get logoHint;
+
+  /// No description provided for @uploadLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Logo'**
+  String get uploadLogo;
+
+  /// No description provided for @changeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Logo'**
+  String get changeLogo;
+
+  /// No description provided for @removeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Logo'**
+  String get removeLogo;
+
+  /// No description provided for @proposedLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed Logo'**
+  String get proposedLogo;
+
+  /// No description provided for @logoAppliesToBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Will apply to all \"{brand}\" stations'**
+  String logoAppliesToBrand(String brand);
+
   /// No description provided for @addStationAddress.
   ///
   /// In en, this message translates to:
@@ -1579,6 +1627,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID: {id}'**
   String stationId(String id);
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Drivstoffpriser!'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingRadiusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Radius & Brand'**
+  String get onboardingRadiusTitle;
+
+  /// No description provided for @onboardingRadiusBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the filter button to set a search radius and select which fuel brands to show on the map.'**
+  String get onboardingRadiusBody;
+
+  /// No description provided for @onboardingAddStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Missing Station'**
+  String get onboardingAddStationTitle;
+
+  /// No description provided for @onboardingAddStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If a station is missing, tap and hold on the map to place it, then fill in the details and submit.'**
+  String get onboardingAddStationBody;
+
+  /// No description provided for @onboardingEditStationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Station Info'**
+  String get onboardingEditStationTitle;
+
+  /// No description provided for @onboardingEditStationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If something is wrong with a station, open it and tap the edit button to suggest changes.'**
+  String get onboardingEditStationBody;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @tips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get tips;
+
+  /// No description provided for @tipsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn about app features'**
+  String get tipsSubtitle;
+
+  /// No description provided for @onboardingStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String onboardingStepOf(int current, int total);
 }
 
 class _AppLocalizationsDelegate

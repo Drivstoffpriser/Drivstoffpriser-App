@@ -22,12 +22,15 @@ def main():
 
     os.makedirs('docs/data', exist_ok=True)
 
-    # Export stations
-    stations_doc = db.collection('aggregates').document('stations').get()
-    stations = []
-    if stations_doc.exists:
-        data = stations_doc.to_dict()
-        stations = data.get('stations', [])
+    # Export stations from the stations collection (source of truth).
+    # This also self-heals the aggregate if it has drifted.
+    stations = [doc.to_dict() for doc in db.collection('stations').stream()]
+
+    # Rebuild aggregate to stay in sync
+    db.collection('aggregates').document('stations').set({
+        'stations': stations,
+        'updatedAt': firestore.SERVER_TIMESTAMP,
+    })
     print(f'Exported {len(stations)} stations')
 
     # Export prices

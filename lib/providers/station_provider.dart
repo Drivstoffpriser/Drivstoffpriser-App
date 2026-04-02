@@ -1,3 +1,21 @@
+/*
+* A crowdsourced platform for real-time fuel price monitoring in Norway
+* Copyright (C) 2026  Tsotne Karchava & Contributors
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import 'package:flutter/foundation.dart';
 
 import '../models/current_price.dart';
@@ -7,6 +25,7 @@ import '../services/cache_service.dart';
 import '../services/distance_service.dart';
 import '../services/favorite_service.dart';
 import '../services/firestore_service.dart';
+import '../widgets/brand_logo.dart';
 
 enum SortMode { cheapest, nearest, latest }
 
@@ -174,6 +193,7 @@ class StationProvider extends ChangeNotifier {
       await _fetchFromFirestore();
     } catch (e) {
       debugPrint('Failed to refresh stations: $e');
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -190,6 +210,14 @@ class StationProvider extends ChangeNotifier {
     // Update local cache
     await CacheService.cacheStations(stations);
     await CacheService.cachePrices(prices);
+
+    // Load remote brand logos and update BrandLogo cache
+    try {
+      final logos = await FirestoreService.getBrandLogos();
+      BrandLogo.setRemoteLogos(logos);
+    } catch (_) {
+      // Non-critical — local assets still work
+    }
   }
 
   void setFuelType(FuelType type) {
