@@ -431,6 +431,36 @@ class FirestoreService {
 
   // ── New Station Submissions ─────────────────────────────────────────
 
+  // ── Brand Logos ──────────────────────────────────────────────────────
+
+  /// Load the brand logos aggregate (brand name → download URL).
+  static Future<Map<String, String>> getBrandLogos() async {
+    final doc = await _db.collection('aggregates').doc('brand_logos').get();
+    if (!doc.exists) return {};
+    final data = doc.data()!;
+    final logos = data['logos'] as Map<String, dynamic>? ?? {};
+    return logos.map((k, v) => MapEntry(k, v as String));
+  }
+
+  /// Save a brand logo URL to the brand_logos aggregate.
+  /// Applies to all stations of that brand automatically.
+  static Future<void> saveBrandLogo(String brand, String logoUrl) async {
+    final ref = _db.collection('aggregates').doc('brand_logos');
+    final doc = await ref.get();
+    final existing = doc.exists
+        ? Map<String, dynamic>.from(
+            doc.data()!['logos'] as Map<dynamic, dynamic>? ?? {},
+          )
+        : <String, dynamic>{};
+    existing[brand] = logoUrl;
+    await ref.set({
+      'logos': existing,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ── New Station Submissions ─────────────────────────────────────────
+
   /// Submit a new station for admin approval.
   /// Writes to the `new_stations` collection (not the main `stations`).
   static Future<void> submitNewStation({
@@ -441,6 +471,7 @@ class FirestoreService {
     required double latitude,
     required double longitude,
     required String submittedBy,
+    String? logoUrl,
   }) async {
     await _db.collection('new_stations').add({
       'name': name,
@@ -452,6 +483,7 @@ class FirestoreService {
       'submittedBy': submittedBy,
       'submittedAt': FieldValue.serverTimestamp(),
       'status': 'pending',
+      'logoUrl': ?logoUrl,
     });
   }
 
@@ -505,6 +537,7 @@ class FirestoreService {
     required double latitude,
     required double longitude,
     required String submittedBy,
+    String? logoUrl,
   }) async {
     await _db.collection('new_stations').doc(docId).update({
       'name': name,
@@ -515,6 +548,7 @@ class FirestoreService {
       'longitude': longitude,
       'submittedBy': submittedBy,
       'status': 'pending',
+      'logoUrl': ?logoUrl,
     });
   }
 
@@ -595,6 +629,11 @@ class FirestoreService {
       });
     } catch (_) {
       await _rebuildStationsAggregate();
+    }
+
+    // Save brand logo if the submission included one
+    if (submission.logoUrl != null) {
+      await saveBrandLogo(submission.brand, submission.logoUrl!);
     }
   }
 
@@ -730,6 +769,11 @@ class FirestoreService {
       }
     } catch (_) {
       await _rebuildStationsAggregate();
+    }
+
+    // Save brand logo if the modify request included one
+    if (request.proposedLogoUrl != null) {
+      await saveBrandLogo(request.proposedBrand, request.proposedLogoUrl!);
     }
   }
 

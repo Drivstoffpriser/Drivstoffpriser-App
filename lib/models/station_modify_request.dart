@@ -43,6 +43,7 @@ class StationModifyRequest {
   final ModifyRequestStatus status;
   final String? feedback;
   final bool feedbackRead;
+  final String? proposedLogoUrl;
 
   const StationModifyRequest({
     required this.id,
@@ -64,6 +65,7 @@ class StationModifyRequest {
     this.status = ModifyRequestStatus.pending,
     this.feedback,
     this.feedbackRead = false,
+    this.proposedLogoUrl,
   });
 
   bool get nameChanged => originalName != proposedName;
@@ -73,12 +75,14 @@ class StationModifyRequest {
   bool get locationChanged =>
       originalLatitude != proposedLatitude ||
       originalLongitude != proposedLongitude;
+  bool get logoChanged => proposedLogoUrl != null;
   bool get hasChanges =>
       nameChanged ||
       brandChanged ||
       addressChanged ||
       cityChanged ||
-      locationChanged;
+      locationChanged ||
+      logoChanged;
 
   factory StationModifyRequest.fromJson(String id, Map<String, dynamic> json) {
     return StationModifyRequest(
@@ -106,6 +110,7 @@ class StationModifyRequest {
       ),
       feedback: json['feedback'] as String?,
       feedbackRead: json['feedbackRead'] as bool? ?? false,
+      proposedLogoUrl: json['proposedLogoUrl'] as String?,
     );
   }
 
@@ -126,6 +131,7 @@ class StationModifyRequest {
       'proposedLongitude': proposedLongitude,
       'submittedBy': submittedBy,
       'status': status.name,
+      'proposedLogoUrl': ?proposedLogoUrl,
     };
   }
 }

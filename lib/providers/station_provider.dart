@@ -24,6 +24,7 @@ import '../models/station.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
 import '../services/firestore_service.dart';
+import '../widgets/brand_logo.dart';
 
 enum SortMode { cheapest, nearest, latest }
 
@@ -190,6 +191,14 @@ class StationProvider extends ChangeNotifier {
     // Update local cache
     await CacheService.cacheStations(stations);
     await CacheService.cachePrices(prices);
+
+    // Load remote brand logos and update BrandLogo cache
+    try {
+      final logos = await FirestoreService.getBrandLogos();
+      BrandLogo.setRemoteLogos(logos);
+    } catch (_) {
+      // Non-critical — local assets still work
+    }
   }
 
   void setFuelType(FuelType type) {

@@ -649,6 +649,30 @@ class AppLocalizationsNb extends AppLocalizations {
   String get addStationBrandRequired => 'Vennligst skriv inn et merkenavn';
 
   @override
+  String get stationLogo => 'Stasjonslogo';
+
+  @override
+  String get logoHint =>
+      'Valgfritt — gjelder for alle stasjoner med dette merket';
+
+  @override
+  String get uploadLogo => 'Last opp logo';
+
+  @override
+  String get changeLogo => 'Endre logo';
+
+  @override
+  String get removeLogo => 'Fjern logo';
+
+  @override
+  String get proposedLogo => 'Foreslått logo';
+
+  @override
+  String logoAppliesToBrand(String brand) {
+    return 'Gjelder for alle «$brand»-stasjoner';
+  }
+
+  @override
   String get addStationAddress => 'Adresse';
 
   @override
