@@ -26,6 +26,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
+import '../../../services/auto_crop_service.dart';
 import '../../../services/image_metadata_service.dart';
 import '../../../services/native_image_picker_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
@@ -174,13 +175,32 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     await _cropAndScan(File(pickResult.path), pickResult.metadata);
   }
 
-  /// Common flow: crop → scan → confirm → callback.
+  /// Common flow: auto-detect → crop → scan → confirm → callback.
   Future<void> _cropAndScan(File imageFile, ImageMetadata metadata) async {
     if (!mounted) return;
 
+    setState(() => _isProcessing = true);
+    debugPrint('[$_tag] Running auto-crop detection...');
+    final detectedArea = await AutoCropService.detectPriceRegion(
+      imageFile.path,
+    );
+    if (!mounted) return;
+    setState(() => _isProcessing = false);
+
+    if (detectedArea != null) {
+      debugPrint('[$_tag] Auto-crop area found: $detectedArea');
+    } else {
+      debugPrint('[$_tag] No auto-crop area detected, using full image');
+    }
+
     final croppedBytes = await Navigator.push<dynamic>(
       context,
-      MaterialPageRoute(builder: (_) => ManualCropScreen(imageFile: imageFile)),
+      MaterialPageRoute(
+        builder: (_) => ManualCropScreen(
+          imageFile: imageFile,
+          initialArea: detectedArea,
+        ),
+      ),
     );
 
     if (croppedBytes == null || !mounted) {
