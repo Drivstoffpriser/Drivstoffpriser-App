@@ -22,7 +22,9 @@
   "allOfNorway": "All of Norway",
   "searchRadius": "Search Radius",
   "filterByBrand": "Filter by Brand",
+  "showFavoritesOnly": "Show favorites only",
   "clearAll": "Clear all",
+  "favorites": "Favorites",
 
   "navigate": "Navigate",
   "currentPrices": "CURRENT PRICES",

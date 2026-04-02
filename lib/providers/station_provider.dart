@@ -23,6 +23,7 @@ import '../models/fuel_type.dart';
 import '../models/station.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
+import '../services/favorite_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/brand_logo.dart';
 
@@ -35,6 +36,8 @@ class StationProvider extends ChangeNotifier {
   SortMode _sortMode = SortMode.cheapest;
   Set<String> _selectedBrands = {};
   bool _isLoading = false;
+  bool _showFavoritesOnly = false;
+  Set<String> _favoriteStationIds = {};
 
   /// Map radius in km. null means show all stations ("All of Norway").
   double? _mapRadiusKm;
@@ -54,6 +57,8 @@ class StationProvider extends ChangeNotifier {
   bool get hasUserLocation => _userLat != null && _userLng != null;
   double? get mapRadiusKm => _mapRadiusKm;
   double? get listRadiusKm => _listRadiusKm;
+  bool get showFavoritesOnly => _showFavoritesOnly;
+  Set<String> get favoriteStationIds => _favoriteStationIds;
 
   /// Set the map filter radius in km. Pass null to show all stations.
   void setMapRadius(double? km) {
@@ -64,6 +69,28 @@ class StationProvider extends ChangeNotifier {
   /// Set the station list filter radius in km. Pass null to show all stations.
   void setListRadius(double? km) {
     _listRadiusKm = km;
+    notifyListeners();
+  }
+
+  Future<void> loadFavorites() async {
+    _favoriteStationIds = await FavoriteService.getFavorites();
+    notifyListeners();
+  }
+
+  Future<void> toggleFavorite(String stationId) async {
+    await FavoriteService.toggleFavorite(stationId);
+    if (_favoriteStationIds.contains(stationId)) {
+      _favoriteStationIds.remove(stationId);
+    } else {
+      _favoriteStationIds.add(stationId);
+    }
+    notifyListeners();
+  }
+
+  bool isFavorite(String stationId) => _favoriteStationIds.contains(stationId);
+
+  void setShowFavoritesOnly(bool value) {
+    _showFavoritesOnly = value;
     notifyListeners();
   }
 
@@ -130,6 +157,10 @@ class StationProvider extends ChangeNotifier {
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    if (_showFavoritesOnly) {
+      result = result.where((s) => _favoriteStationIds.contains(s.id));
     }
 
     return result.toList();

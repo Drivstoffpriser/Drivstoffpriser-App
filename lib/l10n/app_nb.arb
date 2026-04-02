@@ -20,7 +20,9 @@
   "allOfNorway": "Hele Norge",
   "searchRadius": "Søkeradius",
   "filterByBrand": "Filtrer etter merke",
+  "showFavoritesOnly": "Vis kun favoritter",
   "clearAll": "Fjern alle",
+  "favorites": "Favoritter",
 
   "navigate": "Naviger",
   "currentPrices": "GJELDENDE PRISER",

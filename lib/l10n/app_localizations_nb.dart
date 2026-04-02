@@ -58,7 +58,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get filterByBrand => 'Filtrer etter merke';
 
   @override
+  String get showFavoritesOnly => 'Vis kun favoritter';
+
+  @override
   String get clearAll => 'Fjern alle';
+
+  @override
+  String get favorites => 'Favoritter';
 
   @override
   String get navigate => 'Naviger';

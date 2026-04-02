@@ -188,11 +188,23 @@ abstract class AppLocalizations {
   /// **'Filter by Brand'**
   String get filterByBrand;
 
+  /// No description provided for @showFavoritesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Show favorites only'**
+  String get showFavoritesOnly;
+
   /// No description provided for @clearAll.
   ///
   /// In en, this message translates to:
   /// **'Clear all'**
   String get clearAll;
+
+  /// No description provided for @favorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favorites;
 
   /// No description provided for @navigate.
   ///

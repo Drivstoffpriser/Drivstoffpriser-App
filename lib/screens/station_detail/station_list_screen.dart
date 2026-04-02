@@ -58,9 +58,35 @@ class StationListScreen extends StatelessWidget {
       body: Column(
         children: [
           FuelFilterBar(
-            trailing: const BrandFilterButton(
-              heroTag: 'brandFilterList',
-              filterLocation: FilterLocation.list,
+            trailing: Consumer<StationProvider>(
+              builder: (context, provider, _) {
+                final hasFavorites = provider.favoriteStationIds.isNotEmpty;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (hasFavorites)
+                      GestureDetector(
+                        onTap: () => provider.setShowFavoritesOnly(
+                          !provider.showFavoritesOnly,
+                        ),
+                        child: Icon(
+                          provider.showFavoritesOnly
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          size: 18,
+                          color: provider.showFavoritesOnly
+                              ? Colors.red
+                              : AppColors.textPrimary(context),
+                        ),
+                      ),
+                    if (hasFavorites) const SizedBox(width: 8),
+                    const BrandFilterButton(
+                      heroTag: 'brandFilterList',
+                      filterLocation: FilterLocation.list,
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           Padding(
@@ -154,6 +180,7 @@ class StationListScreen extends StatelessWidget {
                         }
 
                         return _StationListTile(
+                          stationId: station.id,
                           name: station.name,
                           brand: station.brand,
                           city: station.city,
@@ -179,6 +206,7 @@ class StationListScreen extends StatelessWidget {
 }
 
 class _StationListTile extends StatefulWidget {
+  final String stationId;
   final String name;
   final String brand;
   final String city;
@@ -188,6 +216,7 @@ class _StationListTile extends StatefulWidget {
   final VoidCallback onTap;
 
   const _StationListTile({
+    required this.stationId,
     required this.name,
     required this.brand,
     required this.city,
@@ -279,6 +308,22 @@ class _StationListTileState extends State<_StationListTile> {
                     ).copyWith(color: AppColors.primaryContainer(context)),
                   ),
                 ],
+                const SizedBox(width: 8),
+                Consumer<StationProvider>(
+                  builder: (context, provider, _) {
+                    final isFavorite = provider.isFavorite(widget.stationId);
+                    return GestureDetector(
+                      onTap: () => provider.toggleFavorite(widget.stationId),
+                      child: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        size: 20,
+                        color: isFavorite
+                            ? Colors.red
+                            : AppColors.textMuted(context),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
