@@ -40,17 +40,13 @@ class BrandFilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
-<<<<<<< HEAD
-    final hasFilter =
-        provider.selectedBrands.isNotEmpty ||
-        provider.filterRadiusKm != null ||
-        provider.showFavoritesOnly;
-=======
     final radiusKm = filterLocation == FilterLocation.map
         ? provider.mapRadiusKm
         : provider.listRadiusKm;
-    final hasFilter = provider.selectedBrands.isNotEmpty || radiusKm != null;
->>>>>>> main
+    final hasFilter =
+        provider.selectedBrands.isNotEmpty ||
+        radiusKm != null ||
+        provider.showFavoritesOnly;
     final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(

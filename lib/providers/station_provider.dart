@@ -55,14 +55,10 @@ class StationProvider extends ChangeNotifier {
   Set<String> get selectedBrands => _selectedBrands;
   bool get isLoading => _isLoading;
   bool get hasUserLocation => _userLat != null && _userLng != null;
-<<<<<<< HEAD
-  double? get filterRadiusKm => _filterRadiusKm;
-  bool get showFavoritesOnly => _showFavoritesOnly;
-  Set<String> get favoriteStationIds => _favoriteStationIds;
-=======
   double? get mapRadiusKm => _mapRadiusKm;
   double? get listRadiusKm => _listRadiusKm;
->>>>>>> main
+  bool get showFavoritesOnly => _showFavoritesOnly;
+  Set<String> get favoriteStationIds => _favoriteStationIds;
 
   /// Set the map filter radius in km. Pass null to show all stations.
   void setMapRadius(double? km) {
