@@ -33,8 +33,9 @@ jobs:
 
       - name: Compute build number from commit count
         id: build_number
+        # +1 accounts for the pubspec update commit at the end of this workflow
         run: |
-          BUILD=$(git rev-list --count HEAD)
+          BUILD=$(( $(git rev-list --count HEAD) + 1 ))
           echo "value=$BUILD" >> "$GITHUB_OUTPUT"
           echo "Build number: $BUILD"
 
