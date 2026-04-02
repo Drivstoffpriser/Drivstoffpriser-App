@@ -58,7 +58,10 @@ class StationListScreen extends StatelessWidget {
       body: Column(
         children: [
           FuelFilterBar(
-            trailing: const BrandFilterButton(heroTag: 'brandFilterList'),
+            trailing: const BrandFilterButton(
+              heroTag: 'brandFilterList',
+              filterLocation: FilterLocation.list,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
