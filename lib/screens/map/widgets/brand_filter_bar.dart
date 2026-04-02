@@ -24,18 +24,33 @@ import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../providers/station_provider.dart';
 
+/// Whether the filter is shown on the map or the station list.
+enum FilterLocation { map, list }
+
 class BrandFilterButton extends StatelessWidget {
   final String heroTag;
+  final FilterLocation filterLocation;
 
-  const BrandFilterButton({super.key, this.heroTag = 'brandFilter'});
+  const BrandFilterButton({
+    super.key,
+    this.heroTag = 'brandFilter',
+    this.filterLocation = FilterLocation.map,
+  });
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
+<<<<<<< HEAD
     final hasFilter =
         provider.selectedBrands.isNotEmpty ||
         provider.filterRadiusKm != null ||
         provider.showFavoritesOnly;
+=======
+    final radiusKm = filterLocation == FilterLocation.map
+        ? provider.mapRadiusKm
+        : provider.listRadiusKm;
+    final hasFilter = provider.selectedBrands.isNotEmpty || radiusKm != null;
+>>>>>>> main
     final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
@@ -88,13 +103,15 @@ class BrandFilterButton extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const _BrandFilterSheet(),
+      builder: (context) => _BrandFilterSheet(filterLocation: filterLocation),
     );
   }
 }
 
 class _BrandFilterSheet extends StatelessWidget {
-  const _BrandFilterSheet();
+  final FilterLocation filterLocation;
+
+  const _BrandFilterSheet({required this.filterLocation});
 
   static String _radiusLabel(BuildContext context, double? km) {
     if (km == null) return context.l10n.allOfNorway;
@@ -105,8 +122,11 @@ class _BrandFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
-    final brands = provider.availableBrands;
-    final radiusKm = provider.filterRadiusKm;
+    final isMap = filterLocation == FilterLocation.map;
+    final brands = isMap
+        ? provider.mapAvailableBrands
+        : provider.listAvailableBrands;
+    final radiusKm = isMap ? provider.mapRadiusKm : provider.listRadiusKm;
     final activeColor = AppColors.primaryContainer(context);
 
     final steps = [5, 10, 20, 50, 100, 200, 500, null];
@@ -156,7 +176,11 @@ class _BrandFilterSheet extends StatelessWidget {
               onChanged: (v) {
                 final idx = v.round();
                 final km = steps[idx];
-                provider.setFilterRadius(km?.toDouble());
+                if (isMap) {
+                  provider.setMapRadius(km?.toDouble());
+                } else {
+                  provider.setListRadius(km?.toDouble());
+                }
               },
             ),
           ),

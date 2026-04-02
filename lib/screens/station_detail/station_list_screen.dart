@@ -80,7 +80,10 @@ class StationListScreen extends StatelessWidget {
                         ),
                       ),
                     if (hasFavorites) const SizedBox(width: 8),
-                    const BrandFilterButton(heroTag: 'brandFilterList'),
+                    const BrandFilterButton(
+                      heroTag: 'brandFilterList',
+                      filterLocation: FilterLocation.list,
+                    ),
                   ],
                 );
               },

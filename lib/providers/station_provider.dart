@@ -39,8 +39,11 @@ class StationProvider extends ChangeNotifier {
   bool _showFavoritesOnly = false;
   Set<String> _favoriteStationIds = {};
 
-  /// Filter radius in km. null means show all stations (no distance filter).
-  double? _filterRadiusKm = 20;
+  /// Map radius in km. null means show all stations ("All of Norway").
+  double? _mapRadiusKm;
+
+  /// Station list radius in km. null means show all stations.
+  double? _listRadiusKm = 20;
 
   double? _userLat;
   double? _userLng;
@@ -52,13 +55,24 @@ class StationProvider extends ChangeNotifier {
   Set<String> get selectedBrands => _selectedBrands;
   bool get isLoading => _isLoading;
   bool get hasUserLocation => _userLat != null && _userLng != null;
+<<<<<<< HEAD
   double? get filterRadiusKm => _filterRadiusKm;
   bool get showFavoritesOnly => _showFavoritesOnly;
   Set<String> get favoriteStationIds => _favoriteStationIds;
+=======
+  double? get mapRadiusKm => _mapRadiusKm;
+  double? get listRadiusKm => _listRadiusKm;
+>>>>>>> main
 
-  /// Set the filter radius in km. Pass null to show all stations.
-  void setFilterRadius(double? km) {
-    _filterRadiusKm = km;
+  /// Set the map filter radius in km. Pass null to show all stations.
+  void setMapRadius(double? km) {
+    _mapRadiusKm = km;
+    notifyListeners();
+  }
+
+  /// Set the station list filter radius in km. Pass null to show all stations.
+  void setListRadius(double? km) {
+    _listRadiusKm = km;
     notifyListeners();
   }
 
@@ -91,12 +105,12 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Stations filtered by radius only (before brand filter).
-  Iterable<Station> get _radiusFiltered {
+  /// Filter stations by a given radius in km.
+  Iterable<Station> _filterByRadius(double? radiusKm) {
     Iterable<Station> result = _stations;
 
-    if (_filterRadiusKm != null && _userLat != null && _userLng != null) {
-      final radiusMeters = _filterRadiusKm! * 1000;
+    if (radiusKm != null && _userLat != null && _userLng != null) {
+      final radiusMeters = radiusKm * 1000;
       result = result.where((s) {
         final d = DistanceService.distanceInMeters(
           _userLat!,
@@ -111,21 +125,39 @@ class StationProvider extends ChangeNotifier {
     return result;
   }
 
-  /// Sorted list of unique brand names from stations within the radius
-  /// (independent of brand filter so all chips remain visible).
-  List<String> get availableBrands {
-    final brands = _radiusFiltered
-        .map((s) => s.brand)
-        .where((b) => b.isNotEmpty)
-        .toSet()
-        .toList();
+  /// Brands available within the map radius.
+  List<String> get mapAvailableBrands {
+    final brands = _filterByRadius(
+      _mapRadiusKm,
+    ).map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
     brands.sort();
     return brands;
   }
 
-  /// Stations filtered by radius (if set) and selected brands.
+  /// Brands available within the station list radius.
+  List<String> get listAvailableBrands {
+    final brands = _filterByRadius(
+      _listRadiusKm,
+    ).map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
+    brands.sort();
+    return brands;
+  }
+
+  /// Stations filtered by station list radius and selected brands.
   List<Station> get filteredStations {
-    Iterable<Station> result = _radiusFiltered;
+    Iterable<Station> result = _filterByRadius(_listRadiusKm);
+
+    if (_selectedBrands.isNotEmpty) {
+      result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    return result.toList();
+  }
+
+  /// Stations filtered by map radius and selected brands.
+  /// Used by the map to show stations.
+  List<Station> get brandFilteredStations {
+    Iterable<Station> result = _filterByRadius(_mapRadiusKm);
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));

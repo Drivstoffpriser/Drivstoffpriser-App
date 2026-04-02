@@ -54,6 +54,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _hasSetUserLocation = false;
   bool _isSearching = false;
   String _searchQuery = '';
+  LatLngBounds? _visibleBounds;
 
   @override
   void initState() {
@@ -101,6 +102,33 @@ class _MapScreenState extends State<MapScreen> {
     _searchFocus.unfocus();
     _mapController.move(LatLng(station.latitude, station.longitude), 15);
     Navigator.pushNamed(context, AppRoutes.stationDetail, arguments: station);
+  }
+
+  void _onMapEvent(MapCamera camera, bool hasGesture) {
+    final bounds = camera.visibleBounds;
+    if (_visibleBounds != bounds) {
+      setState(() => _visibleBounds = bounds);
+    }
+  }
+
+  List<Station> _visibleStations(List<Station> stations) {
+    final bounds = _visibleBounds;
+    if (bounds == null) return stations;
+
+    // Add padding so stations at the edge don't pop in/out abruptly
+    final latPad = (bounds.north - bounds.south) * 0.2;
+    final lngPad = (bounds.east - bounds.west) * 0.2;
+    final south = bounds.south - latPad;
+    final north = bounds.north + latPad;
+    final west = bounds.west - lngPad;
+    final east = bounds.east + lngPad;
+
+    return stations.where((s) {
+      return s.latitude >= south &&
+          s.latitude <= north &&
+          s.longitude >= west &&
+          s.longitude <= east;
+    }).toList();
   }
 
   List<Station> _searchResults(List<Station> stations) {
@@ -152,7 +180,8 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
-    final filtered = stationProvider.filteredStations;
+    final allBrandFiltered = stationProvider.brandFilteredStations;
+    final filtered = _visibleStations(allBrandFiltered);
     final results = _searchResults(stationProvider.stations);
 
     // Find best (cheapest) station for the selected fuel type
@@ -187,6 +216,9 @@ class _MapScreenState extends State<MapScreen> {
                 initialCenter: AppConstants.defaultMapCenter,
                 initialZoom: AppConstants.defaultMapZoom,
                 onMapReady: () {
+                  setState(() {
+                    _visibleBounds = _mapController.camera.visibleBounds;
+                  });
                   // Nudge tiles to load — flutter_map may not render
                   // tiles when built behind a dialog or IndexedStack.
                   Future.delayed(const Duration(milliseconds: 200), () {
@@ -202,6 +234,7 @@ class _MapScreenState extends State<MapScreen> {
                 onTap: (_, _) {
                   if (_isSearching) _searchFocus.unfocus();
                 },
+                onPositionChanged: _onMapEvent,
                 onLongPress: (_, point) {
                   Navigator.pushNamed(
                     context,
