@@ -96,22 +96,18 @@ class StationProvider extends ChangeNotifier {
 
   /// Brands available within the map radius.
   List<String> get mapAvailableBrands {
-    final brands = _filterByRadius(_mapRadiusKm)
-        .map((s) => s.brand)
-        .where((b) => b.isNotEmpty)
-        .toSet()
-        .toList();
+    final brands = _filterByRadius(
+      _mapRadiusKm,
+    ).map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
     brands.sort();
     return brands;
   }
 
   /// Brands available within the station list radius.
   List<String> get listAvailableBrands {
-    final brands = _filterByRadius(_listRadiusKm)
-        .map((s) => s.brand)
-        .where((b) => b.isNotEmpty)
-        .toSet()
-        .toList();
+    final brands = _filterByRadius(
+      _listRadiusKm,
+    ).map((s) => s.brand).where((b) => b.isNotEmpty).toSet().toList();
     brands.sort();
     return brands;
   }

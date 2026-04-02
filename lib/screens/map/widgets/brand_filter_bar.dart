@@ -43,8 +43,7 @@ class BrandFilterButton extends StatelessWidget {
     final radiusKm = filterLocation == FilterLocation.map
         ? provider.mapRadiusKm
         : provider.listRadiusKm;
-    final hasFilter =
-        provider.selectedBrands.isNotEmpty || radiusKm != null;
+    final hasFilter = provider.selectedBrands.isNotEmpty || radiusKm != null;
     final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
@@ -97,8 +96,7 @@ class BrandFilterButton extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) =>
-          _BrandFilterSheet(filterLocation: filterLocation),
+      builder: (context) => _BrandFilterSheet(filterLocation: filterLocation),
     );
   }
 }
@@ -118,8 +116,9 @@ class _BrandFilterSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
     final isMap = filterLocation == FilterLocation.map;
-    final brands =
-        isMap ? provider.mapAvailableBrands : provider.listAvailableBrands;
+    final brands = isMap
+        ? provider.mapAvailableBrands
+        : provider.listAvailableBrands;
     final radiusKm = isMap ? provider.mapRadiusKm : provider.listRadiusKm;
     final activeColor = AppColors.primaryContainer(context);
 
