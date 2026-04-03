@@ -420,7 +420,7 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
-  String get priceRange => 'Område: 5–50 kr';
+  String get priceRange => 'Område: 10–40 kr';
 
   @override
   String get enterAPrice => 'Skriv inn en pris';
@@ -429,7 +429,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get invalidNumber => 'Ugyldig tall';
 
   @override
-  String get priceMustBeBetween => 'Prisen må være mellom 5 og 50 kr';
+  String get priceMustBeBetween => 'Prisen må være mellom 10 og 40 kr';
 
   @override
   String get bugReportTitle => 'Rapporter en feil';
