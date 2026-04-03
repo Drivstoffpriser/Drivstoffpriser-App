@@ -74,14 +74,18 @@ class AutoCropService {
             if (_ledPricePattern.hasMatch(text)) {
               final value = int.tryParse(text);
               if (value != null && value >= 1000 && value <= 3500) {
-                debugPrint('[$_tag]     -> LED price "$text" '
-                    'at ${element.boundingBox}');
+                debugPrint(
+                  '[$_tag]     -> LED price "$text" '
+                  'at ${element.boundingBox}',
+                );
                 blockMatched = true;
               }
             }
             if (_fuelKeywords.hasMatch(text)) {
-              debugPrint('[$_tag]     -> keyword "$text" '
-                  'at ${element.boundingBox}');
+              debugPrint(
+                '[$_tag]     -> keyword "$text" '
+                'at ${element.boundingBox}',
+              );
               blockMatched = true;
             }
           }
@@ -139,9 +143,11 @@ class AutoCropService {
         padded.bottom.clamp(0, imageSize.height),
       );
 
-      debugPrint('[$_tag] Detected region: $padded '
-          '(${signBoxes.length} matching blocks, '
-          'image: ${imageSize.width.toInt()}x${imageSize.height.toInt()})');
+      debugPrint(
+        '[$_tag] Detected region: $padded '
+        '(${signBoxes.length} matching blocks, '
+        'image: ${imageSize.width.toInt()}x${imageSize.height.toInt()})',
+      );
       return padded;
     } catch (e, stack) {
       debugPrint('[$_tag] Text recognition failed: $e\n$stack');

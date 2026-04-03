@@ -133,9 +133,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       if (!kIsWeb) {
         picked = await Navigator.push<XFile>(
           context,
-          MaterialPageRoute(
-            builder: (_) => const CameraWithStencilScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const CameraWithStencilScreen()),
         );
       } else {
         picked = await ImagePicker().pickImage(source: ImageSource.camera);
@@ -206,10 +204,8 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     final croppedBytes = await Navigator.push<dynamic>(
       context,
       MaterialPageRoute(
-        builder: (_) => ManualCropScreen(
-          imageFile: imageFile,
-          initialArea: detectedArea,
-        ),
+        builder: (_) =>
+            ManualCropScreen(imageFile: imageFile, initialArea: detectedArea),
       ),
     );
 
