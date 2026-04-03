@@ -26,9 +26,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
+import '../../../services/auto_crop_service.dart';
 import '../../../services/image_metadata_service.dart';
 import '../../../services/native_image_picker_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
+import 'camera_with_stencil_screen.dart';
 import 'confirm_prices_screen.dart';
 import 'manual_crop_screen.dart';
 
@@ -121,16 +123,23 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     return acknowledged == true;
   }
 
-  /// Pick from camera using image_picker (camera images aren't GPS-redacted).
+  /// Pick from camera with stencil overlay guide.
   Future<void> _pickFromCamera() async {
     Navigator.pop(context);
 
-    final picker = ImagePicker();
-    final XFile? picked;
+    XFile? picked;
     try {
-      picked = await picker.pickImage(source: ImageSource.camera);
+      // Use custom camera with stencil on mobile, fall back to ImagePicker.
+      if (!kIsWeb) {
+        picked = await Navigator.push<XFile>(
+          context,
+          MaterialPageRoute(builder: (_) => const CameraWithStencilScreen()),
+        );
+      } else {
+        picked = await ImagePicker().pickImage(source: ImageSource.camera);
+      }
     } catch (e, stack) {
-      debugPrint('[$_tag] ImagePicker error: $e\n$stack');
+      debugPrint('[$_tag] Camera error: $e\n$stack');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.cameraPermissionRequired)),
@@ -174,13 +183,30 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     await _cropAndScan(File(pickResult.path), pickResult.metadata);
   }
 
-  /// Common flow: crop → scan → confirm → callback.
+  /// Common flow: auto-detect → crop → scan → confirm → callback.
   Future<void> _cropAndScan(File imageFile, ImageMetadata metadata) async {
     if (!mounted) return;
 
+    setState(() => _isProcessing = true);
+    debugPrint('[$_tag] Running auto-crop detection...');
+    final detectedArea = await AutoCropService.detectPriceRegion(
+      imageFile.path,
+    );
+    if (!mounted) return;
+    setState(() => _isProcessing = false);
+
+    if (detectedArea != null) {
+      debugPrint('[$_tag] Auto-crop area found: $detectedArea');
+    } else {
+      debugPrint('[$_tag] No auto-crop area detected, using full image');
+    }
+
     final croppedBytes = await Navigator.push<dynamic>(
       context,
-      MaterialPageRoute(builder: (_) => ManualCropScreen(imageFile: imageFile)),
+      MaterialPageRoute(
+        builder: (_) =>
+            ManualCropScreen(imageFile: imageFile, initialArea: detectedArea),
+      ),
     );
 
     if (croppedBytes == null || !mounted) {
