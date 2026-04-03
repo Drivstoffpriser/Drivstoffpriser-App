@@ -30,6 +30,7 @@ import '../../../services/auto_crop_service.dart';
 import '../../../services/image_metadata_service.dart';
 import '../../../services/native_image_picker_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
+import 'camera_with_stencil_screen.dart';
 import 'confirm_prices_screen.dart';
 import 'manual_crop_screen.dart';
 
@@ -122,16 +123,25 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     return acknowledged == true;
   }
 
-  /// Pick from camera using image_picker (camera images aren't GPS-redacted).
+  /// Pick from camera with stencil overlay guide.
   Future<void> _pickFromCamera() async {
     Navigator.pop(context);
 
-    final picker = ImagePicker();
-    final XFile? picked;
+    XFile? picked;
     try {
-      picked = await picker.pickImage(source: ImageSource.camera);
+      // Use custom camera with stencil on mobile, fall back to ImagePicker.
+      if (!kIsWeb) {
+        picked = await Navigator.push<XFile>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const CameraWithStencilScreen(),
+          ),
+        );
+      } else {
+        picked = await ImagePicker().pickImage(source: ImageSource.camera);
+      }
     } catch (e, stack) {
-      debugPrint('[$_tag] ImagePicker error: $e\n$stack');
+      debugPrint('[$_tag] Camera error: $e\n$stack');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.cameraPermissionRequired)),
