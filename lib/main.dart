@@ -16,7 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io' show Platform;
+
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -41,16 +42,16 @@ void main() async {
     // Already initialized (e.g. after hot restart)
   }
 
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
-  );
-
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: false,
-  );
+  // App Check is only enforced for Android in the Firebase Console.
+  // Activating on iOS causes UNAVAILABLE errors because DeviceCheck
+  // tokens fail and the client SDK blocks requests.
+  if (Platform.isAndroid) {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode
+          ? AndroidProvider.debug
+          : AndroidProvider.playIntegrity,
+    );
+  }
   await GoogleSignIn.instance.initialize();
 
   // Don't block the UI on auth — UserProvider has sensible defaults
