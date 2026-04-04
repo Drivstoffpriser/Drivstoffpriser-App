@@ -58,35 +58,9 @@ class StationListScreen extends StatelessWidget {
       body: Column(
         children: [
           FuelFilterBar(
-            trailing: Consumer<StationProvider>(
-              builder: (context, provider, _) {
-                final hasFavorites = provider.favoriteStationIds.isNotEmpty;
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (hasFavorites)
-                      GestureDetector(
-                        onTap: () => provider.setShowFavoritesOnly(
-                          !provider.showFavoritesOnly,
-                        ),
-                        child: Icon(
-                          provider.showFavoritesOnly
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          size: 18,
-                          color: provider.showFavoritesOnly
-                              ? Colors.red
-                              : AppColors.textPrimary(context),
-                        ),
-                      ),
-                    if (hasFavorites) const SizedBox(width: 8),
-                    const BrandFilterButton(
-                      heroTag: 'brandFilterList',
-                      filterLocation: FilterLocation.list,
-                    ),
-                  ],
-                );
-              },
+            trailing: const BrandFilterButton(
+              heroTag: 'brandFilterList',
+              filterLocation: FilterLocation.list,
             ),
           ),
           Padding(
