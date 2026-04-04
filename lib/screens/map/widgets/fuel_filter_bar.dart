@@ -60,9 +60,8 @@ class FuelFilterBar extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(right: trailing != null ? 8 : 16),
             child: GestureDetector(
-              onTap: () => provider.setShowFavoritesOnly(
-                !provider.showFavoritesOnly,
-              ),
+              onTap: () =>
+                  provider.setShowFavoritesOnly(!provider.showFavoritesOnly),
               child: Container(
                 width: 32,
                 height: 32,
