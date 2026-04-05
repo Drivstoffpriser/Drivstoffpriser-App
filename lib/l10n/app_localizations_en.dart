@@ -260,10 +260,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordMinLength => 'Password must be at least 6 characters';
 
   @override
+  String get createAccountSubtitle => 'Track prices and help the community.';
+
+  @override
+  String get signInSubtitle => 'Welcome back.';
+
+  @override
+  String get alreadyHaveAccountPrefix => 'Already have an account? ';
+
+  @override
+  String get needAccountPrefix => 'Need an account? ';
+
+  @override
   String get alreadyHaveAccount => 'Already have an account? Sign in';
 
   @override
   String get needAccount => 'Need an account? Create one';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get passwordResetSent =>
+      'If an account exists for this email, you will receive a password reset email.';
 
   @override
   String get errorEmailInUse =>
@@ -284,6 +303,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorCredentialInUse =>
       'This credential is already associated with another account.';
+
+  @override
+  String get errorUserDisabled => 'This account has been disabled.';
+
+  @override
+  String get errorTooManyRequests =>
+      'Too many attempts. Please wait a bit and try again.';
+
+  @override
+  String get errorNetworkRequestFailed =>
+      'Network error. Check your connection and try again.';
 
   @override
   String errorAuthFailed(String code) {
