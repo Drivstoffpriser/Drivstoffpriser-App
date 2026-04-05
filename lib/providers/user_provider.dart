@@ -40,12 +40,14 @@ class UserProvider extends ChangeNotifier {
 
   ThemeMode _themeMode = ThemeMode.system;
   Locale? _locale;
+  bool _allowMapRotation = true;
 
   UserProfile get user => _user;
   bool get isAdmin => _user.isAdmin;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   Locale? get locale => _locale;
+  bool get allowMapRotation => _allowMapRotation;
 
   /// True when the user has linked email/password or Google credentials.
   bool get isAuthenticated {
@@ -88,6 +90,8 @@ class UserProvider extends ChangeNotifier {
     if (localePref != null) {
       _locale = Locale(localePref);
     }
+
+    _allowMapRotation = prefs.getBool('allowMapRotation') ?? true;
 
     // Wait for Firebase Auth to restore the persisted session before
     // deciding whether to create a new anonymous account.
@@ -297,6 +301,14 @@ class UserProvider extends ChangeNotifier {
       } else {
         prefs.setString('locale', locale.languageCode);
       }
+    });
+  }
+
+  void setAllowMapRotation(bool value) {
+    _allowMapRotation = value;
+    notifyListeners();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('allowMapRotation', value);
     });
   }
 

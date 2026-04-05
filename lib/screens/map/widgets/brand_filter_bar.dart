@@ -23,6 +23,7 @@ import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../providers/station_provider.dart';
+import '../../../providers/user_provider.dart';
 
 /// Whether the filter is shown on the map or the station list.
 enum FilterLocation { map, list }
@@ -39,14 +40,17 @@ class BrandFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<StationProvider>();
+    final stationProvider = context.watch<StationProvider>();
+    final userProvider = context.watch<UserProvider>();
     final radiusKm = filterLocation == FilterLocation.map
-        ? provider.mapRadiusKm
-        : provider.listRadiusKm;
+        ? stationProvider.mapRadiusKm
+        : stationProvider.listRadiusKm;
     final hasFilter =
-        provider.selectedBrands.isNotEmpty ||
+        stationProvider.selectedBrands.isNotEmpty ||
         radiusKm != null ||
-        provider.showFavoritesOnly;
+        stationProvider.showFavoritesOnly ||
+        (filterLocation == FilterLocation.map &&
+            !userProvider.allowMapRotation);
     final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
@@ -118,12 +122,14 @@ class _BrandFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
+    final userProvider = context.watch<UserProvider>();
     final isMap = filterLocation == FilterLocation.map;
     final brands = isMap
         ? provider.mapAvailableBrands
         : provider.listAvailableBrands;
     final radiusKm = isMap ? provider.mapRadiusKm : provider.listRadiusKm;
     final activeColor = AppColors.primaryContainer(context);
+    final allowMapRotation = userProvider.allowMapRotation;
 
     final steps = [5, 10, 20, 50, 100, 200, 500, null];
     final currentIndex = radiusKm == null
@@ -243,6 +249,38 @@ class _BrandFilterSheet extends StatelessWidget {
               ),
             ],
           ),
+          if (isMap) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.explore_outlined,
+                  size: 20,
+                  color: allowMapRotation
+                      ? activeColor
+                      : AppColors.textMuted(context),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.allowMapRotation,
+                    style: AppTextStyles.bodyMedium(context),
+                  ),
+                ),
+                Switch(
+                  value: allowMapRotation,
+                  onChanged: userProvider.setAllowMapRotation,
+                  activeTrackColor: activeColor.withValues(alpha: 0.5),
+                  thumbColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return activeColor;
+                    }
+                    return null;
+                  }),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

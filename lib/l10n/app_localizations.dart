@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Show favorites only'**
   String get showFavoritesOnly;
 
+  /// No description provided for @allowMapRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow map rotation'**
+  String get allowMapRotation;
+
   /// No description provided for @clearAll.
   ///
   /// In en, this message translates to:

@@ -21,6 +21,7 @@
   "searchRadius": "Søkeradius",
   "filterByBrand": "Filtrer etter merke",
   "showFavoritesOnly": "Vis kun favoritter",
+  "allowMapRotation": "Tillat kartrotasjon",
   "clearAll": "Fjern alle",
   "favorites": "Favoritter",
 
