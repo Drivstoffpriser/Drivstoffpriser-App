@@ -379,7 +379,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takePhoto => 'Take photo';
 
   @override
-  String get chooseFromGallery => 'Choose from gallery';
+  String get chooseFromGallery => 'Gallery';
 
   @override
   String get cameraPermissionRequired => 'Camera permission required';
@@ -878,5 +878,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String onboardingStepOf(int current, int total) {
     return '$current of $total';
+  }
+
+  @override
+  String nearbyStationPrompt(String stationName) {
+    return 'Looks like you are close to $stationName. Report a price?';
   }
 }

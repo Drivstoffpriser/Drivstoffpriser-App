@@ -107,9 +107,10 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
                     image: _imageBytes!,
                     controller: _cropController,
                     onCropped: _onCropped,
-                    initialRectBuilder: widget.initialArea != null
-                        ? InitialRectBuilder.withArea(widget.initialArea!)
-                        : null,
+                    initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
+                      size: 0.25,
+                      aspectRatio: 2 / 3,
+                    ),
                     maskColor: Colors.black54,
                     cornerDotBuilder: (size, edgeAlignment) => DotControl(
                       color: Theme.of(context).colorScheme.primary,
