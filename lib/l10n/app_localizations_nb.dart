@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -515,6 +516,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emailAccount => 'E-postkonto';
 
   @override
+  String get emailConfirmed => 'E-post bekreftet';
+
+  @override
   String get contributeData => 'BIDRA MED DATA';
 
   @override
@@ -893,4 +897,16 @@ class AppLocalizationsNb extends AppLocalizations {
   String nearbyStationPrompt(String stationName) {
     return 'Du er i nærheten av $stationName. Rapportere pris?';
   }
+
+  String get emailNotVerified => 'Bekreft e-posten din';
+
+  @override
+  String get emailNotVerifiedSubtitle =>
+      'Sjekk innboksen din for en bekreftelseslenke';
+
+  @override
+  String get resendVerificationEmail => 'Send på nytt';
+
+  @override
+  String get verificationEmailSent => 'Bekreftelses-e-post sendt';
 }
