@@ -151,10 +151,10 @@
   "cropFailed": "Crop failed: {cause}",
   "@cropFailed": { "placeholders": { "cause": { "type": "String" } } },
 
-  "priceRange": "Range: 5-50 kr",
+  "priceRange": "Range: 10-40 kr",
   "enterAPrice": "Enter a price",
   "invalidNumber": "Invalid number",
-  "priceMustBeBetween": "Price must be between 5 and 50 kr",
+  "priceMustBeBetween": "Price must be between 10 and 40 kr",
 
   "bugReportTitle": "Report a Bug",
   "bugReportIntro": "Found an issue? Let us know the details and we will look into it.",

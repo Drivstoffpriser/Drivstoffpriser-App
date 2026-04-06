@@ -857,7 +857,7 @@ abstract class AppLocalizations {
   /// No description provided for @priceRange.
   ///
   /// In en, this message translates to:
-  /// **'Range: 5-50 kr'**
+  /// **'Range: 10-40 kr'**
   String get priceRange;
 
   /// No description provided for @enterAPrice.
@@ -875,7 +875,7 @@ abstract class AppLocalizations {
   /// No description provided for @priceMustBeBetween.
   ///
   /// In en, this message translates to:
-  /// **'Price must be between 5 and 50 kr'**
+  /// **'Price must be between 10 and 40 kr'**
   String get priceMustBeBetween;
 
   /// No description provided for @bugReportTitle.

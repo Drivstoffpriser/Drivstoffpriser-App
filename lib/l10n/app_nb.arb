@@ -139,10 +139,10 @@
   "dragToSelect": "Dra for å velge området med drivstoffpriser",
   "cropFailed": "Beskjæring mislyktes: {cause}",
 
-  "priceRange": "Område: 5–50 kr",
+  "priceRange": "Område: 10–40 kr",
   "enterAPrice": "Skriv inn en pris",
   "invalidNumber": "Ugyldig tall",
-  "priceMustBeBetween": "Prisen må være mellom 5 og 50 kr",
+  "priceMustBeBetween": "Prisen må være mellom 10 og 40 kr",
 
   "bugReportTitle": "Rapporter en feil",
   "bugReportIntro": "Fant du et problem? Gi oss detaljene, så ser vi på det.",
