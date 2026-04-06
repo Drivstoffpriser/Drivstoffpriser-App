@@ -188,7 +188,9 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
 
     final croppedBytes = await Navigator.push<dynamic>(
       context,
-      MaterialPageRoute(builder: (_) => ManualCropScreen(imageFile: imageFile)),
+      MaterialPageRoute(
+        builder: (_) => ManualCropScreen(imageFile: imageFile),
+      ),
     );
 
     if (croppedBytes == null || !mounted) {

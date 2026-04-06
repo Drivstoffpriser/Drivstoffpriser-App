@@ -26,8 +26,13 @@ import '../../../l10n/l10n_helper.dart';
 
 class ManualCropScreen extends StatefulWidget {
   final File imageFile;
+  final Rect? initialArea;
 
-  const ManualCropScreen({super.key, required this.imageFile});
+  const ManualCropScreen({
+    super.key,
+    required this.imageFile,
+    this.initialArea,
+  });
 
   @override
   State<ManualCropScreen> createState() => _ManualCropScreenState();
@@ -103,7 +108,7 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
                     controller: _cropController,
                     onCropped: _onCropped,
                     initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
-                      size: 0.3,
+                      size: 0.25,
                       aspectRatio: 2 / 3,
                     ),
                     maskColor: Colors.black54,
