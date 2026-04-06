@@ -118,7 +118,17 @@ class _OnboardingDialogState extends State<_OnboardingDialog> {
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                onPageChanged: (i) => setState(() => _currentPage = i),
+                onPageChanged: (i) {
+                  setState(() {
+                    _currentPage = i;
+                    if (i == tips.length - 1 &&
+                        widget.requireDismiss &&
+                        !_dontShowAgain) {
+                      _dontShowAgain = true;
+                      widget.onDontShowAgainChanged?.call(true);
+                    }
+                  });
+                },
                 itemCount: tips.length,
                 itemBuilder: (context, index) {
                   final tip = tips[index];
@@ -198,9 +208,7 @@ class _OnboardingDialogState extends State<_OnboardingDialog> {
           children: [
             if (isLastPage)
               FilledButton(
-                onPressed: !widget.requireDismiss || _dontShowAgain
-                    ? () => Navigator.pop(context)
-                    : null,
+                onPressed: () => Navigator.pop(context),
                 child: Text(l10n.gotIt),
               )
             else
