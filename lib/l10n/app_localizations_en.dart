@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -892,6 +891,7 @@ class AppLocalizationsEn extends AppLocalizations {
     return 'Looks like you are close to $stationName. Report a price?';
   }
 
+  @override
   String get emailNotVerified => 'Verify your email';
 
   @override
