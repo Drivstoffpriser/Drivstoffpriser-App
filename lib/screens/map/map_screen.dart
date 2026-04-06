@@ -31,6 +31,7 @@ import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../providers/user_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
@@ -56,6 +57,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isSearching = false;
   String _searchQuery = '';
   LatLngBounds? _visibleBounds;
+  bool? _previousAllowMapRotation;
 
   @override
   void initState() {
@@ -150,7 +152,18 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
+    final allowMapRotation = context.select<UserProvider, bool>(
+      (provider) => provider.allowMapRotation,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_previousAllowMapRotation == true && !allowMapRotation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _mapController.camera.rotation == 0) return;
+        _mapController.rotate(0);
+      });
+    }
+    _previousAllowMapRotation = allowMapRotation;
 
     if (locationProvider.hasLocation && !_hasCenteredOnUser) {
       _hasCenteredOnUser = true;
@@ -216,6 +229,11 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: AppConstants.defaultMapCenter,
                 initialZoom: AppConstants.defaultMapZoom,
+                interactionOptions: InteractionOptions(
+                  flags: allowMapRotation
+                      ? InteractiveFlag.all
+                      : InteractiveFlag.all & ~InteractiveFlag.rotate,
+                ),
                 onMapReady: () {
                   setState(() {
                     _visibleBounds = _mapController.camera.visibleBounds;

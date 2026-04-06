@@ -23,6 +23,7 @@ import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../providers/station_provider.dart';
+import '../../../providers/user_provider.dart';
 
 /// Whether the filter is shown on the map or the station list.
 enum FilterLocation { map, list }
@@ -39,14 +40,17 @@ class BrandFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<StationProvider>();
+    final stationProvider = context.watch<StationProvider>();
+    final userProvider = context.watch<UserProvider>();
     final radiusKm = filterLocation == FilterLocation.map
-        ? provider.mapRadiusKm
-        : provider.listRadiusKm;
+        ? stationProvider.mapRadiusKm
+        : stationProvider.listRadiusKm;
     final hasFilter =
-        provider.selectedBrands.isNotEmpty ||
+        stationProvider.selectedBrands.isNotEmpty ||
         radiusKm != null ||
-        provider.showFavoritesOnly;
+        stationProvider.showFavoritesOnly ||
+        (filterLocation == FilterLocation.map &&
+            !userProvider.allowMapRotation);
     final activeColor = AppColors.primaryContainer(context);
 
     return GestureDetector(
@@ -96,8 +100,12 @@ class BrandFilterButton extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface(context),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       builder: (context) => _BrandFilterSheet(filterLocation: filterLocation),
     );
@@ -118,12 +126,14 @@ class _BrandFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
+    final userProvider = context.watch<UserProvider>();
     final isMap = filterLocation == FilterLocation.map;
     final brands = isMap
         ? provider.mapAvailableBrands
         : provider.listAvailableBrands;
     final radiusKm = isMap ? provider.mapRadiusKm : provider.listRadiusKm;
     final activeColor = AppColors.primaryContainer(context);
+    final allowMapRotation = userProvider.allowMapRotation;
 
     final steps = [5, 10, 20, 50, 100, 200, 500, null];
     final currentIndex = radiusKm == null
@@ -139,111 +149,145 @@ class _BrandFilterSheet extends StatelessWidget {
         16,
         MediaQuery.of(context).padding.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                context.l10n.searchRadius,
-                style: AppTextStyles.title(context),
-              ),
-              const Spacer(),
-              Text(
-                _radiusLabel(context, radiusKm),
-                style: AppTextStyles.bodyMedium(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: activeColor,
-              inactiveTrackColor: AppColors.border(context),
-              thumbColor: activeColor,
-              overlayColor: activeColor.withValues(alpha: 0.12),
-            ),
-            child: Slider(
-              value: sliderValue,
-              min: 0,
-              max: (steps.length - 1).toDouble(),
-              divisions: steps.length - 1,
-              onChanged: (v) {
-                final idx = v.round();
-                final km = steps[idx];
-                if (isMap) {
-                  provider.setMapRadius(km?.toDouble());
-                } else {
-                  provider.setListRadius(km?.toDouble());
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(
-                context.l10n.filterByBrand,
-                style: AppTextStyles.title(context),
-              ),
-              const Spacer(),
-              if (provider.selectedBrands.isNotEmpty)
-                GestureDetector(
-                  onTap: () => provider.clearBrandFilter(),
-                  child: Text(
-                    context.l10n.clearAll,
-                    style: AppTextStyles.label(
-                      context,
-                    ).copyWith(color: activeColor),
-                  ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  context.l10n.searchRadius,
+                  style: AppTextStyles.title(context),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: brands.map((brand) {
-              final selected = provider.selectedBrands.contains(brand);
-              return _FilterChip(
-                label: brand,
-                isSelected: selected,
-                onTap: () => provider.toggleBrand(brand),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Icon(
-                Icons.favorite,
-                size: 20,
-                color: provider.showFavoritesOnly
-                    ? Colors.red
-                    : AppColors.textMuted(context),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.l10n.showFavoritesOnly,
+                const Spacer(),
+                Text(
+                  _radiusLabel(context, radiusKm),
                   style: AppTextStyles.bodyMedium(context),
                 ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: activeColor,
+                inactiveTrackColor: AppColors.border(context),
+                thumbColor: activeColor,
+                overlayColor: activeColor.withValues(alpha: 0.12),
               ),
-              Switch(
-                value: provider.showFavoritesOnly,
-                onChanged: (v) => provider.setShowFavoritesOnly(v),
-                activeTrackColor: Colors.red.withValues(alpha: 0.5),
-                thumbColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return Colors.red;
+              child: Slider(
+                value: sliderValue,
+                min: 0,
+                max: (steps.length - 1).toDouble(),
+                divisions: steps.length - 1,
+                onChanged: (v) {
+                  final idx = v.round();
+                  final km = steps[idx];
+                  if (isMap) {
+                    provider.setMapRadius(km?.toDouble());
+                  } else {
+                    provider.setListRadius(km?.toDouble());
                   }
-                  return null;
-                }),
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(
+                  context.l10n.filterByBrand,
+                  style: AppTextStyles.title(context),
+                ),
+                const Spacer(),
+                if (provider.selectedBrands.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => provider.clearBrandFilter(),
+                    child: Text(
+                      context.l10n.clearAll,
+                      style: AppTextStyles.label(
+                        context,
+                      ).copyWith(color: activeColor),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: brands.map((brand) {
+                final selected = provider.selectedBrands.contains(brand);
+                return _FilterChip(
+                  label: brand,
+                  isSelected: selected,
+                  onTap: () => provider.toggleBrand(brand),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Icon(
+                  Icons.favorite,
+                  size: 20,
+                  color: provider.showFavoritesOnly
+                      ? Colors.red
+                      : AppColors.textMuted(context),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.showFavoritesOnly,
+                    style: AppTextStyles.bodyMedium(context),
+                  ),
+                ),
+                Switch(
+                  value: provider.showFavoritesOnly,
+                  onChanged: (v) => provider.setShowFavoritesOnly(v),
+                  activeTrackColor: Colors.red.withValues(alpha: 0.5),
+                  thumbColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Colors.red;
+                    }
+                    return null;
+                  }),
+                ),
+              ],
+            ),
+            if (isMap) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.explore_outlined,
+                    size: 20,
+                    color: allowMapRotation
+                        ? activeColor
+                        : AppColors.textMuted(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.allowMapRotation,
+                      style: AppTextStyles.bodyMedium(context),
+                    ),
+                  ),
+                  Switch(
+                    value: allowMapRotation,
+                    onChanged: userProvider.setAllowMapRotation,
+                    activeTrackColor: activeColor.withValues(alpha: 0.5),
+                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return activeColor;
+                      }
+                      return null;
+                    }),
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

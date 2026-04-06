@@ -61,6 +61,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get showFavoritesOnly => 'Vis kun favoritter';
 
   @override
+  String get allowMapRotation => 'Tillat kartrotasjon';
+
+  @override
   String get clearAll => 'Fjern alle';
 
   @override

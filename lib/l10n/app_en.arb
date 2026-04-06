@@ -23,6 +23,7 @@
   "searchRadius": "Search Radius",
   "filterByBrand": "Filter by Brand",
   "showFavoritesOnly": "Show favorites only",
+  "allowMapRotation": "Allow map rotation",
   "clearAll": "Clear all",
   "favorites": "Favorites",
 

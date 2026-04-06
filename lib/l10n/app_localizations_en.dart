@@ -61,6 +61,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showFavoritesOnly => 'Show favorites only';
 
   @override
+  String get allowMapRotation => 'Allow map rotation';
+
+  @override
   String get clearAll => 'Clear all';
 
   @override
