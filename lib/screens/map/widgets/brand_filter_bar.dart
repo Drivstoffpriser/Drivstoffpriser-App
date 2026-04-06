@@ -100,8 +100,12 @@ class BrandFilterButton extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface(context),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       builder: (context) => _BrandFilterSheet(filterLocation: filterLocation),
     );
@@ -145,10 +149,11 @@ class _BrandFilterSheet extends StatelessWidget {
         16,
         MediaQuery.of(context).padding.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             children: [
               Text(
@@ -282,6 +287,7 @@ class _BrandFilterSheet extends StatelessWidget {
             ),
           ],
         ],
+        ),
       ),
     );
   }
