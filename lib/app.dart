@@ -33,7 +33,7 @@ import 'screens/admin/admin_submissions_screen.dart';
 import 'screens/settings/bug_report_screen.dart';
 import 'screens/settings/my_station_submissions_screen.dart';
 import 'screens/station_detail/station_detail_screen.dart';
-import 'screens/submit_price/submit_price_screen.dart';
+import 'screens/submit_price/price_capture_screen.dart';
 import 'widgets/connectivity_gate.dart';
 import 'widgets/floating_pill_nav.dart';
 
@@ -65,7 +65,7 @@ class App extends StatelessWidget {
           case AppRoutes.submitPrice:
             final station = settings.arguments as Station;
             return MaterialPageRoute(
-              builder: (_) => SubmitPriceScreen(station: station),
+              builder: (_) => PriceCaptureScreen(station: station),
             );
           case AppRoutes.auth:
             return MaterialPageRoute(
