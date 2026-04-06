@@ -21,8 +21,19 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/l10n_helper.dart';
 
+/// Actions returned by the camera screen besides a captured photo.
+enum CameraAction { gallery, manual }
+
 class CameraWithStencilScreen extends StatefulWidget {
   const CameraWithStencilScreen({super.key});
+
+  /// Returns [XFile] on capture, [CameraAction] for gallery/manual, or null.
+  static Future<Object?> open(BuildContext context) {
+    return Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(builder: (_) => const CameraWithStencilScreen()),
+    );
+  }
 
   @override
   State<CameraWithStencilScreen> createState() =>
@@ -55,7 +66,6 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
         return;
       }
 
-      // Prefer the back camera.
       final camera = cameras.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.back,
         orElse: () => cameras.first,
@@ -153,69 +163,142 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
             ),
           ),
 
-          // Top bar with back button.
+          // Top panel.
           Positioned(
-            top: MediaQuery.of(context).padding.top,
+            top: 0,
             left: 0,
             right: 0,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(28),
+              ),
+              child: Container(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 24,
+                  bottom: 16,
                 ),
-              ],
-            ),
-          ),
-
-          // Bottom controls: zoom presets + capture button.
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                color: Colors.black.withAlpha(150),
+                child: Row(
                   children: [
-                    // Zoom preset buttons.
-                    _buildZoomPresets(),
-                    const SizedBox(height: 20),
-                    // Capture button.
-                    GestureDetector(
-                      onTap: _isCapturing ? null : _capture,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        context.l10n.scanPriceSign,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: _isCapturing
-                            ? const Padding(
-                                padding: EdgeInsets.all(20),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 3,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Container(
-                                margin: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white,
-                                ),
-                              ),
                       ),
                     ),
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
             ),
           ),
+
+          // Bottom panel.
+          Positioned(
+            bottom: 24,
+            left: 0,
+            right: 0,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Zoom controls float above the panel.
+                _buildZoomPresets(),
+                const SizedBox(height: 12),
+                // Frosted panel.
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  child: Container(
+                    color: Colors.black.withAlpha(150),
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 20,
+                          bottom: 28,
+                          left: 28,
+                          right: 28,
+                        ),
+                        child: _buildBottomBar(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Gallery button.
+        _ActionButton(
+          icon: Icons.photo_library_outlined,
+          label: context.l10n.chooseFromGallery,
+          onTap: () => Navigator.pop(context, CameraAction.gallery),
+        ),
+
+        // Capture button — raised above the side buttons.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: GestureDetector(
+            onTap: _isCapturing ? null : _capture,
+            child: Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withAlpha(30),
+                    blurRadius: 20,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: _isCapturing
+                  ? const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+
+        // Manual entry button.
+        _ActionButton(
+          icon: Icons.edit_note,
+          label: context.l10n.enterPrice,
+          onTap: () => Navigator.pop(context, CameraAction.manual),
+        ),
+      ],
     );
   }
 
@@ -226,7 +309,6 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Current zoom indicator (shown when not at a preset).
         AnimatedOpacity(
           opacity: _isAtPreset ? 0.0 : 1.0,
           duration: const Duration(milliseconds: 150),
@@ -242,7 +324,6 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
             ),
           ),
         ),
-        // Preset buttons.
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: _zoomPresets.where((z) => z <= _maxZoom).map((preset) {
@@ -275,6 +356,56 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
           }).toList(),
         ),
       ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withAlpha(20),
+                border: Border.all(color: Colors.white.withAlpha(40)),
+              ),
+              child: Icon(icon, color: Colors.white70, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

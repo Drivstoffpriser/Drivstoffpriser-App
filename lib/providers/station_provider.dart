@@ -147,6 +147,10 @@ class StationProvider extends ChangeNotifier {
       result = result.where((s) => _selectedBrands.contains(s.brand));
     }
 
+    if (_showFavoritesOnly) {
+      result = result.where((s) => _favoriteStationIds.contains(s.id));
+    }
+
     return result.toList();
   }
 

@@ -135,7 +135,7 @@
   "dontShowAgain": "Don't show again",
   "gotIt": "Got it",
   "takePhoto": "Take photo",
-  "chooseFromGallery": "Choose from gallery",
+  "chooseFromGallery": "Gallery",
   "cameraPermissionRequired": "Camera permission required",
   "failedToProcessImage": "Failed to process image",
 
@@ -319,5 +319,8 @@
   "tips": "Tips",
   "tipsSubtitle": "Learn about app features",
   "onboardingStepOf": "{current} of {total}",
-  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } }
+  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
+
+  "nearbyStationPrompt": "Looks like you are close to {stationName}. Report a price?",
+  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } }
 }

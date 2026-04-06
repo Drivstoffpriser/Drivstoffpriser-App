@@ -785,7 +785,7 @@ abstract class AppLocalizations {
   /// No description provided for @chooseFromGallery.
   ///
   /// In en, this message translates to:
-  /// **'Choose from gallery'**
+  /// **'Gallery'**
   String get chooseFromGallery;
 
   /// No description provided for @cameraPermissionRequired.
@@ -1699,6 +1699,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{current} of {total}'**
   String onboardingStepOf(int current, int total);
+
+  /// No description provided for @nearbyStationPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks like you are close to {stationName}. Report a price?'**
+  String nearbyStationPrompt(String stationName);
 }
 
 class _AppLocalizationsDelegate

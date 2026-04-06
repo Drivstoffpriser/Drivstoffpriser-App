@@ -37,6 +37,7 @@ import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
 import 'widgets/brand_filter_bar.dart';
 import 'widgets/fuel_filter_bar.dart';
+import 'widgets/nearby_station_banner.dart';
 import 'widgets/station_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 
@@ -442,6 +443,14 @@ class _MapScreenState extends State<MapScreen> {
             left: 0,
             right: 0,
             child: FuelFilterBar(),
+          ),
+
+          // Nearby station prompt — below fuel filter bar
+          Positioned(
+            top: topPadding + 100,
+            left: 16,
+            right: 16,
+            child: const NearbyStationBanner(),
           ),
 
           // Add Station button — bottom right, above locate button

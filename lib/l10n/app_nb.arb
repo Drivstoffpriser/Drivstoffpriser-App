@@ -124,7 +124,7 @@
   "dontShowAgain": "Ikke vis igjen",
   "gotIt": "Forstått",
   "takePhoto": "Ta bilde",
-  "chooseFromGallery": "Velg fra galleri",
+  "chooseFromGallery": "Galleri",
   "cameraPermissionRequired": "Kameratillatelse kreves",
   "failedToProcessImage": "Kunne ikke behandle bildet",
 
@@ -296,5 +296,8 @@
   "tips": "Tips",
   "tipsSubtitle": "Lær om appens funksjoner",
   "onboardingStepOf": "{current} av {total}",
-  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } }
+  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
+
+  "nearbyStationPrompt": "Du er i nærheten av {stationName}. Rapportere pris?",
+  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } }
 }

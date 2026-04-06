@@ -385,7 +385,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get takePhoto => 'Ta bilde';
 
   @override
-  String get chooseFromGallery => 'Velg fra galleri';
+  String get chooseFromGallery => 'Galleri';
 
   @override
   String get cameraPermissionRequired => 'Kameratillatelse kreves';
@@ -887,5 +887,10 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String onboardingStepOf(int current, int total) {
     return '$current av $total';
+  }
+
+  @override
+  String nearbyStationPrompt(String stationName) {
+    return 'Du er i nærheten av $stationName. Rapportere pris?';
   }
 }

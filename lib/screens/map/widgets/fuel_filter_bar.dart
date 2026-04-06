@@ -52,28 +52,43 @@ class FuelFilterBar extends StatelessWidget {
                     ),
                   );
                 }),
-                if (provider.favoriteStationIds.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: GestureDetector(
-                      onTap: () => provider.setShowFavoritesOnly(
-                        !provider.showFavoritesOnly,
-                      ),
-                      child: Icon(
-                        provider.showFavoritesOnly
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        size: 20,
-                        color: provider.showFavoritesOnly
-                            ? Colors.red
-                            : AppColors.textMuted(context),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
         ),
+        if (provider.favoriteStationIds.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(right: trailing != null ? 8 : 16),
+            child: GestureDetector(
+              onTap: () =>
+                  provider.setShowFavoritesOnly(!provider.showFavoritesOnly),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: provider.showFavoritesOnly
+                        ? Colors.red
+                        : AppColors.border(context),
+                    width: 0.5,
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    provider.showFavoritesOnly
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    size: 18,
+                    color: provider.showFavoritesOnly
+                        ? Colors.red
+                        : AppColors.textMuted(context),
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (trailing != null)
           Padding(padding: const EdgeInsets.only(right: 16), child: trailing!),
       ],
