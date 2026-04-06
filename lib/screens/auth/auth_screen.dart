@@ -27,8 +27,13 @@ import '../../providers/user_provider.dart';
 
 class AuthScreen extends StatefulWidget {
   final bool popOnSuccess;
+  final bool initialIsRegister;
 
-  const AuthScreen({super.key, this.popOnSuccess = false});
+  const AuthScreen({
+    super.key,
+    this.popOnSuccess = false,
+    this.initialIsRegister = true,
+  });
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -40,9 +45,15 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  bool _isRegister = true;
+  late bool _isRegister;
   bool _isLoading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _isRegister = widget.initialIsRegister;
+  }
 
   @override
   void dispose() {

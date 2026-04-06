@@ -16,6 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -456,6 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               )
                             : null,
                         onTap: _isRefreshing ? null : _refreshStations,
+                        showLoadingOnTap: false,
                       ),
                     ],
                   ),
@@ -544,6 +547,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ],
                           );
                         },
+                        showLoadingOnTap: false,
                       ),
                       const _CardDivider(),
                       _SettingsTile(
@@ -638,6 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               }
                             }
                           },
+                          showLoadingOnTap: false,
                         ),
                         const _CardDivider(),
                         _SettingsTile(
@@ -824,6 +829,28 @@ class _ProfileHero extends StatelessWidget {
               ],
             ),
           ),
+          if (!isAuthenticated) ...[
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                AppRoutes.auth,
+                arguments: false,
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: activeColor,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: activeColor.withValues(alpha: 0.4)),
+                ),
+              ),
+              child: Text(context.l10n.signIn),
+            ),
+          ],
         ],
       ),
     );
@@ -1032,7 +1059,8 @@ class _SettingsTile extends StatefulWidget {
   final String title;
   final String subtitle;
   final Widget? trailing;
-  final VoidCallback? onTap;
+  final FutureOr<void> Function()? onTap;
+  final bool showLoadingOnTap;
 
   const _SettingsTile({
     required this.icon,
@@ -1041,6 +1069,7 @@ class _SettingsTile extends StatefulWidget {
     required this.subtitle,
     this.trailing,
     this.onTap,
+    this.showLoadingOnTap = true,
   });
 
   @override
@@ -1049,27 +1078,36 @@ class _SettingsTile extends StatefulWidget {
 
 class _SettingsTileState extends State<_SettingsTile> {
   bool _isPressed = false;
+  bool _isLoading = false;
+
+  Future<void> _handleTap() async {
+    if (_isLoading) return;
+    setState(() {
+      _isPressed = false;
+      if (widget.showLoadingOnTap) _isLoading = true;
+    });
+    try {
+      await widget.onTap?.call();
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: widget.onTap != null
+      onTapDown: widget.onTap != null && !_isLoading
           ? (_) => setState(() => _isPressed = true)
           : null,
-      onTapUp: widget.onTap != null
-          ? (_) {
-              setState(() => _isPressed = false);
-              widget.onTap?.call();
-            }
-          : null,
+      onTapUp: widget.onTap != null && !_isLoading ? (_) => _handleTap() : null,
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOutCubic,
         child: AnimatedOpacity(
-          opacity: _isPressed ? 0.7 : 1.0,
+          opacity: _isLoading ? 0.4 : (_isPressed ? 0.7 : 1.0),
           duration: const Duration(milliseconds: 100),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1083,7 +1121,16 @@ class _SettingsTileState extends State<_SettingsTile> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: Icon(widget.icon, size: 20, color: widget.iconColor),
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: widget.iconColor,
+                            ),
+                          )
+                        : Icon(widget.icon, size: 20, color: widget.iconColor),
                   ),
                 ),
                 const SizedBox(width: 14),
