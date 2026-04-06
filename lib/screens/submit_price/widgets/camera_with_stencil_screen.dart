@@ -136,8 +136,8 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
               child: Text(_error!, style: const TextStyle(color: Colors.white)),
             )
           : _controller == null || !_controller!.value.isInitialized
-              ? const Center(child: CircularProgressIndicator())
-              : _buildCameraView(),
+          ? const Center(child: CircularProgressIndicator())
+          : _buildCameraView(),
     );
   }
 
