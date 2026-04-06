@@ -185,6 +185,7 @@
   "googleEmailAccount": "Google + Email account",
   "googleAccount": "Google account",
   "emailAccount": "Email account",
+  "emailConfirmed": "Email confirmed",
 
   "contributeData": "CONTRIBUTE DATA",
   "station": "Station",
@@ -322,5 +323,9 @@
   "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
 
   "nearbyStationPrompt": "Looks like you are close to {stationName}. Report a price?",
-  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } }
+  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } },
+  "emailNotVerified": "Verify your email",
+  "emailNotVerifiedSubtitle": "Check your inbox for a verification link",
+  "resendVerificationEmail": "Resend email",
+  "verificationEmailSent": "Verification email sent"
 }

@@ -173,6 +173,31 @@ class UserProvider extends ChangeNotifier {
       );
     }
     await FirestoreService.setUserProfile(_user);
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// True when the user has linked an email/password credential.
+  bool get hasEmailProvider =>
+      _auth.currentUser?.providerData.any((i) => i.providerId == 'password') ??
+      false;
+
+  /// The current user's email address, if any.
+  String? get email => _auth.currentUser?.email;
+
+  /// Whether the current user's email has been verified.
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  /// Re-send the verification email.
+  Future<void> sendVerificationEmail() async {
+    await _auth.currentUser?.sendEmailVerification();
+  }
+
+  /// Reload the Firebase user to pick up email-verified status, etc.
+  Future<void> reloadUser() async {
+    await _auth.currentUser?.reload();
     notifyListeners();
   }
 

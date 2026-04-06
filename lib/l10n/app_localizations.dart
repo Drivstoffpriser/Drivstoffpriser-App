@@ -1028,6 +1028,12 @@ abstract class AppLocalizations {
   /// **'Email account'**
   String get emailAccount;
 
+  /// No description provided for @emailConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Email confirmed'**
+  String get emailConfirmed;
+
   /// No description provided for @contributeData.
   ///
   /// In en, this message translates to:
@@ -1705,6 +1711,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Looks like you are close to {stationName}. Report a price?'**
   String nearbyStationPrompt(String stationName);
+
+  /// No description provided for @emailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get emailNotVerified;
+
+  /// No description provided for @emailNotVerifiedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox for a verification link'**
+  String get emailNotVerifiedSubtitle;
+
+  /// No description provided for @resendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get resendVerificationEmail;
+
+  /// No description provided for @verificationEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent'**
+  String get verificationEmailSent;
 }
 
 class _AppLocalizationsDelegate

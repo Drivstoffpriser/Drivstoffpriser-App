@@ -255,7 +255,10 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                             activeIcon: Icons.person,
                             label: context.l10n.navProfile,
                             isActive: _currentIndex == 2,
-                            onTap: () => setState(() => _currentIndex = 2),
+                            onTap: () {
+                              setState(() => _currentIndex = 2);
+                              context.read<UserProvider>().reloadUser();
+                            },
                           ),
                         ],
                       ),

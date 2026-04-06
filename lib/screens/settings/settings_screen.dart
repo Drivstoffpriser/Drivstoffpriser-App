@@ -41,19 +41,27 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isRefreshing = false;
+  bool _isResendingEmail = false;
   int _stationSubmissionCount = 0;
-  bool _hasLoadedCount = false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.isAuthenticated) {
+        _loadSubmissionCount();
+      }
+    });
+  }
 
   Future<void> _loadSubmissionCount() async {
     final userProvider = context.read<UserProvider>();
-    if (!userProvider.isAuthenticated) return;
     final submissions = await FirestoreService.getUserStationSubmissions(
       userProvider.user.id,
     );
     if (mounted) {
       setState(() {
         _stationSubmissionCount = submissions.length;
-        _hasLoadedCount = true;
       });
     }
   }
@@ -62,8 +70,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isRefreshing = true);
 
     final stationProvider = context.read<StationProvider>();
+    final userProvider = context.read<UserProvider>();
     try {
-      await stationProvider.refreshStations();
+      await Future.wait([
+        stationProvider.refreshStations(),
+        userProvider.reloadUser(),
+      ]);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -87,10 +99,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isAuth = userProvider.isAuthenticated;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
-
-    if (isAuth && !_hasLoadedCount) {
-      _loadSubmissionCount();
-    }
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
@@ -125,6 +133,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     isAuthenticated: isAuth,
                     userProvider: userProvider,
                   ),
+
+                  // ── Email Verification Banner ──
+                  if (isAuth &&
+                      userProvider.hasEmailProvider &&
+                      !userProvider.isEmailVerified) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.orange.withValues(alpha: 0.15)
+                            : Colors.orange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.mark_email_unread_outlined,
+                            color: Colors.orange,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.l10n.emailNotVerified,
+                                  style: AppTextStyles.bodyMedium(context),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  context.l10n.emailNotVerifiedSubtitle,
+                                  style: AppTextStyles.label(context),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: _isResendingEmail
+                                ? null
+                                : () async {
+                                    setState(() => _isResendingEmail = true);
+                                    try {
+                                      await userProvider
+                                          .sendVerificationEmail();
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            context.l10n.verificationEmailSent,
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    } finally {
+                                      if (mounted) {
+                                        setState(
+                                          () => _isResendingEmail = false,
+                                        );
+                                      }
+                                    }
+                                  },
+                            child: Text(context.l10n.resendVerificationEmail),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 20),
 
                   // ── Contributions Card ──
@@ -207,7 +298,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         context,
                                         AppRoutes.myStationSubmissions,
                                       );
-                                      _hasLoadedCount = false;
                                       _loadSubmissionCount();
                                     },
                                     child: Container(
@@ -676,14 +766,15 @@ class _ProfileHero extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    switch (userProvider.accountType) {
-                      AccountType.anonymous =>
-                        context.l10n.anonymousBrowsingOnly,
-                      AccountType.email => context.l10n.emailAccount,
-                      AccountType.google => context.l10n.googleAccount,
-                      AccountType.googleEmail =>
-                        context.l10n.googleEmailAccount,
-                    },
+                    userProvider.email ??
+                        switch (userProvider.accountType) {
+                          AccountType.anonymous =>
+                            context.l10n.anonymousBrowsingOnly,
+                          AccountType.email => context.l10n.emailAccount,
+                          AccountType.google => context.l10n.googleAccount,
+                          AccountType.googleEmail =>
+                            context.l10n.googleEmailAccount,
+                        },
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -691,8 +782,27 @@ class _ProfileHero extends StatelessWidget {
                           ? activeColor
                           : AppColors.textMuted(context),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (userProvider.isEmailVerified) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified, size: 13, color: activeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        context.l10n.emailConfirmed,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: activeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (isAuthenticated) ...[
                   const SizedBox(height: 8),
                   Row(
@@ -704,7 +814,7 @@ class _ProfileHero extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       _StatBadge(
-                        icon: Icons.verified,
+                        icon: Icons.groups,
                         value: '${(user.trustScore * 100).toStringAsFixed(0)}%',
                         label: context.l10n.trust,
                       ),
