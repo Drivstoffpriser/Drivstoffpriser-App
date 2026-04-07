@@ -16,33 +16,15 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/// Configuration for external API keys.
-/// flutter run --dart-define=ANTHROPIC_API_KEY=sk-...
-/// The Anthropic API key can be provided via:
-/// - `--dart-define=ANTHROPIC_API_KEY=sk-...` at build time
-/// - Calling [AnthropicConfig.setApiKey] at runtime (e.g. from settings)
-class AnthropicConfig {
-  AnthropicConfig._();
+/// Configuration for the backend API.
+/// Provide the base URL at build time:
+///   flutter run --dart-define=BACKEND_URL=https://api.example.com
+class BackendConfig {
+  BackendConfig._();
 
-  static const _envKey = String.fromEnvironment(
-    'ANTHROPIC_API_KEY',
-    defaultValue: '',
+  /// Base URL of the backend API (no trailing slash).
+  static const String baseUrl = String.fromEnvironment(
+    'BACKEND_URL',
+    defaultValue: 'http://localhost:8000',
   );
-
-  static String _runtimeKey = '';
-
-  /// Set the API key at runtime (overrides the build-time value).
-  static void setApiKey(String key) => _runtimeKey = key;
-
-  /// The active API key (runtime override takes precedence).
-  static String get apiKey => _runtimeKey.isNotEmpty ? _runtimeKey : _envKey;
-
-  /// Whether a usable API key is configured.
-  static bool get hasApiKey => apiKey.isNotEmpty;
-
-  /// The model to use for vision requests (cheapest Claude model).
-  static const String model = 'claude-haiku-4-5-20251001';
-
-  /// Max tokens for the response (price JSON is tiny).
-  static const int maxTokens = 256;
 }
