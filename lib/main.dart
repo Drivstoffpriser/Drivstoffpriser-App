@@ -45,7 +45,7 @@ void main() async {
   // App Check is only enforced for Android in the Firebase Console.
   // Activating on iOS causes UNAVAILABLE errors because DeviceCheck
   // tokens fail and the client SDK blocks requests.
-  if (Platform.isAndroid) {
+  if (!kIsWeb && Platform.isAndroid) {
     await FirebaseAppCheck.instance.activate(
       androidProvider: kDebugMode
           ? AndroidProvider.debug
