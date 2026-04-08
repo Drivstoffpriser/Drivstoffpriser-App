@@ -29,7 +29,14 @@ class _AutoDecimalFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final digitsOnly = newValue.text.replaceAll('.', '');
+    String digitsOnly = newValue.text.replaceAll('.', '');
+
+    // When user backspaces over the auto-inserted dot (e.g. "19." → "19"),
+    // also remove the last digit so they can actually delete backwards.
+    if (oldValue.text.endsWith('.') &&
+        newValue.text == oldValue.text.substring(0, oldValue.text.length - 1)) {
+      digitsOnly = digitsOnly.substring(0, digitsOnly.length - 1);
+    }
 
     if (digitsOnly.isEmpty) {
       return const TextEditingValue();
@@ -45,8 +52,11 @@ class _AutoDecimalFormatter extends TextInputFormatter {
     }
 
     String formatted;
-    if (digitsOnly.length <= 2) {
+    if (digitsOnly.length < 2) {
       formatted = digitsOnly;
+    } else if (digitsOnly.length == 2) {
+      // Show trailing dot immediately after two digits so the separator is visible.
+      formatted = '$digitsOnly.';
     } else {
       formatted = '${digitsOnly.substring(0, 2)}.${digitsOnly.substring(2)}';
     }
