@@ -16,6 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -59,6 +60,7 @@ class _MapScreenState extends State<MapScreen> {
   String _searchQuery = '';
   LatLngBounds? _visibleBounds;
   bool? _previousAllowMapRotation;
+  Timer? _bboxDebounce;
 
   @override
   void initState() {
@@ -76,6 +78,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    _bboxDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -111,28 +114,18 @@ class _MapScreenState extends State<MapScreen> {
   void _onMapEvent(MapCamera camera, bool hasGesture) {
     final bounds = camera.visibleBounds;
     if (_visibleBounds != bounds) {
-      setState(() => _visibleBounds = bounds);
+      _visibleBounds = bounds;
+      _bboxDebounce?.cancel();
+      _bboxDebounce = Timer(const Duration(milliseconds: 600), () {
+        if (!mounted) return;
+        context.read<StationProvider>().loadStationsByBbox(
+          minLat: bounds.south,
+          minLng: bounds.west,
+          maxLat: bounds.north,
+          maxLng: bounds.east,
+        );
+      });
     }
-  }
-
-  List<Station> _visibleStations(List<Station> stations) {
-    final bounds = _visibleBounds;
-    if (bounds == null) return stations;
-
-    // Add padding so stations at the edge don't pop in/out abruptly
-    final latPad = (bounds.north - bounds.south) * 0.2;
-    final lngPad = (bounds.east - bounds.west) * 0.2;
-    final south = bounds.south - latPad;
-    final north = bounds.north + latPad;
-    final west = bounds.west - lngPad;
-    final east = bounds.east + lngPad;
-
-    return stations.where((s) {
-      return s.latitude >= south &&
-          s.latitude <= north &&
-          s.longitude >= west &&
-          s.longitude <= east;
-    }).toList();
   }
 
   List<Station> _searchResults(List<Station> stations) {
@@ -195,20 +188,10 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
-    final allBrandFiltered = stationProvider.brandFilteredStations;
-    final filtered = _visibleStations(allBrandFiltered);
+    final filtered = stationProvider.mapStations;
     final results = _searchResults(stationProvider.stations);
 
-    // Find best (cheapest) station for the selected fuel type
-    String? bestStationId;
-    double bestPrice = double.infinity;
-    for (final station in filtered) {
-      final p = stationProvider.getPriceForStation(station.id);
-      if (p != null && p.price < bestPrice) {
-        bestPrice = p.price;
-        bestStationId = station.id;
-      }
-    }
+    final bestStationId = stationProvider.bestMapStationId;
 
     final tileUrl = isDark
         ? 'https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png'
@@ -236,9 +219,14 @@ class _MapScreenState extends State<MapScreen> {
                       : InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
                 onMapReady: () {
-                  setState(() {
-                    _visibleBounds = _mapController.camera.visibleBounds;
-                  });
+                  final bounds = _mapController.camera.visibleBounds;
+                  _visibleBounds = bounds;
+                  context.read<StationProvider>().loadStationsByBbox(
+                    minLat: bounds.south,
+                    minLng: bounds.west,
+                    maxLat: bounds.north,
+                    maxLng: bounds.east,
+                  );
                   // Nudge tiles to load — flutter_map may not render
                   // tiles when built behind a dialog or IndexedStack.
                   Future.delayed(const Duration(milliseconds: 200), () {
@@ -303,15 +291,15 @@ class _MapScreenState extends State<MapScreen> {
                     maxZoom: 15,
                     showPolygon: false,
                     markers: filtered.map((station) {
-                      final price = stationProvider.getPriceForStation(
-                        station.id,
-                      );
+                      final price =
+                          station.prices[stationProvider.selectedFuelType];
                       final isBest = station.id == bestStationId;
                       return Marker(
                         point: LatLng(station.latitude, station.longitude),
                         width: 72,
                         height: price != null ? 72 : 48,
                         child: StationMarker(
+                          key: ValueKey(station.id),
                           station: station,
                           price: price,
                           isBestPrice: isBest,

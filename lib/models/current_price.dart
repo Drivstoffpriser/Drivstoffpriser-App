@@ -43,6 +43,19 @@ class CurrentPrice {
     );
   }
 
+  factory CurrentPrice.fromBackendJson(
+    String stationId,
+    Map<String, dynamic> json,
+  ) {
+    return CurrentPrice(
+      stationId: stationId,
+      fuelType: FuelType.fromBackendString(json['fuelType'] as String),
+      price: double.parse(json['price'] as String),
+      updatedAt: DateTime.parse(json['registeredAt'] as String),
+      reportCount: 0,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'stationId': stationId,

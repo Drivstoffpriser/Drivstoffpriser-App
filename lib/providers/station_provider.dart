@@ -18,9 +18,9 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/station.dart';
+import '../services/backend_api_client.dart';
 import '../services/cache_service.dart';
 import '../services/distance_service.dart';
 import '../services/favorite_service.dart';
@@ -31,7 +31,10 @@ enum SortMode { cheapest, nearest, latest }
 
 class StationProvider extends ChangeNotifier {
   List<Station> _stations = [];
-  List<CurrentPrice> _prices = [];
+
+  // Separate state for the map view, populated by bbox fetches.
+  List<Station> _mapStations = [];
+  String? _bestMapStationId;
   FuelType _selectedFuelType = FuelType.petrol95;
   SortMode _sortMode = SortMode.cheapest;
   Set<String> _selectedBrands = {};
@@ -49,7 +52,6 @@ class StationProvider extends ChangeNotifier {
   double? _userLng;
 
   List<Station> get stations => _stations;
-  List<CurrentPrice> get prices => _prices;
   FuelType get selectedFuelType => _selectedFuelType;
   SortMode get sortMode => _sortMode;
   Set<String> get selectedBrands => _selectedBrands;
@@ -78,13 +80,29 @@ class StationProvider extends ChangeNotifier {
   }
 
   Future<void> toggleFavorite(String stationId) async {
-    await FavoriteService.toggleFavorite(stationId);
-    if (_favoriteStationIds.contains(stationId)) {
+    final wasFavorite = _favoriteStationIds.contains(stationId);
+    if (wasFavorite) {
       _favoriteStationIds.remove(stationId);
     } else {
       _favoriteStationIds.add(stationId);
     }
     notifyListeners();
+    try {
+      if (wasFavorite) {
+        await FavoriteService.removeFavorite(stationId);
+      } else {
+        await FavoriteService.addFavorite(stationId);
+      }
+    } catch (e) {
+      // Roll back on failure
+      if (wasFavorite) {
+        _favoriteStationIds.add(stationId);
+      } else {
+        _favoriteStationIds.remove(stationId);
+      }
+      notifyListeners();
+      rethrow;
+    }
   }
 
   bool isFavorite(String stationId) => _favoriteStationIds.contains(stationId);
@@ -170,6 +188,37 @@ class StationProvider extends ChangeNotifier {
     return result.toList();
   }
 
+  String? get bestMapStationId => _bestMapStationId;
+
+  void _recomputeBestMapStation() {
+    String? bestId;
+    double bestPrice = double.infinity;
+    for (final station in _mapStations) {
+      final p = station.prices[_selectedFuelType];
+      if (p != null && p.price < bestPrice) {
+        bestPrice = p.price;
+        bestId = station.id;
+      }
+    }
+    _bestMapStationId = bestId;
+  }
+
+  /// Stations from the last bbox fetch, filtered by brand/favorites.
+  /// Used exclusively by the map screen.
+  List<Station> get mapStations {
+    Iterable<Station> result = _mapStations;
+
+    if (_selectedBrands.isNotEmpty) {
+      result = result.where((s) => _selectedBrands.contains(s.brand));
+    }
+
+    if (_showFavoritesOnly) {
+      result = result.where((s) => _favoriteStationIds.contains(s.id));
+    }
+
+    return result.toList();
+  }
+
   void toggleBrand(String brand) {
     _selectedBrands = Set.of(_selectedBrands);
     if (_selectedBrands.contains(brand)) {
@@ -185,14 +234,14 @@ class StationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load stations and prices from Firestore aggregate docs (2 reads).
+  /// Load stations and prices from the backend API.
   /// Called on app startup.
   Future<void> loadStations() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _fetchFromFirestore();
+      await _fetchFromBackend();
     } catch (e) {
       debugPrint('Failed to load stations: $e');
     } finally {
@@ -201,28 +250,13 @@ class StationProvider extends ChangeNotifier {
     }
   }
 
-  /// Re-read aggregates from Firestore, bypassing cache (2 reads).
-  Future<void> refreshFromFirestore() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      await _fetchFromFirestore();
-    } catch (e) {
-      debugPrint('Failed to refresh from Firestore: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  /// Refresh by re-reading aggregates from Firestore, bypassing cache (2 reads).
+  /// Re-fetch stations and prices from the backend.
   Future<void> refreshStations() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _fetchFromFirestore();
+      await _fetchFromBackend();
     } catch (e) {
       debugPrint('Failed to refresh stations: $e');
       rethrow;
@@ -232,16 +266,40 @@ class StationProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _fetchFromFirestore() async {
-    final stations = await FirestoreService.getStations();
-    final prices = await FirestoreService.getPrices();
+  Future<void> loadStationsByBbox({
+    required double minLat,
+    required double minLng,
+    required double maxLat,
+    required double maxLng,
+  }) async {
+    try {
+      final client = BackendApiClient();
+      _mapStations = await client.getStationsByBbox(
+        minLat: minLat,
+        minLng: minLng,
+        maxLat: maxLat,
+        maxLng: maxLng,
+      );
+      _recomputeBestMapStation();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load stations by bbox: $e');
+    }
+  }
 
-    _stations = stations;
-    _prices = prices;
+  Future<void> _fetchFromBackend() async {
+    final client = BackendApiClient();
+    // Use user location if available; fall back to Norway center + full-country radius.
+    final lat = _userLat ?? 65.0;
+    final lng = _userLng ?? 17.0;
+    final distance = _userLat != null ? 200000.0 : 2500000.0;
+    _stations = await client.getStations(
+      lat: lat,
+      lng: lng,
+      distance: distance,
+    );
 
-    // Update local cache
-    await CacheService.cacheStations(stations);
-    await CacheService.cachePrices(prices);
+    await CacheService.cacheStations(_stations);
 
     // Load remote brand logos and update BrandLogo cache
     try {
@@ -254,28 +312,13 @@ class StationProvider extends ChangeNotifier {
 
   void setFuelType(FuelType type) {
     _selectedFuelType = type;
+    _recomputeBestMapStation();
     notifyListeners();
   }
 
   void setSortMode(SortMode mode) {
     _sortMode = mode;
     notifyListeners();
-  }
-
-  /// Get the current price for a station and the selected fuel type.
-  CurrentPrice? getPriceForStation(String stationId) {
-    try {
-      return _prices.firstWhere(
-        (p) => p.stationId == stationId && p.fuelType == _selectedFuelType,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Get all prices for a specific station.
-  List<CurrentPrice> getPricesForStation(String stationId) {
-    return _prices.where((p) => p.stationId == stationId).toList();
   }
 
   /// Stations filtered by brand and sorted by the current sort mode.
@@ -286,9 +329,8 @@ class StationProvider extends ChangeNotifier {
     switch (_sortMode) {
       case SortMode.cheapest:
         all.sort((a, b) {
-          final pa = getPriceForStation(a.id);
-          final pb = getPriceForStation(b.id);
-          // Stations with prices come first
+          final pa = a.prices[_selectedFuelType];
+          final pb = b.prices[_selectedFuelType];
           if (pa == null && pb == null) return a.name.compareTo(b.name);
           if (pa == null) return 1;
           if (pb == null) return -1;
@@ -316,8 +358,8 @@ class StationProvider extends ChangeNotifier {
         }
       case SortMode.latest:
         all.sort((a, b) {
-          final pa = getPriceForStation(a.id);
-          final pb = getPriceForStation(b.id);
+          final pa = a.prices[_selectedFuelType];
+          final pb = b.prices[_selectedFuelType];
           if (pa == null && pb == null) return a.name.compareTo(b.name);
           if (pa == null) return 1;
           if (pb == null) return -1;

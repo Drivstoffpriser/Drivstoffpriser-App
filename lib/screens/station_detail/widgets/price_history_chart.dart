@@ -95,9 +95,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     }
 
     final dateRange = latest.difference(earliest).inDays.toDouble();
-    if (dateRange == 0) return const SizedBox.shrink();
+    // When all points share one date, pad the x-axis so the point renders.
+    final xMin = dateRange == 0 ? -1.0 : 0.0;
+    final xMax = dateRange == 0 ? 1.0 : dateRange;
 
-    final yPad = (maxPrice - minPrice) * 0.15;
+    final rawYPad = (maxPrice - minPrice) * 0.15;
+    // Guard against zero range (single price value).
+    final yPad = rawYPad == 0 ? maxPrice * 0.05 : rawYPad;
     final yMin = (minPrice - yPad).floorToDouble();
     final yMax = (maxPrice + yPad).ceilToDouble();
 
@@ -121,8 +125,8 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                 LineChartData(
                   minY: yMin,
                   maxY: yMax,
-                  minX: 0,
-                  maxX: dateRange,
+                  minX: xMin,
+                  maxX: xMax,
                   gridData: FlGridData(
                     horizontalInterval: ((yMax - yMin) / 4)
                         .ceilToDouble()
@@ -163,7 +167,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                         reservedSize: 44,
                         getTitlesWidget: (value, _) {
                           return Text(
-                            '${value.toStringAsFixed(1)} ${context.l10n.krSuffix}',
+                            '${value.toStringAsFixed(2)} ${context.l10n.krSuffix}',
                             style: TextStyle(fontSize: 10, color: labelColor),
                           );
                         },
@@ -196,17 +200,26 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                       .where((e) => _visible.contains(e.key))
                       .map((entry) {
                         final color = _fuelColor(entry.key, context);
+                        var spots = entry.value.map((pt) {
+                          final x = pt.date
+                              .difference(earliest!)
+                              .inDays
+                              .toDouble();
+                          return FlSpot(
+                            x,
+                            double.parse(pt.price.toStringAsFixed(2)),
+                          );
+                        }).toList();
+                        // fl_chart needs ≥2 spots to render anything.
+                        // Duplicate the single point with a tiny x offset.
+                        if (spots.length == 1) {
+                          spots = [
+                            FlSpot(spots[0].x - 0.01, spots[0].y),
+                            spots[0],
+                          ];
+                        }
                         return LineChartBarData(
-                          spots: entry.value.map((pt) {
-                            final x = pt.date
-                                .difference(earliest!)
-                                .inDays
-                                .toDouble();
-                            return FlSpot(
-                              x,
-                              double.parse(pt.price.toStringAsFixed(2)),
-                            );
-                          }).toList(),
+                          spots: spots,
                           isCurved: true,
                           curveSmoothness: 0.2,
                           color: color,
@@ -220,9 +233,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                                   ) ??
                                   false;
                               return FlDotCirclePainter(
-                                radius: isTouched ? 5 : 0,
+                                radius: isTouched ? 5 : 3,
                                 color: color,
-                                strokeWidth: isTouched ? 2 : 0,
+                                strokeWidth: 2,
                                 strokeColor: isDark
                                     ? AppColors.darkBackground
                                     : Colors.white,
