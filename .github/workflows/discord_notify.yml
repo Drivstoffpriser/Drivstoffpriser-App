@@ -7,7 +7,7 @@ on:
 jobs:
   notify-bug:
     runs-on: ubuntu-latest
-    if: contains(github.event.issue.labels.*.name, 'bug')
+    if: github.event.label.name == 'bug'
     steps:
       - name: Send Discord notification
         env:
@@ -38,10 +38,10 @@ jobs:
   notify-task:
     runs-on: ubuntu-latest
     if: >-
-      contains(github.event.issue.labels.*.name, 'feature') ||
-      contains(github.event.issue.labels.*.name, 'task') ||
-      contains(github.event.issue.labels.*.name, 'documentation') ||
-      contains(github.event.issue.labels.*.name, 'good first issue')
+      github.event.label.name == 'feature' ||
+      github.event.label.name == 'task' ||
+      github.event.label.name == 'documentation' ||
+      github.event.label.name == 'good first issue'
     steps:
       - name: Determine label for title
         id: label
