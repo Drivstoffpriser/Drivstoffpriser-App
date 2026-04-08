@@ -61,6 +61,7 @@ class _EditStationScreenState extends State<EditStationScreen> {
   File? _pickedLogo;
 
   static const _knownBrands = [
+    'Automat1',
     'Circle K',
     'Esso',
     'Shell',

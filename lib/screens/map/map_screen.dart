@@ -40,6 +40,7 @@ import 'widgets/fuel_filter_bar.dart';
 import 'widgets/nearby_station_banner.dart';
 import 'widgets/station_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import '../../widgets/web_constrained.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -367,69 +368,73 @@ class _MapScreenState extends State<MapScreen> {
             top: topPadding + 8,
             left: 16,
             right: 16,
-            child: GestureDetector(
-              onTap: () => _searchFocus.requestFocus(),
-              behavior: HitTestBehavior.opaque,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurface.withValues(alpha: 0.85)
-                          : Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppColors.border(context).withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.search,
-                          size: 20,
-                          color: AppColors.textMuted(context),
+            child: WebConstrained(
+              child: GestureDetector(
+                onTap: () => _searchFocus.requestFocus(),
+                behavior: HitTestBehavior.opaque,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurface.withValues(alpha: 0.85)
+                            : Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.border(
+                            context,
+                          ).withValues(alpha: 0.5),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            focusNode: _searchFocus,
-                            style: AppTextStyles.body(context),
-                            textAlignVertical: TextAlignVertical.center,
-                            decoration: InputDecoration(
-                              hintText: context.l10n.searchStations,
-                              hintStyle: AppTextStyles.body(
-                                context,
-                              ).copyWith(color: AppColors.textMuted(context)),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                              isCollapsed: true,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.search,
+                            size: 20,
+                            color: AppColors.textMuted(context),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocus,
+                              style: AppTextStyles.body(context),
+                              decoration: InputDecoration(
+                                hintText: context.l10n.searchStations,
+                                hintStyle: AppTextStyles.body(
+                                  context,
+                                ).copyWith(color: AppColors.textMuted(context)),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                filled: false,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 15,
+                                ),
+                                isDense: true,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        if (_searchQuery.isNotEmpty)
-                          GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                            },
-                            child: Icon(
-                              Icons.close,
-                              size: 18,
-                              color: AppColors.textMuted(context),
-                            ),
-                          )
-                        else
-                          const BrandFilterButton(),
-                      ],
+                          const SizedBox(width: 10),
+                          if (_searchQuery.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                              },
+                              child: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: AppColors.textMuted(context),
+                              ),
+                            )
+                          else
+                            const BrandFilterButton(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -442,7 +447,7 @@ class _MapScreenState extends State<MapScreen> {
             top: topPadding + 60,
             left: 0,
             right: 0,
-            child: FuelFilterBar(),
+            child: WebConstrained(child: FuelFilterBar()),
           ),
 
           // Nearby station prompt — below fuel filter bar

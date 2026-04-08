@@ -46,6 +46,7 @@ class _StationMarkerState extends State<StationMarker> {
   bool _isPressed = false;
 
   static final Map<String, String> _brandLogoAssets = {
+    'Automat1': 'assets/logos/automat1.png',
     'Circle K': 'assets/logos/circle-k.png',
     'Esso': 'assets/logos/esso.png',
     'Shell': 'assets/logos/shell.png',

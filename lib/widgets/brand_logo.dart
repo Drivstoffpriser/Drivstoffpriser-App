@@ -36,6 +36,7 @@ class BrandLogo extends StatelessWidget {
   });
 
   static const _brandAssets = {
+    'Automat1': 'assets/logos/automat1.png',
     'Circle K': 'assets/logos/circle-k.png',
     'Shell': 'assets/logos/shell.png',
     'Esso': 'assets/logos/esso.png',
