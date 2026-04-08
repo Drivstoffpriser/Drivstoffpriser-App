@@ -1,26 +1,18 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'backend_api_client.dart';
 
 class FavoriteService {
-  static const String _favoritesKey = 'favorite_stations';
+  static final BackendApiClient _client = BackendApiClient();
 
   static Future<Set<String>> getFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_favoritesKey) ?? [];
-    return list.toSet();
+    return _client.getFavorites();
   }
 
   static Future<void> addFavorite(String stationId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final favorites = await getFavorites();
-    favorites.add(stationId);
-    await prefs.setStringList(_favoritesKey, favorites.toList());
+    await _client.addFavorite(stationId);
   }
 
   static Future<void> removeFavorite(String stationId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final favorites = await getFavorites();
-    favorites.remove(stationId);
-    await prefs.setStringList(_favoritesKey, favorites.toList());
+    await _client.removeFavorite(stationId);
   }
 
   static Future<bool> isFavorite(String stationId) async {

@@ -43,4 +43,17 @@ enum FuelType {
   };
 
   String get unit => 'L';
+
+  String get backendString => switch (this) {
+    FuelType.petrol95 => 'GASOLINE_95',
+    FuelType.petrol98 => 'GASOLINE_98',
+    FuelType.diesel => 'DIESEL',
+  };
+
+  static FuelType fromBackendString(String s) => switch (s) {
+    'GASOLINE_95' => FuelType.petrol95,
+    'GASOLINE_98' => FuelType.petrol98,
+    'DIESEL' => FuelType.diesel,
+    _ => throw ArgumentError('Unknown backend fuel type: $s'),
+  };
 }

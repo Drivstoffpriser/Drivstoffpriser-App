@@ -20,7 +20,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_colors.dart';
@@ -37,6 +36,15 @@ import '../../widgets/loading_indicator.dart';
 import 'edit_station_screen.dart';
 import 'widgets/price_card.dart';
 import 'widgets/price_history_chart.dart';
+import '../submit_price/submit_price_screen.dart';
+
+String _formatAge(BuildContext context, Duration age) {
+  final minutes = age.inMinutes;
+  final hours = age.inHours;
+  if (minutes < 60) return context.l10n.ageMinutes(minutes);
+  if (hours <= 23) return context.l10n.ageHours(hours);
+  return context.l10n.ageOver1Day;
+}
 
 class StationDetailScreen extends StatefulWidget {
   final Station station;
@@ -53,7 +61,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<PriceProvider>();
-      provider.loadReports(widget.station.id);
+      provider.clear();
       provider.loadHistory(widget.station.id);
     });
   }
@@ -102,7 +110,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     if (confirmed != true || !mounted) return;
     await FirestoreService.deleteStation(widget.station.id);
     if (mounted) {
-      await stationProvider.refreshFromFirestore();
+      await stationProvider.refreshStations();
       if (mounted) Navigator.pop(context);
     }
   }
@@ -112,7 +120,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final stationProvider = context.watch<StationProvider>();
     final priceProvider = context.watch<PriceProvider>();
     final userProvider = context.watch<UserProvider>();
-    final prices = stationProvider.getPricesForStation(widget.station.id);
+    final station = stationProvider.stations.firstWhere(
+      (s) => s.id == widget.station.id,
+      orElse: () => widget.station,
+    );
+    final prices = station.prices.values.toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
 
@@ -258,39 +270,96 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
                 const SizedBox(height: 28),
 
-                // ── Price History Chart ──
+                // ── Report Price ──
                 Text(
-                  context.l10n.priceTrend,
+                  'Registrer pris',
                   style: AppTextStyles.sectionHeader(context),
                 ),
                 const SizedBox(height: 12),
-                if (priceProvider.isLoadingHistory)
-                  const SizedBox(height: 220, child: LoadingIndicator())
-                else if (priceProvider.history.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface(context),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.border(context),
-                        width: 0.5,
+                Row(
+                  children: [
+                    Expanded(
+                      child: _GradientActionButton(
+                        icon: Icons.camera_alt_outlined,
+                        label: 'Med kamera',
+                        onPressed: () async {
+                          final priceProvider = context.read<PriceProvider>();
+                          await Navigator.pushNamed(
+                            context,
+                            AppRoutes.submitPrice,
+                            arguments: widget.station,
+                          );
+                          if (mounted) {
+                            priceProvider.loadHistory(widget.station.id);
+                          }
+                        },
                       ),
                     ),
-                    child: PriceHistoryChart(history: priceProvider.history),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _GradientActionButton(
+                        icon: Icons.edit_outlined,
+                        label: 'Manuelt',
+                        onPressed: () async {
+                          final priceProvider = context.read<PriceProvider>();
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  SubmitPriceScreen(station: widget.station),
+                            ),
+                          );
+                          if (mounted) {
+                            priceProvider.loadHistory(widget.station.id);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
 
-                const SizedBox(height: 28),
-
-                // ── Report Price Button ──
-                _GradientActionButton(
-                  icon: Icons.add_circle_outline,
-                  label: context.l10n.reportAPrice,
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.submitPrice,
-                      arguments: widget.station,
+                // ── Price History Chart ──
+                Builder(
+                  builder: (context) {
+                    final distinctDates = priceProvider.history.values
+                        .expand(
+                          (list) => list.map(
+                            (pt) =>
+                                pt.date.toLocal().toString().substring(0, 10),
+                          ),
+                        )
+                        .toSet();
+                    if (!priceProvider.isLoadingHistory &&
+                        distinctDates.length < 2) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 28),
+                        Text(
+                          context.l10n.priceTrend,
+                          style: AppTextStyles.sectionHeader(context),
+                        ),
+                        const SizedBox(height: 12),
+                        if (priceProvider.isLoadingHistory)
+                          const SizedBox(height: 220, child: LoadingIndicator())
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface(context),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.border(context),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: PriceHistoryChart(
+                              history: priceProvider.history,
+                            ),
+                          ),
+                      ],
                     );
                   },
                 ),
@@ -350,7 +419,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                                   style: AppTextStyles.bodyMedium(context),
                                 ),
                                 Text(
-                                  timeago.format(report.reportedAt),
+                                  _formatAge(
+                                    context,
+                                    DateTime.now().difference(
+                                      report.reportedAt,
+                                    ),
+                                  ),
                                   style: AppTextStyles.meta(context),
                                 ),
                               ],
@@ -397,7 +471,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                                   report.id,
                                 );
                                 if (mounted) {
-                                  provider.loadReports(widget.station.id);
+                                  provider.loadHistory(widget.station.id);
                                 }
                               },
                               child: Icon(
@@ -429,32 +503,26 @@ class _PriceBentoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Display prices in a grid-like layout
-    if (prices.length == 1) {
-      return PriceCard(price: prices[0]);
+    if (prices.length <= 2) {
+      return Row(
+        children: [
+          for (int i = 0; i < prices.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(child: PriceCard(price: prices[i], compact: true)),
+          ],
+        ],
+      );
     }
 
-    final rows = <Widget>[];
-    for (int i = 0; i < prices.length; i += 2) {
-      if (i + 1 < prices.length) {
-        rows.add(
-          Row(
-            children: [
-              Expanded(child: PriceCard(price: prices[i])),
-              const SizedBox(width: 8),
-              Expanded(child: PriceCard(price: prices[i + 1])),
-            ],
-          ),
-        );
-      } else {
-        rows.add(PriceCard(price: prices[i]));
-      }
-      if (i + 2 < prices.length) {
-        rows.add(const SizedBox(height: 8));
-      }
-    }
-
-    return Column(children: rows);
+    // 3 or more: show all in one row with compact cards
+    return Row(
+      children: [
+        for (int i = 0; i < prices.length; i++) ...[
+          if (i > 0) const SizedBox(width: 6),
+          Expanded(child: PriceCard(price: prices[i], compact: true)),
+        ],
+      ],
+    );
   }
 }
 

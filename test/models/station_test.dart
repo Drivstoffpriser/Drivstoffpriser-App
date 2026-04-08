@@ -45,7 +45,7 @@ void main() {
     test('toJson produces correct map', () {
       final station = Station.fromJson(json);
       final output = station.toJson();
-      expect(output, json);
+      expect(output, {...json, 'prices': []});
     });
 
     test('fromJson handles int coordinates', () {
