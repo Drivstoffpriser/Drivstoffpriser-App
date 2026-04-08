@@ -172,6 +172,7 @@
   "googleEmailAccount": "Google + E-postkonto",
   "googleAccount": "Google-konto",
   "emailAccount": "E-postkonto",
+  "emailConfirmed": "E-post bekreftet",
 
   "contributeData": "BIDRA MED DATA",
   "station": "Stasjon",
@@ -299,5 +300,9 @@
   "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
 
   "nearbyStationPrompt": "Du er i nærheten av {stationName}. Rapportere pris?",
-  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } }
+  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } },
+  "emailNotVerified": "Bekreft e-posten din",
+  "emailNotVerifiedSubtitle": "Sjekk innboksen din for en bekreftelseslenke",
+  "resendVerificationEmail": "Send på nytt",
+  "verificationEmailSent": "Bekreftelses-e-post sendt"
 }

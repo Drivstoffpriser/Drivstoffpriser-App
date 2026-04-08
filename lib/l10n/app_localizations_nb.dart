@@ -515,6 +515,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get emailAccount => 'E-postkonto';
 
   @override
+  String get emailConfirmed => 'E-post bekreftet';
+
+  @override
   String get contributeData => 'BIDRA MED DATA';
 
   @override
@@ -893,4 +896,17 @@ class AppLocalizationsNb extends AppLocalizations {
   String nearbyStationPrompt(String stationName) {
     return 'Du er i nærheten av $stationName. Rapportere pris?';
   }
+
+  @override
+  String get emailNotVerified => 'Bekreft e-posten din';
+
+  @override
+  String get emailNotVerifiedSubtitle =>
+      'Sjekk innboksen din for en bekreftelseslenke';
+
+  @override
+  String get resendVerificationEmail => 'Send på nytt';
+
+  @override
+  String get verificationEmailSent => 'Bekreftelses-e-post sendt';
 }

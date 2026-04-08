@@ -16,6 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -41,19 +43,27 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isRefreshing = false;
+  bool _isResendingEmail = false;
   int _stationSubmissionCount = 0;
-  bool _hasLoadedCount = false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.isAuthenticated) {
+        _loadSubmissionCount();
+      }
+    });
+  }
 
   Future<void> _loadSubmissionCount() async {
     final userProvider = context.read<UserProvider>();
-    if (!userProvider.isAuthenticated) return;
     final submissions = await FirestoreService.getUserStationSubmissions(
       userProvider.user.id,
     );
     if (mounted) {
       setState(() {
         _stationSubmissionCount = submissions.length;
-        _hasLoadedCount = true;
       });
     }
   }
@@ -62,8 +72,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isRefreshing = true);
 
     final stationProvider = context.read<StationProvider>();
+    final userProvider = context.read<UserProvider>();
     try {
-      await stationProvider.refreshStations();
+      await Future.wait([
+        stationProvider.refreshStations(),
+        userProvider.reloadUser(),
+      ]);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -87,10 +101,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isAuth = userProvider.isAuthenticated;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
-
-    if (isAuth && !_hasLoadedCount) {
-      _loadSubmissionCount();
-    }
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
@@ -125,6 +135,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     isAuthenticated: isAuth,
                     userProvider: userProvider,
                   ),
+
+                  // ── Email Verification Banner ──
+                  if (isAuth &&
+                      userProvider.hasEmailProvider &&
+                      !userProvider.isEmailVerified) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.orange.withValues(alpha: 0.15)
+                            : Colors.orange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.mark_email_unread_outlined,
+                            color: Colors.orange,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.l10n.emailNotVerified,
+                                  style: AppTextStyles.bodyMedium(context),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  context.l10n.emailNotVerifiedSubtitle,
+                                  style: AppTextStyles.label(context),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: _isResendingEmail
+                                ? null
+                                : () async {
+                                    setState(() => _isResendingEmail = true);
+                                    try {
+                                      await userProvider
+                                          .sendVerificationEmail();
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            context.l10n.verificationEmailSent,
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    } finally {
+                                      if (mounted) {
+                                        setState(
+                                          () => _isResendingEmail = false,
+                                        );
+                                      }
+                                    }
+                                  },
+                            child: Text(context.l10n.resendVerificationEmail),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 20),
 
                   // ── Contributions Card ──
@@ -207,7 +300,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         context,
                                         AppRoutes.myStationSubmissions,
                                       );
-                                      _hasLoadedCount = false;
                                       _loadSubmissionCount();
                                     },
                                     child: Container(
@@ -366,6 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               )
                             : null,
                         onTap: _isRefreshing ? null : _refreshStations,
+                        showLoadingOnTap: false,
                       ),
                     ],
                   ),
@@ -454,6 +547,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ],
                           );
                         },
+                        showLoadingOnTap: false,
                       ),
                       const _CardDivider(),
                       _SettingsTile(
@@ -548,6 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               }
                             }
                           },
+                          showLoadingOnTap: false,
                         ),
                         const _CardDivider(),
                         _SettingsTile(
@@ -676,14 +771,15 @@ class _ProfileHero extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    switch (userProvider.accountType) {
-                      AccountType.anonymous =>
-                        context.l10n.anonymousBrowsingOnly,
-                      AccountType.email => context.l10n.emailAccount,
-                      AccountType.google => context.l10n.googleAccount,
-                      AccountType.googleEmail =>
-                        context.l10n.googleEmailAccount,
-                    },
+                    userProvider.email ??
+                        switch (userProvider.accountType) {
+                          AccountType.anonymous =>
+                            context.l10n.anonymousBrowsingOnly,
+                          AccountType.email => context.l10n.emailAccount,
+                          AccountType.google => context.l10n.googleAccount,
+                          AccountType.googleEmail =>
+                            context.l10n.googleEmailAccount,
+                        },
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -691,8 +787,27 @@ class _ProfileHero extends StatelessWidget {
                           ? activeColor
                           : AppColors.textMuted(context),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (userProvider.isEmailVerified) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified, size: 13, color: activeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        context.l10n.emailConfirmed,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: activeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (isAuthenticated) ...[
                   const SizedBox(height: 8),
                   Row(
@@ -704,7 +819,7 @@ class _ProfileHero extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       _StatBadge(
-                        icon: Icons.verified,
+                        icon: Icons.groups,
                         value: '${(user.trustScore * 100).toStringAsFixed(0)}%',
                         label: context.l10n.trust,
                       ),
@@ -714,6 +829,28 @@ class _ProfileHero extends StatelessWidget {
               ],
             ),
           ),
+          if (!isAuthenticated) ...[
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                AppRoutes.auth,
+                arguments: false,
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: activeColor,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: activeColor.withValues(alpha: 0.4)),
+                ),
+              ),
+              child: Text(context.l10n.signIn),
+            ),
+          ],
         ],
       ),
     );
@@ -922,7 +1059,8 @@ class _SettingsTile extends StatefulWidget {
   final String title;
   final String subtitle;
   final Widget? trailing;
-  final VoidCallback? onTap;
+  final FutureOr<void> Function()? onTap;
+  final bool showLoadingOnTap;
 
   const _SettingsTile({
     required this.icon,
@@ -931,6 +1069,7 @@ class _SettingsTile extends StatefulWidget {
     required this.subtitle,
     this.trailing,
     this.onTap,
+    this.showLoadingOnTap = true,
   });
 
   @override
@@ -939,27 +1078,36 @@ class _SettingsTile extends StatefulWidget {
 
 class _SettingsTileState extends State<_SettingsTile> {
   bool _isPressed = false;
+  bool _isLoading = false;
+
+  Future<void> _handleTap() async {
+    if (_isLoading) return;
+    setState(() {
+      _isPressed = false;
+      if (widget.showLoadingOnTap) _isLoading = true;
+    });
+    try {
+      await widget.onTap?.call();
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: widget.onTap != null
+      onTapDown: widget.onTap != null && !_isLoading
           ? (_) => setState(() => _isPressed = true)
           : null,
-      onTapUp: widget.onTap != null
-          ? (_) {
-              setState(() => _isPressed = false);
-              widget.onTap?.call();
-            }
-          : null,
+      onTapUp: widget.onTap != null && !_isLoading ? (_) => _handleTap() : null,
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOutCubic,
         child: AnimatedOpacity(
-          opacity: _isPressed ? 0.7 : 1.0,
+          opacity: _isLoading ? 0.4 : (_isPressed ? 0.7 : 1.0),
           duration: const Duration(milliseconds: 100),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -973,7 +1121,16 @@ class _SettingsTileState extends State<_SettingsTile> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: Icon(widget.icon, size: 20, color: widget.iconColor),
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: widget.iconColor,
+                            ),
+                          )
+                        : Icon(widget.icon, size: 20, color: widget.iconColor),
                   ),
                 ),
                 const SizedBox(width: 14),

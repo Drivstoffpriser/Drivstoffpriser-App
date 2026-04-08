@@ -68,8 +68,12 @@ class App extends StatelessWidget {
               builder: (_) => PriceCaptureScreen(station: station),
             );
           case AppRoutes.auth:
+            final isRegister = settings.arguments is bool
+                ? settings.arguments as bool
+                : true;
             return MaterialPageRoute(
-              builder: (_) => const AuthScreen(popOnSuccess: true),
+              builder: (_) =>
+                  AuthScreen(popOnSuccess: true, initialIsRegister: isRegister),
             );
           case AppRoutes.bugReport:
             return MaterialPageRoute(builder: (_) => const BugReportScreen());

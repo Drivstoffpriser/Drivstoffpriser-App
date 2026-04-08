@@ -512,6 +512,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailAccount => 'Email account';
 
   @override
+  String get emailConfirmed => 'Email confirmed';
+
+  @override
   String get contributeData => 'CONTRIBUTE DATA';
 
   @override
@@ -887,4 +890,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String nearbyStationPrompt(String stationName) {
     return 'Looks like you are close to $stationName. Report a price?';
   }
+
+  @override
+  String get emailNotVerified => 'Verify your email';
+
+  @override
+  String get emailNotVerifiedSubtitle =>
+      'Check your inbox for a verification link';
+
+  @override
+  String get resendVerificationEmail => 'Resend email';
+
+  @override
+  String get verificationEmailSent => 'Verification email sent';
 }
