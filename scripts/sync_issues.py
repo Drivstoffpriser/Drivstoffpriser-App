@@ -13,7 +13,7 @@ def sync_reports():
     db = firestore.client()
 
     # 2. Get GitHub info
-    github_token = os.environ.get('GITHUB_TOKEN')
+    github_token = os.environ.get('PAT_ISSUES')
     repo_name = os.environ.get('GITHUB_REPOSITORY') # e.g. "Drivstoffpriser/Drivstoffpriser-App"
     headers = {
         "Authorization": f"token {github_token}",
@@ -74,7 +74,7 @@ def sync_reports():
 if __name__ == "__main__":
     if not os.environ.get('FIREBASE_SERVICE_ACCOUNT_JSON'):
         print("Error: FIREBASE_SERVICE_ACCOUNT_JSON not set.")
-    elif not os.environ.get('GITHUB_TOKEN'):
-        print("Error: GITHUB_TOKEN not set.")
+    elif not os.environ.get('PAT_ISSUES'):
+        print("Error: PAT_ISSUES not set.")
     else:
         sync_reports()

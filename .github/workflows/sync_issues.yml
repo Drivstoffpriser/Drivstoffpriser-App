@@ -27,5 +27,5 @@ jobs:
       - name: Run sync script
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PAT_ISSUES: ${{ secrets.PAT_ISSUES }}
         run: python scripts/sync_issues.py
