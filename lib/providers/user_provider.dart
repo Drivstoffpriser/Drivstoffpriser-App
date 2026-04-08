@@ -87,9 +87,7 @@ class UserProvider extends ChangeNotifier {
     );
 
     final localePref = prefs.getString('locale');
-    if (localePref != null) {
-      _locale = Locale(localePref);
-    }
+    _locale = localePref != null ? Locale(localePref) : const Locale('nb');
 
     _allowMapRotation = prefs.getBool('allowMapRotation') ?? true;
 

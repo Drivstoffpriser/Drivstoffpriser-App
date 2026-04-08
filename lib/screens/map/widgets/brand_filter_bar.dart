@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../config/app_colors.dart';
+import '../../../widgets/web_constrained.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../providers/station_provider.dart';
@@ -106,6 +107,7 @@ class BrandFilterButton extends StatelessWidget {
       ),
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxWidth: kWebMaxWidth,
       ),
       builder: (context) => _BrandFilterSheet(filterLocation: filterLocation),
     );

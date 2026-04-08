@@ -16,6 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +37,17 @@ import 'screens/station_detail/station_detail_screen.dart';
 import 'screens/submit_price/price_capture_screen.dart';
 import 'widgets/connectivity_gate.dart';
 import 'widgets/floating_pill_nav.dart';
+import 'widgets/web_constrained.dart';
+
+Widget _web(Widget child) {
+  if (!kIsWeb) return child;
+  return Builder(
+    builder: (context) => ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: WebConstrained(child: child),
+    ),
+  );
+}
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -60,45 +72,48 @@ class App extends StatelessWidget {
           case AppRoutes.stationDetail:
             final station = settings.arguments as Station;
             return MaterialPageRoute(
-              builder: (_) => StationDetailScreen(station: station),
+              builder: (_) => _web(StationDetailScreen(station: station)),
             );
           case AppRoutes.submitPrice:
             final station = settings.arguments as Station;
             return MaterialPageRoute(
-              builder: (_) => PriceCaptureScreen(station: station),
+              builder: (_) => _web(PriceCaptureScreen(station: station)),
             );
           case AppRoutes.auth:
             final isRegister = settings.arguments is bool
                 ? settings.arguments as bool
                 : true;
             return MaterialPageRoute(
-              builder: (_) =>
-                  AuthScreen(popOnSuccess: true, initialIsRegister: isRegister),
+              builder: (_) => _web(
+                AuthScreen(popOnSuccess: true, initialIsRegister: isRegister),
+              ),
             );
           case AppRoutes.bugReport:
-            return MaterialPageRoute(builder: (_) => const BugReportScreen());
+            return MaterialPageRoute(
+              builder: (_) => _web(const BugReportScreen()),
+            );
           case AppRoutes.addStation:
             final args = settings.arguments;
             if (args is StationSubmission) {
               return MaterialPageRoute(
-                builder: (_) => AddStationScreen(editSubmission: args),
+                builder: (_) => _web(AddStationScreen(editSubmission: args)),
               );
             }
             return MaterialPageRoute(
               builder: (_) =>
-                  AddStationScreen(initialLocation: args as LatLng?),
+                  _web(AddStationScreen(initialLocation: args as LatLng?)),
             );
           case AppRoutes.myStationSubmissions:
             return MaterialPageRoute(
-              builder: (_) => const MyStationSubmissionsScreen(),
+              builder: (_) => _web(const MyStationSubmissionsScreen()),
             );
           case AppRoutes.adminSubmissions:
             return MaterialPageRoute(
-              builder: (_) => const AdminSubmissionsScreen(),
+              builder: (_) => _web(const AdminSubmissionsScreen()),
             );
           case AppRoutes.adminModifyRequests:
             return MaterialPageRoute(
-              builder: (_) => const AdminModifyRequestsScreen(),
+              builder: (_) => _web(const AdminModifyRequestsScreen()),
             );
           default:
             return null;
