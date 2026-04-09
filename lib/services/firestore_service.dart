@@ -237,7 +237,6 @@ class FirestoreService {
     required FuelType fuelType,
     required double price,
     required String userId,
-    bool incrementUserReport = false,
   }) async {
     final now = DateTime.now();
 
@@ -280,12 +279,6 @@ class FirestoreService {
         reportCount: currentCount + 1,
       ).toJson(),
     );
-
-    // Increment user report count only once per station submission
-    if (incrementUserReport) {
-      final userRef = _db.collection('users').doc(userId);
-      batch.update(userRef, {'reportCount': FieldValue.increment(1)});
-    }
 
     await batch.commit();
 
