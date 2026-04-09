@@ -268,6 +268,14 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 else
                   _PriceBentoGrid(prices: prices),
 
+                if (prices.any((p) => p.isEstimate)) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Stasjoner uten prishistorikk viser et estimat basert på andre stasjoner i området',
+                    style: AppTextStyles.meta(context),
+                  ),
+                ],
+
                 const SizedBox(height: 28),
 
                 // ── Report Price ──

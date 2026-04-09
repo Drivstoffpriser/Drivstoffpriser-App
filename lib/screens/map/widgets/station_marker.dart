@@ -162,8 +162,18 @@ class _StationMarkerState extends State<StationMarker> {
   Widget _buildLogoWithPrice(BuildContext context) {
     final price = widget.price!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final age = DateTime.now().difference(price.updatedAt);
-    final (:label, :color) = _formatAge(context, age);
+
+    final Color borderColor;
+    final String? ageLabel;
+    if (price.isEstimate) {
+      borderColor = AppColors.border(context);
+      ageLabel = null;
+    } else {
+      final age = DateTime.now().difference(price.updatedAt!);
+      final formatted = _formatAge(context, age);
+      borderColor = formatted.color;
+      ageLabel = formatted.label;
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -178,9 +188,12 @@ class _StationMarkerState extends State<StationMarker> {
               decoration: BoxDecoration(
                 color: AppColors.surfaceElevated(context),
                 shape: BoxShape.circle,
-                border: Border.all(color: color, width: 2.5),
+                border: Border.all(color: borderColor, width: 2.5),
                 boxShadow: [
-                  BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 6),
+                  BoxShadow(
+                    color: borderColor.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                  ),
                 ],
               ),
               child: _buildBrandImage(
@@ -190,25 +203,47 @@ class _StationMarkerState extends State<StationMarker> {
               ),
             ),
             // Time badge — top right
-            Positioned(
-              top: -4,
-              right: -8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(6),
+            if (ageLabel != null)
+              Positioned(
+                top: -4,
+                right: -8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: borderColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    ageLabel,
+                    style: const TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w800,
+              )
+            else if (price.isEstimate)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.question_mark_rounded,
+                    size: 9,
                     color: Colors.white,
                   ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 2),
@@ -240,7 +275,7 @@ class _StationMarkerState extends State<StationMarker> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.isBestPrice)
+              if (widget.isBestPrice && !price.isEstimate)
                 Padding(
                   padding: const EdgeInsets.only(right: 2),
                   child: Icon(
