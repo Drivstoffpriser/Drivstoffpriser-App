@@ -57,12 +57,14 @@ void main() async {
   // Don't block the UI on auth — UserProvider has sensible defaults
   // (Anonymous user) so the app can render immediately.
   final userProvider = UserProvider();
-  userProvider.initialize();
+  final authReady = userProvider.initialize();
 
-  // Load stations from cache or Firestore aggregate (≤2 reads).
   final stationProvider = StationProvider();
-  stationProvider.loadStations();
-  stationProvider.loadFavorites();
+  // Delay both favorites and station fetch until auth is established.
+  authReady.then((_) {
+    stationProvider.loadFavorites();
+    stationProvider.loadStations();
+  });
 
   runApp(
     MultiProvider(

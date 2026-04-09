@@ -98,15 +98,17 @@ class BackendApiClient {
     required double lat,
     required double lng,
     required double distance,
+    String sort = 'nearest',
+    String? fuelType,
   }) async {
-    final data = await get(
-      '/stations/',
-      queryParams: {
-        'lat': lat.toString(),
-        'lng': lng.toString(),
-        'distance': distance.toString(),
-      },
-    );
+    final params = <String, String>{
+      'lat': lat.toString(),
+      'lng': lng.toString(),
+      'distance': distance.toString(),
+      'sort': sort,
+    };
+    if (fuelType != null) params['fuelType'] = fuelType;
+    final data = await get('/stations/', queryParams: params);
     final raw = data['stations'] as List<dynamic>;
     return [
       for (final item in raw)
