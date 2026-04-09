@@ -61,25 +61,30 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
 
   Future<void> _checkForFeedback() async {
     final userProvider = context.read<UserProvider>();
+    await userProvider.initialized;
     if (!userProvider.isAuthenticated) return;
     final uid = userProvider.user.id;
 
-    // Check new station submission feedback
-    final unread = await FirestoreService.getUnreadFeedback(uid);
-    if (mounted) {
-      for (final submission in unread) {
-        if (!mounted) return;
-        await _showFeedbackDialog(submission);
+    try {
+      // Check new station submission feedback
+      final unread = await FirestoreService.getUnreadFeedback(uid);
+      if (mounted) {
+        for (final submission in unread) {
+          if (!mounted) return;
+          await _showFeedbackDialog(submission);
+        }
       }
-    }
 
-    // Check modify request feedback
-    final unreadModify = await FirestoreService.getUnreadModifyFeedback(uid);
-    if (mounted) {
-      for (final req in unreadModify) {
-        if (!mounted) return;
-        await _showModifyFeedbackDialog(req);
+      // Check modify request feedback
+      final unreadModify = await FirestoreService.getUnreadModifyFeedback(uid);
+      if (mounted) {
+        for (final req in unreadModify) {
+          if (!mounted) return;
+          await _showModifyFeedbackDialog(req);
+        }
       }
+    } catch (_) {
+      // Non-critical — feedback check silently skipped if Firestore denies access.
     }
   }
 
