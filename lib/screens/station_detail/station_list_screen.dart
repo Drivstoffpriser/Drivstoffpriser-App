@@ -160,6 +160,7 @@ class StationListScreen extends StatelessWidget {
                           distance: distanceStr,
                           price: price?.price,
                           lastUpdated: price?.updatedAt,
+                          isEstimate: price?.isEstimate ?? false,
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -186,6 +187,7 @@ class _StationListTile extends StatefulWidget {
   final String? distance;
   final double? price;
   final DateTime? lastUpdated;
+  final bool isEstimate;
   final VoidCallback onTap;
 
   const _StationListTile({
@@ -196,6 +198,7 @@ class _StationListTile extends StatefulWidget {
     this.distance,
     this.price,
     this.lastUpdated,
+    this.isEstimate = false,
     required this.onTap,
   });
 
@@ -248,14 +251,21 @@ class _StationListTileState extends State<_StationListTile> {
                               TextSpan(text: widget.city),
                             if (widget.city.isNotEmpty &&
                                 (widget.distance != null ||
-                                    widget.lastUpdated != null))
+                                    widget.lastUpdated != null ||
+                                    widget.isEstimate))
                               const TextSpan(text: ' · '),
                             if (widget.distance != null)
                               TextSpan(text: widget.distance),
                             if (widget.distance != null &&
-                                widget.lastUpdated != null)
+                                (widget.lastUpdated != null ||
+                                    widget.isEstimate))
                               const TextSpan(text: ' · '),
-                            if (widget.lastUpdated != null)
+                            if (widget.isEstimate)
+                              TextSpan(
+                                text: 'Estimat',
+                                style: TextStyle(color: Colors.orange),
+                              )
+                            else if (widget.lastUpdated != null)
                               TextSpan(
                                 text: timeago.format(widget.lastUpdated!),
                                 style: TextStyle(

@@ -504,7 +504,7 @@ class MockDataService {
           fuelType: price.fuelType,
           price: price.price,
           userId: 'user-mock-1',
-          reportedAt: price.updatedAt,
+          reportedAt: price.updatedAt ?? DateTime.now(),
         ),
       );
       // Add a second older report for variety

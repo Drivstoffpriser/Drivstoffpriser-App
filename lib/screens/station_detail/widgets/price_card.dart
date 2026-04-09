@@ -77,10 +77,25 @@ class PriceCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            timeago.format(price.updatedAt),
-            style: AppTextStyles.meta(context),
-          ),
+          if (price.isEstimate)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'Estimat',
+                style: AppTextStyles.meta(
+                  context,
+                ).copyWith(color: Colors.orange, fontWeight: FontWeight.w600),
+              ),
+            )
+          else
+            Text(
+              timeago.format(price.updatedAt!),
+              style: AppTextStyles.meta(context),
+            ),
         ],
       ),
     );
