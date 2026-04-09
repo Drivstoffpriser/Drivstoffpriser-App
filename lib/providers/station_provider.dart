@@ -69,9 +69,16 @@ class StationProvider extends ChangeNotifier {
   }
 
   /// Set the station list filter radius in km. Pass null to show all stations.
-  void setListRadius(double? km) {
+  /// Optionally provide user location to use for the backend fetch and
+  /// client-side distance filter; falls back to any previously stored location.
+  void setListRadius(double? km, {double? userLat, double? userLng}) {
     _listRadiusKm = km;
+    if (userLat != null && userLng != null) {
+      _userLat = userLat;
+      _userLng = userLng;
+    }
     notifyListeners();
+    loadStations();
   }
 
   Future<void> loadFavorites() async {
@@ -292,11 +299,24 @@ class StationProvider extends ChangeNotifier {
     // Use user location if available; fall back to Norway center + full-country radius.
     final lat = _userLat ?? 65.0;
     final lng = _userLng ?? 17.0;
-    final distance = _userLat != null ? 200000.0 : 2500000.0;
+    final double distance;
+    if (_userLat != null && _listRadiusKm != null) {
+      distance = _listRadiusKm! * 1000;
+    } else {
+      distance = 2500000.0;
+    }
     _stations = await client.getStations(
       lat: lat,
       lng: lng,
       distance: distance,
+      sort: switch (_sortMode) {
+        SortMode.cheapest => 'cheapest',
+        SortMode.nearest => 'nearest',
+        SortMode.latest => 'latest',
+      },
+      fuelType: _sortMode == SortMode.cheapest
+          ? _selectedFuelType.backendString
+          : null,
     );
 
     await CacheService.cacheStations(_stations);
@@ -314,61 +334,19 @@ class StationProvider extends ChangeNotifier {
     _selectedFuelType = type;
     _recomputeBestMapStation();
     notifyListeners();
+    if (_sortMode == SortMode.cheapest) {
+      loadStations();
+    }
   }
 
   void setSortMode(SortMode mode) {
     _sortMode = mode;
     notifyListeners();
+    loadStations();
   }
 
-  /// Stations filtered by brand and sorted by the current sort mode.
-  /// Shows all stations; those with prices sort first.
+  /// Returns filtered stations in the order returned by the backend.
   List<Station> sortedStations({double? userLat, double? userLng}) {
-    final all = List<Station>.from(filteredStations);
-
-    switch (_sortMode) {
-      case SortMode.cheapest:
-        all.sort((a, b) {
-          final pa = a.prices[_selectedFuelType];
-          final pb = b.prices[_selectedFuelType];
-          if (pa == null && pb == null) return a.name.compareTo(b.name);
-          if (pa == null) return 1;
-          if (pb == null) return -1;
-          return pa.price.compareTo(pb.price);
-        });
-      case SortMode.nearest:
-        if (userLat != null && userLng != null) {
-          all.sort((a, b) {
-            final da = DistanceService.distanceInMeters(
-              userLat,
-              userLng,
-              a.latitude,
-              a.longitude,
-            );
-            final db = DistanceService.distanceInMeters(
-              userLat,
-              userLng,
-              b.latitude,
-              b.longitude,
-            );
-            return da.compareTo(db);
-          });
-        } else {
-          all.sort((a, b) => a.name.compareTo(b.name));
-        }
-      case SortMode.latest:
-        all.sort((a, b) {
-          final pa = a.prices[_selectedFuelType];
-          final pb = b.prices[_selectedFuelType];
-          if (pa == null && pb == null) return a.name.compareTo(b.name);
-          if (pa == null) return 1;
-          if (pb == null) return -1;
-          final paTime = pa.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final pbTime = pb.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return pbTime.compareTo(paTime);
-        });
-    }
-
-    return all;
+    return filteredStations;
   }
 }

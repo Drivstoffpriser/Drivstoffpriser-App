@@ -23,6 +23,7 @@ import '../../../config/app_colors.dart';
 import '../../../widgets/web_constrained.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
+import '../../../providers/location_provider.dart';
 import '../../../providers/station_provider.dart';
 import '../../../providers/user_provider.dart';
 
@@ -114,10 +115,20 @@ class BrandFilterButton extends StatelessWidget {
   }
 }
 
-class _BrandFilterSheet extends StatelessWidget {
+class _BrandFilterSheet extends StatefulWidget {
   final FilterLocation filterLocation;
 
   const _BrandFilterSheet({required this.filterLocation});
+
+  @override
+  State<_BrandFilterSheet> createState() => _BrandFilterSheetState();
+}
+
+class _BrandFilterSheetState extends State<_BrandFilterSheet> {
+  static const _steps = [5, 10, 20, 50, 100, 200, 500, null];
+
+  // Tracks the slider index while dragging; null means use provider value.
+  int? _draggingIndex;
 
   static String _radiusLabel(BuildContext context, double? km) {
     if (km == null) return context.l10n.allOfNorway;
@@ -125,24 +136,28 @@ class _BrandFilterSheet extends StatelessWidget {
     return '${km.round()} km';
   }
 
+  int _indexForKm(double? km) {
+    if (km == null) return _steps.length - 1;
+    final idx = _steps.indexWhere((s) => s != null && (s as num) >= km.round());
+    return idx == -1 ? _steps.length - 1 : idx;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StationProvider>();
     final userProvider = context.watch<UserProvider>();
-    final isMap = filterLocation == FilterLocation.map;
+    final locationProvider = context.watch<LocationProvider>();
+    final isMap = widget.filterLocation == FilterLocation.map;
     final brands = isMap
         ? provider.mapAvailableBrands
         : provider.listAvailableBrands;
-    final radiusKm = isMap ? provider.mapRadiusKm : provider.listRadiusKm;
+    final committedKm = isMap ? provider.mapRadiusKm : provider.listRadiusKm;
     final activeColor = AppColors.primaryContainer(context);
     final allowMapRotation = userProvider.allowMapRotation;
 
-    final steps = [5, 10, 20, 50, 100, 200, 500, null];
-    final currentIndex = radiusKm == null
-        ? steps.length - 1
-        : steps.indexWhere((s) => s != null && (s as num) >= radiusKm.round());
-    final sliderValue = (currentIndex == -1 ? steps.length - 1 : currentIndex)
-        .toDouble();
+    final displayIndex = _draggingIndex ?? _indexForKm(committedKm);
+    final displayKm = _steps[displayIndex]?.toDouble();
+    final sliderValue = displayIndex.toDouble();
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -164,7 +179,7 @@ class _BrandFilterSheet extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  _radiusLabel(context, radiusKm),
+                  _radiusLabel(context, displayKm),
                   style: AppTextStyles.bodyMedium(context),
                 ),
               ],
@@ -180,15 +195,27 @@ class _BrandFilterSheet extends StatelessWidget {
               child: Slider(
                 value: sliderValue,
                 min: 0,
-                max: (steps.length - 1).toDouble(),
-                divisions: steps.length - 1,
+                max: (_steps.length - 1).toDouble(),
+                divisions: _steps.length - 1,
                 onChanged: (v) {
-                  final idx = v.round();
-                  final km = steps[idx];
+                  setState(() => _draggingIndex = v.round());
                   if (isMap) {
-                    provider.setMapRadius(km?.toDouble());
+                    provider.setMapRadius(_steps[v.round()]?.toDouble());
+                  }
+                },
+                onChangeEnd: (v) {
+                  final idx = v.round();
+                  final km = _steps[idx]?.toDouble();
+                  setState(() => _draggingIndex = null);
+                  if (isMap) {
+                    provider.setMapRadius(km);
                   } else {
-                    provider.setListRadius(km?.toDouble());
+                    final pos = locationProvider.position;
+                    provider.setListRadius(
+                      km,
+                      userLat: pos?.latitude,
+                      userLng: pos?.longitude,
+                    );
                   }
                 },
               ),

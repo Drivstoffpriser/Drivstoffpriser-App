@@ -271,6 +271,7 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                             onTap: () {
                               setState(() => _currentIndex = 2);
                               context.read<UserProvider>().reloadUser();
+                              context.read<UserProvider>().refreshProfile();
                             },
                           ),
                         ],
