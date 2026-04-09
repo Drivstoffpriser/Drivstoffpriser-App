@@ -22,8 +22,10 @@ class CurrentPrice {
   final String stationId;
   final FuelType fuelType;
   final double price;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   final int reportCount;
+
+  bool get isEstimate => updatedAt == null;
 
   const CurrentPrice({
     required this.stationId,
@@ -38,7 +40,9 @@ class CurrentPrice {
       stationId: json['stationId'] as String,
       fuelType: FuelType.values.byName(json['fuelType'] as String),
       price: (json['price'] as num).toDouble(),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
       reportCount: json['reportCount'] as int,
     );
   }
@@ -51,7 +55,9 @@ class CurrentPrice {
       stationId: stationId,
       fuelType: FuelType.fromBackendString(json['fuelType'] as String),
       price: double.parse(json['price'] as String),
-      updatedAt: DateTime.parse(json['registeredAt'] as String),
+      updatedAt: json['registeredAt'] != null
+          ? DateTime.parse(json['registeredAt'] as String)
+          : null,
       reportCount: 0,
     );
   }
@@ -61,7 +67,7 @@ class CurrentPrice {
       'stationId': stationId,
       'fuelType': fuelType.name,
       'price': price,
-      'updatedAt': updatedAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
       'reportCount': reportCount,
     };
   }

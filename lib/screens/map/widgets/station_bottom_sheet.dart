@@ -296,7 +296,10 @@ class _StationTileState extends State<_StationTile> {
                           if (widget.station.city.isNotEmpty)
                             widget.station.city,
                           ?distanceStr,
-                          if (price != null) timeago.format(price.updatedAt),
+                          if (price != null)
+                            price.isEstimate
+                                ? 'Estimat'
+                                : timeago.format(price.updatedAt!),
                         ].join(' · '),
                         style: AppTextStyles.meta(context),
                       ),

@@ -363,7 +363,9 @@ class StationProvider extends ChangeNotifier {
           if (pa == null && pb == null) return a.name.compareTo(b.name);
           if (pa == null) return 1;
           if (pb == null) return -1;
-          return pb.updatedAt.compareTo(pa.updatedAt);
+          final paTime = pa.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final pbTime = pb.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return pbTime.compareTo(paTime);
         });
     }
 
