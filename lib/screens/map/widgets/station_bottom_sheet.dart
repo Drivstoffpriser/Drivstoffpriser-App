@@ -243,7 +243,7 @@ class _StationTileState extends State<_StationTile> {
   Widget build(BuildContext context) {
     final stationProvider = context.read<StationProvider>();
     final locationProvider = context.read<LocationProvider>();
-    final price = stationProvider.getPriceForStation(widget.station.id);
+    final price = widget.station.prices[stationProvider.selectedFuelType];
 
     String? distanceStr;
     if (locationProvider.hasLocation) {

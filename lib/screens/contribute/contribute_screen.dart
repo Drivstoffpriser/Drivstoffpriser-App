@@ -515,7 +515,8 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
   Widget build(BuildContext context) {
     final activeColor = AppColors.primaryContainer(context);
     final stationProvider = context.watch<StationProvider>();
-    final currentPrice = stationProvider.getPriceForStation(widget.station.id);
+    final currentPrice =
+        widget.station.prices[stationProvider.selectedFuelType];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

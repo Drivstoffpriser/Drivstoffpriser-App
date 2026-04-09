@@ -17,18 +17,19 @@
 */
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/fuel_type.dart';
 import '../models/price_history_point.dart';
 import '../models/price_report.dart';
-import '../services/firestore_service.dart';
+import '../services/backend_api_client.dart';
 
 class PriceProvider extends ChangeNotifier {
   static const Duration cooldownDuration = Duration(hours: 1);
 
   List<PriceReport> _reports = [];
   Map<FuelType, List<PriceHistoryPoint>> _history = {};
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool _isSubmitting = false;
   bool _isLoadingHistory = false;
   String? _error;
@@ -40,20 +41,27 @@ class PriceProvider extends ChangeNotifier {
   bool get isLoadingHistory => _isLoadingHistory;
   String? get error => _error;
 
-  Future<void> loadReports(String stationId) async {
-    _isLoading = true;
-    notifyListeners();
-
-    _reports = await FirestoreService.getReports(stationId);
-    _isLoading = false;
+  void clear() {
+    _reports = [];
+    _history = {};
+    _error = null;
     notifyListeners();
   }
 
   Future<void> loadHistory(String stationId) async {
+    _history = {};
+    _reports = [];
     _isLoadingHistory = true;
     notifyListeners();
 
-    _history = await FirestoreService.getPriceHistory(stationId);
+    try {
+      final result = await BackendApiClient().getPriceHistory(stationId);
+      _history = result.history;
+      _reports = result.recentUpdates;
+    } catch (e, st) {
+      debugPrint('loadHistory error: $e\n$st');
+      _history = {};
+    }
     _isLoadingHistory = false;
     notifyListeners();
   }
@@ -64,11 +72,12 @@ class PriceProvider extends ChangeNotifier {
     required String stationId,
     required FuelType fuelType,
   }) async {
-    final lastReport = await FirestoreService.getLastReportTime(
-      userId: userId,
-      stationId: stationId,
-      fuelType: fuelType,
-    );
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'lastReport_${stationId}_${fuelType.name}';
+    final stored = prefs.getString(key);
+    if (stored == null) return null;
+
+    final lastReport = DateTime.tryParse(stored);
     if (lastReport == null) return null;
 
     final elapsed = DateTime.now().difference(lastReport);
@@ -89,13 +98,15 @@ class PriceProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await FirestoreService.submitReport(
-        stationId: stationId,
-        fuelType: fuelType,
-        price: price,
-        userId: userId,
-        incrementUserReport: incrementUserReport,
-      );
+      final client = BackendApiClient();
+      await client.registerPrices(stationId, [
+        (fuelType: fuelType, price: price),
+      ]);
+
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'lastReport_${stationId}_${fuelType.name}';
+      await prefs.setString(key, DateTime.now().toIso8601String());
+
       _isSubmitting = false;
       notifyListeners();
       return true;

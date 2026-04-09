@@ -278,7 +278,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       final userProvider = context.read<UserProvider>();
       final stationProvider = context.read<StationProvider>();
       await userProvider.refreshProfile();
-      stationProvider.refreshFromFirestore();
+      stationProvider.refreshStations();
     }
 
     if (!mounted) return;

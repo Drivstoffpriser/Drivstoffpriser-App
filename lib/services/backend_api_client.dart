@@ -22,6 +22,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
+import '../models/fuel_type.dart';
+import '../models/price_history_point.dart';
+import '../models/price_report.dart';
+import '../models/station.dart';
 
 /// Thrown when the backend returns a non-2xx response.
 class ApiException implements Exception {
@@ -44,7 +48,16 @@ class BackendApiClient {
       headers: await _authHeaders(),
       body: jsonEncode(body),
     );
-    return _decode(response);
+    return _decodeMap(response);
+  }
+
+  Future<void> postVoid(String path, Map<String, dynamic> body) async {
+    final response = await http.post(
+      _uri(path),
+      headers: await _authHeaders(),
+      body: jsonEncode(body),
+    );
+    _checkStatus(response);
   }
 
   Future<Map<String, dynamic>> get(
@@ -55,8 +68,143 @@ class BackendApiClient {
       _uri(path, queryParams: queryParams),
       headers: await _authHeaders(),
     );
-    return _decode(response);
+    return _decodeMap(response);
   }
+
+  Future<List<dynamic>> getList(
+    String path, {
+    Map<String, String>? queryParams,
+  }) async {
+    final response = await http.get(
+      _uri(path, queryParams: queryParams),
+      headers: await _authHeaders(),
+    );
+    _checkStatus(response);
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  Future<void> delete(String path, Map<String, dynamic> body) async {
+    final response = await http.delete(
+      _uri(path),
+      headers: await _authHeaders(),
+      body: jsonEncode(body),
+    );
+    _checkStatus(response);
+  }
+
+  // ── Domain methods ────────────────────────────────────────────────────────
+
+  Future<List<Station>> getStations({
+    required double lat,
+    required double lng,
+    required double distance,
+  }) async {
+    final data = await get(
+      '/stations/',
+      queryParams: {
+        'lat': lat.toString(),
+        'lng': lng.toString(),
+        'distance': distance.toString(),
+      },
+    );
+    final raw = data['stations'] as List<dynamic>;
+    return [
+      for (final item in raw)
+        Station.fromBackendJson(item as Map<String, dynamic>),
+    ];
+  }
+
+  Future<List<Station>> getStationsByBbox({
+    required double minLat,
+    required double minLng,
+    required double maxLat,
+    required double maxLng,
+  }) async {
+    final data = await get(
+      '/stations/bbox',
+      queryParams: {
+        'minLat': minLat.toString(),
+        'minLng': minLng.toString(),
+        'maxLat': maxLat.toString(),
+        'maxLng': maxLng.toString(),
+      },
+    );
+    final raw = data['stations'] as List<dynamic>;
+    return [
+      for (final item in raw)
+        Station.fromBackendJson(item as Map<String, dynamic>),
+    ];
+  }
+
+  Future<void> registerPrices(
+    String stationId,
+    List<({FuelType fuelType, double price})> registrations,
+  ) async {
+    await postVoid('/stations/$stationId/prices', {
+      'registrations': [
+        for (final r in registrations)
+          {'fuelType': r.fuelType.backendString, 'price': r.price},
+      ],
+    });
+  }
+
+  Future<Set<String>> getFavorites() async {
+    final data = await get('/favorites');
+    final ids = data['stationIds'] as List<dynamic>;
+    return ids.cast<String>().toSet();
+  }
+
+  Future<void> addFavorite(String stationId) async {
+    await postVoid('/favorites', {'stationId': stationId});
+  }
+
+  Future<void> removeFavorite(String stationId) async {
+    await delete('/favorites', {'stationId': stationId});
+  }
+
+  Future<
+    ({
+      Map<FuelType, List<PriceHistoryPoint>> history,
+      List<PriceReport> recentUpdates,
+    })
+  >
+  getPriceHistory(String stationId) async {
+    final data = await get('/stations/$stationId/history');
+
+    final historyRaw = data['history'] as Map<String, dynamic>;
+    final history = <FuelType, List<PriceHistoryPoint>>{};
+    for (final entry in historyRaw.entries) {
+      final fuelType = FuelType.fromBackendString(entry.key);
+      final points = (entry.value as List<dynamic>).map((p) {
+        final map = p as Map<String, dynamic>;
+        return PriceHistoryPoint(
+          date: DateTime.parse(map['date'] as String),
+          price: _toDouble(map['averagePrice']),
+        );
+      }).toList();
+      if (points.isNotEmpty) history[fuelType] = points;
+    }
+
+    final recentRaw = data['recentUpdates'] as List<dynamic>;
+    final recentUpdates = recentRaw.map((r) {
+      final map = r as Map<String, dynamic>;
+      return PriceReport(
+        id: map['id'] as String,
+        stationId: stationId,
+        fuelType: FuelType.fromBackendString(map['fuelType'] as String),
+        price: _toDouble(map['price']),
+        userId: '',
+        reportedAt: DateTime.parse(map['registeredAt'] as String),
+      );
+    }).toList();
+
+    return (history: history, recentUpdates: recentUpdates);
+  }
+
+  static double _toDouble(dynamic v) =>
+      v is num ? v.toDouble() : double.parse(v.toString());
+
+  // ── Internal helpers ──────────────────────────────────────────────────────
 
   Uri _uri(String path, {Map<String, String>? queryParams}) {
     final base = BackendConfig.baseUrl;
@@ -76,13 +224,17 @@ class BackendApiClient {
     };
   }
 
-  Map<String, dynamic> _decode(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+  void _checkStatus(http.Response response) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        response.statusCode,
+        response.reasonPhrase ?? 'Unknown error',
+      );
     }
-    throw ApiException(
-      response.statusCode,
-      response.reasonPhrase ?? 'Unknown error',
-    );
+  }
+
+  Map<String, dynamic> _decodeMap(http.Response response) {
+    _checkStatus(response);
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 }

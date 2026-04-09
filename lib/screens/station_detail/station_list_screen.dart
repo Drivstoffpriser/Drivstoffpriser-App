@@ -138,9 +138,8 @@ class StationListScreen extends StatelessWidget {
                       itemCount: sorted.length,
                       itemBuilder: (context, index) {
                         final station = sorted[index];
-                        final price = stationProvider.getPriceForStation(
-                          station.id,
-                        );
+                        final price =
+                            station.prices[stationProvider.selectedFuelType];
 
                         String? distanceStr;
                         if (locationProvider.hasLocation) {
