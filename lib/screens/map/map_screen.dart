@@ -61,6 +61,7 @@ class _MapScreenState extends State<MapScreen> {
   LatLngBounds? _visibleBounds;
   bool? _previousAllowMapRotation;
   Timer? _bboxDebounce;
+  bool _hasLoadedInitialBbox = false;
 
   @override
   void initState() {
@@ -116,15 +117,27 @@ class _MapScreenState extends State<MapScreen> {
     if (_visibleBounds != bounds) {
       _visibleBounds = bounds;
       _bboxDebounce?.cancel();
-      _bboxDebounce = Timer(const Duration(milliseconds: 600), () {
-        if (!mounted) return;
+      if (!_hasLoadedInitialBbox) {
+        // First position event — load immediately without debounce so
+        // stations appear even if onMapReady fired before layout.
+        _hasLoadedInitialBbox = true;
         context.read<StationProvider>().loadStationsByBbox(
           minLat: bounds.south,
           minLng: bounds.west,
           maxLat: bounds.north,
           maxLng: bounds.east,
         );
-      });
+      } else {
+        _bboxDebounce = Timer(const Duration(milliseconds: 600), () {
+          if (!mounted) return;
+          context.read<StationProvider>().loadStationsByBbox(
+            minLat: bounds.south,
+            minLng: bounds.west,
+            maxLat: bounds.north,
+            maxLng: bounds.east,
+          );
+        });
+      }
     }
   }
 
@@ -219,14 +232,20 @@ class _MapScreenState extends State<MapScreen> {
                       : InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
                 onMapReady: () {
-                  final bounds = _mapController.camera.visibleBounds;
-                  _visibleBounds = bounds;
-                  context.read<StationProvider>().loadStationsByBbox(
-                    minLat: bounds.south,
-                    minLng: bounds.west,
-                    maxLat: bounds.north,
-                    maxLng: bounds.east,
-                  );
+                  // Defer bounds read until after layout so the camera
+                  // has the correct viewport size (not 0×0).
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    final bounds = _mapController.camera.visibleBounds;
+                    _visibleBounds = bounds;
+                    _hasLoadedInitialBbox = true;
+                    context.read<StationProvider>().loadStationsByBbox(
+                      minLat: bounds.south,
+                      minLng: bounds.west,
+                      maxLat: bounds.north,
+                      maxLng: bounds.east,
+                    );
+                  });
                   // Nudge tiles to load — flutter_map may not render
                   // tiles when built behind a dialog or IndexedStack.
                   Future.delayed(const Duration(milliseconds: 200), () {
