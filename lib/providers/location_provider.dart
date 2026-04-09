@@ -60,11 +60,16 @@ class LocationProvider extends ChangeNotifier {
       }
 
       // Try last-known position for a quick initial fix
-      final lastKnown = await Geolocator.getLastKnownPosition();
-      if (lastKnown != null && _position == null) {
-        _position = lastKnown;
-        _isLoading = false;
-        notifyListeners();
+      // getLastKnownPosition() is not supported on web and throws UnimplementedError
+      try {
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null && _position == null) {
+          _position = lastKnown;
+          _isLoading = false;
+          notifyListeners();
+        }
+      } catch (_) {
+        // Not supported on web — ignore and continue
       }
 
       // Get an immediate GPS fix so the map can center right away
