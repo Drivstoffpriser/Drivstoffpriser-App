@@ -31,6 +31,11 @@ class UserProvider extends ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   StreamSubscription<User?>? _authSub;
 
+  final _initCompleter = Completer<void>();
+
+  /// Completes once [initialize] has finished and the auth token is ready.
+  Future<void> get initialized => _initCompleter.future;
+
   UserProfile _user = const UserProfile(
     id: '',
     displayName: 'Anonymous',
@@ -108,6 +113,8 @@ class UserProvider extends ChangeNotifier {
         await _loadProfile(firebaseUser);
       }
     });
+
+    _initCompleter.complete();
   }
 
   Future<void> _loadProfile(User firebaseUser) async {

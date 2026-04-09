@@ -56,13 +56,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSubmissionCount() async {
     final userProvider = context.read<UserProvider>();
-    final submissions = await FirestoreService.getUserStationSubmissions(
-      userProvider.user.id,
-    );
-    if (mounted) {
-      setState(() {
-        _stationSubmissionCount = submissions.length;
-      });
+    await userProvider.initialized;
+    try {
+      final submissions = await FirestoreService.getUserStationSubmissions(
+        userProvider.user.id,
+      );
+      if (mounted) {
+        setState(() {
+          _stationSubmissionCount = submissions.length;
+        });
+      }
+    } catch (_) {
+      // Non-critical — count stays hidden if Firestore denies access.
     }
   }
 
