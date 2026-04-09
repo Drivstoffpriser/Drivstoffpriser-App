@@ -19,6 +19,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -228,40 +229,69 @@ class UserProvider extends ChangeNotifier {
   /// Sign in with Google. Links to anonymous account when possible;
   /// falls back to direct sign-in if the credential is already used.
   Future<void> signInWithGoogle() async {
-    final GoogleSignInAccount googleUser;
-    try {
-      googleUser = await _googleSignIn.authenticate();
-    } on GoogleSignInException catch (e) {
-      throw FirebaseAuthException(
-        code: 'sign-in-cancelled',
-        message: 'Google sign-in failed: ${e.code}',
-      );
-    }
-
-    final googleAuth = googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth.idToken,
-    );
-
     final currentUser = _auth.currentUser;
-    if (currentUser != null) {
+
+    if (kIsWeb) {
+      // Web: use Firebase Auth popup (google_sign_in doesn't support
+      // authenticate() on web).
+      final googleProvider = GoogleAuthProvider();
       try {
-        // Try linking to the current anonymous account
-        await currentUser.linkWithCredential(credential);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'credential-already-in-use') {
-          // Credential belongs to another account — sign in directly
-          await _auth.signInWithCredential(credential);
+        if (currentUser != null) {
+          try {
+            await currentUser.linkWithPopup(googleProvider);
+          } on FirebaseAuthException catch (e) {
+            if (e.code == 'credential-already-in-use') {
+              await _auth.signInWithPopup(googleProvider);
+            } else {
+              rethrow;
+            }
+          }
         } else {
-          rethrow;
+          await _auth.signInWithPopup(googleProvider);
         }
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'popup-closed-by-user' ||
+            e.code == 'cancelled-popup-request') {
+          throw FirebaseAuthException(
+            code: 'sign-in-cancelled',
+            message: 'Google sign-in was cancelled.',
+          );
+        }
+        rethrow;
       }
     } else {
-      // No current user — sign in directly
-      await _auth.signInWithCredential(credential);
+      // Mobile: use google_sign_in package
+      final GoogleSignInAccount googleUser;
+      try {
+        googleUser = await _googleSignIn.authenticate();
+      } on GoogleSignInException catch (e) {
+        throw FirebaseAuthException(
+          code: 'sign-in-cancelled',
+          message: 'Google sign-in failed: ${e.code}',
+        );
+      }
+
+      final googleAuth = googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      if (currentUser != null) {
+        try {
+          await currentUser.linkWithCredential(credential);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'credential-already-in-use') {
+            await _auth.signInWithCredential(credential);
+          } else {
+            rethrow;
+          }
+        }
+      } else {
+        await _auth.signInWithCredential(credential);
+      }
     }
 
-    // Use Google display name if available
+    // Load or create profile for the signed-in user
     final signedInUser = _auth.currentUser;
     if (signedInUser == null) {
       throw FirebaseAuthException(
@@ -270,9 +300,7 @@ class UserProvider extends ChangeNotifier {
       );
     }
 
-    final displayName =
-        signedInUser.displayName ?? googleUser.displayName ?? 'User';
-    // Read existing profile to preserve reportCount/trustScore
+    final displayName = signedInUser.displayName ?? 'User';
     final existing = await FirestoreService.getUserProfile(signedInUser.uid);
     if (existing != null) {
       _user = UserProfile(
