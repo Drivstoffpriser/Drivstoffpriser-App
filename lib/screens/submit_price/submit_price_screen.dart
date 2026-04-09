@@ -261,8 +261,6 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         fuelType: entry.key,
         price: entry.value,
         userId: userId,
-        // Count as one station report regardless of how many fuel types
-        incrementUserReport: successCount == 0,
       );
       if (success) {
         successCount++;

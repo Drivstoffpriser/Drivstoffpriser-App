@@ -162,6 +162,11 @@ class BackendApiClient {
     await delete('/favorites', {'stationId': stationId});
   }
 
+  Future<int> getPriceRegistrations() async {
+    final data = await get('/users/price-registrations');
+    return data['total'] as int;
+  }
+
   Future<
     ({
       Map<FuelType, List<PriceHistoryPoint>> history,

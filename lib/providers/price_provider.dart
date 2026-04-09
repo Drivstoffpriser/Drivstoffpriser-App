@@ -91,7 +91,6 @@ class PriceProvider extends ChangeNotifier {
     required FuelType fuelType,
     required double price,
     required String userId,
-    bool incrementUserReport = false,
   }) async {
     _isSubmitting = true;
     _error = null;
