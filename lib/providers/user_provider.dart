@@ -24,6 +24,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_profile.dart';
+import '../services/backend_api_client.dart';
 import '../services/firestore_service.dart';
 
 class UserProvider extends ChangeNotifier {
@@ -117,15 +118,24 @@ class UserProvider extends ChangeNotifier {
     _initCompleter.complete();
   }
 
+  final _apiClient = BackendApiClient();
+
   Future<void> _loadProfile(User firebaseUser) async {
     final existing = await FirestoreService.getUserProfile(firebaseUser.uid);
+    final reportCount = await _apiClient.getPriceRegistrations();
     if (existing != null) {
-      _user = existing;
+      _user = UserProfile(
+        id: existing.id,
+        displayName: existing.displayName,
+        reportCount: reportCount,
+        trustScore: existing.trustScore,
+        isAdmin: existing.isAdmin,
+      );
     } else {
       _user = UserProfile(
         id: firebaseUser.uid,
         displayName: firebaseUser.displayName ?? 'Anonymous',
-        reportCount: 0,
+        reportCount: reportCount,
         trustScore: 1.0,
       );
       await FirestoreService.setUserProfile(_user);
@@ -302,15 +312,17 @@ class UserProvider extends ChangeNotifier {
     await _loadProfile(_auth.currentUser!);
   }
 
-  /// Refresh the user profile from Firestore to pick up the latest report count.
-  /// Called after submitting reports (the count is incremented atomically
-  /// inside the same Firestore batch as the report write).
+  /// Refresh the report count from the backend after submitting a price.
   Future<void> refreshProfile() async {
-    final existing = await FirestoreService.getUserProfile(_user.id);
-    if (existing != null) {
-      _user = existing;
-      notifyListeners();
-    }
+    final reportCount = await _apiClient.getPriceRegistrations();
+    _user = UserProfile(
+      id: _user.id,
+      displayName: _user.displayName,
+      reportCount: reportCount,
+      trustScore: _user.trustScore,
+      isAdmin: _user.isAdmin,
+    );
+    notifyListeners();
   }
 
   void setThemeMode(ThemeMode mode) {
