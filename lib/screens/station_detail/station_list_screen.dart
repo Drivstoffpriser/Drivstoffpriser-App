@@ -267,7 +267,12 @@ class _StationListTileState extends State<_StationListTile> {
                               )
                             else if (widget.lastUpdated != null)
                               TextSpan(
-                                text: timeago.format(widget.lastUpdated!),
+                                text: timeago.format(
+                                  widget.lastUpdated!,
+                                  locale: Localizations.localeOf(
+                                    context,
+                                  ).languageCode,
+                                ),
                                 style: TextStyle(
                                   color: AppColors.freshness(
                                     DateTime.now().difference(
