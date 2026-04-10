@@ -544,43 +544,45 @@ class _MapScreenState extends State<MapScreen> {
               top: topPadding + 60,
               left: 16,
               right: 16,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 320),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppColors.border(context),
-                      width: 0.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: _searchApiResults.length,
-                      separatorBuilder: (_, _) => Divider(
-                        height: 1,
-                        indent: 56,
+              child: WebConstrained(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    constraints: const BoxConstraints(maxHeight: 320),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
                         color: AppColors.border(context),
+                        width: 0.5,
                       ),
-                      itemBuilder: (context, index) {
-                        final station = _searchApiResults[index];
-                        return _SearchResultTile(
-                          station: station,
-                          onTap: () => _selectSearchResult(station),
-                        );
-                      },
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        itemCount: _searchApiResults.length,
+                        separatorBuilder: (_, _) => Divider(
+                          height: 1,
+                          indent: 56,
+                          color: AppColors.border(context),
+                        ),
+                        itemBuilder: (context, index) {
+                          final station = _searchApiResults[index];
+                          return _SearchResultTile(
+                            station: station,
+                            onTap: () => _selectSearchResult(station),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -596,27 +598,29 @@ class _MapScreenState extends State<MapScreen> {
               top: topPadding + 60,
               left: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppColors.border(context),
-                    width: 0.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+              child: WebConstrained(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.border(context),
+                      width: 0.5,
                     ),
-                  ],
-                ),
-                child: Text(
-                  context.l10n.noStationsFound(_searchQuery),
-                  style: AppTextStyles.label(context),
-                  textAlign: TextAlign.center,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    context.l10n.noStationsFound(_searchQuery),
+                    style: AppTextStyles.label(context),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
