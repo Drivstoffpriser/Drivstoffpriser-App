@@ -138,6 +138,15 @@ class BackendApiClient {
     ];
   }
 
+  Future<List<Station>> searchStations(String query) async {
+    final data = await get('/stations/search', queryParams: {'query': query});
+    final raw = data['stations'] as List<dynamic>;
+    return [
+      for (final item in raw)
+        Station.fromBackendJson(item as Map<String, dynamic>),
+    ];
+  }
+
   Future<void> registerPrices(
     String stationId,
     List<({FuelType fuelType, double price})> registrations,

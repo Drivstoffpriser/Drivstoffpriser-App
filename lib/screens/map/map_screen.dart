@@ -33,6 +33,7 @@ import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/backend_api_client.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
@@ -58,6 +59,9 @@ class _MapScreenState extends State<MapScreen> {
   bool _hasSetUserLocation = false;
   bool _isSearching = false;
   String _searchQuery = '';
+  List<Station> _searchApiResults = [];
+  bool _searchLoading = false;
+  Timer? _searchDebounce;
   LatLngBounds? _visibleBounds;
   bool? _previousAllowMapRotation;
   Timer? _bboxDebounce;
@@ -70,7 +74,24 @@ class _MapScreenState extends State<MapScreen> {
       context.read<LocationProvider>().fetchLocation();
     });
     _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.trim());
+      final query = _searchController.text.trim();
+      _searchDebounce?.cancel();
+      if (query.isEmpty) {
+        setState(() {
+          _searchQuery = query;
+          _searchApiResults = [];
+          _searchLoading = false;
+        });
+      } else {
+        setState(() {
+          _searchQuery = query;
+          _searchLoading = true;
+        });
+        _searchDebounce = Timer(
+          const Duration(milliseconds: 500),
+          () => _fetchSearchResults(query),
+        );
+      }
     });
     _searchFocus.addListener(() {
       setState(() => _isSearching = _searchFocus.hasFocus);
@@ -80,6 +101,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     _bboxDebounce?.cancel();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -112,6 +134,25 @@ class _MapScreenState extends State<MapScreen> {
     Navigator.pushNamed(context, AppRoutes.stationDetail, arguments: station);
   }
 
+  Future<void> _fetchSearchResults(String query) async {
+    try {
+      final results = await BackendApiClient().searchStations(query);
+      if (mounted) {
+        setState(() {
+          _searchApiResults = results;
+          _searchLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _searchApiResults = [];
+          _searchLoading = false;
+        });
+      }
+    }
+  }
+
   void _onMapEvent(MapCamera camera, bool hasGesture) {
     final bounds = camera.visibleBounds;
     if (_visibleBounds != bounds) {
@@ -139,20 +180,6 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     }
-  }
-
-  List<Station> _searchResults(List<Station> stations) {
-    if (_searchQuery.isEmpty) return [];
-    final q = _searchQuery.toLowerCase();
-    return stations
-        .where((s) {
-          return s.name.toLowerCase().contains(q) ||
-              s.brand.toLowerCase().contains(q) ||
-              s.city.toLowerCase().contains(q) ||
-              s.address.toLowerCase().contains(q);
-        })
-        .take(8)
-        .toList();
   }
 
   @override
@@ -202,8 +229,6 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     final filtered = stationProvider.mapStations;
-    final results = _searchResults(stationProvider.stations);
-
     final bestStationId = stationProvider.bestMapStationId;
 
     final tileUrl = isDark
@@ -419,15 +444,22 @@ class _MapScreenState extends State<MapScreen> {
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
                                 filled: false,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                ),
+                                contentPadding: EdgeInsets.zero,
                                 isDense: true,
                               ),
                             ),
                           ),
                           const SizedBox(width: 10),
-                          if (_searchQuery.isNotEmpty)
+                          if (_searchLoading)
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.textMuted(context),
+                              ),
+                            )
+                          else if (_searchQuery.isNotEmpty)
                             GestureDetector(
                               onTap: () {
                                 _searchController.clear();
@@ -505,7 +537,9 @@ class _MapScreenState extends State<MapScreen> {
           ),
 
           // Search results dropdown
-          if (_isSearching && _searchQuery.isNotEmpty && results.isNotEmpty)
+          if (_isSearching &&
+              _searchQuery.isNotEmpty &&
+              _searchApiResults.isNotEmpty)
             Positioned(
               top: topPadding + 60,
               left: 16,
@@ -534,14 +568,14 @@ class _MapScreenState extends State<MapScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: results.length,
+                      itemCount: _searchApiResults.length,
                       separatorBuilder: (_, _) => Divider(
                         height: 1,
                         indent: 56,
                         color: AppColors.border(context),
                       ),
                       itemBuilder: (context, index) {
-                        final station = results[index];
+                        final station = _searchApiResults[index];
                         return _SearchResultTile(
                           station: station,
                           onTap: () => _selectSearchResult(station),
@@ -554,7 +588,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
 
           // "No results" message
-          if (_isSearching && _searchQuery.isNotEmpty && results.isEmpty)
+          if (_isSearching &&
+              _searchQuery.isNotEmpty &&
+              !_searchLoading &&
+              _searchApiResults.isEmpty)
             Positioned(
               top: topPadding + 60,
               left: 16,
