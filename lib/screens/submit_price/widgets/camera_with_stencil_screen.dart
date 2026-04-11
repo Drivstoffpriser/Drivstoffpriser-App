@@ -83,8 +83,14 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
         return;
       }
 
-      final minZoom = await controller.getMinZoomLevel();
-      final maxZoom = await controller.getMaxZoomLevel();
+      var minZoom = 1.0;
+      var maxZoom = 1.0;
+      try {
+        minZoom = await controller.getMinZoomLevel();
+        maxZoom = await controller.getMaxZoomLevel();
+      } catch (_) {
+        // Zoom not supported (e.g. web) — keep defaults.
+      }
 
       setState(() {
         _controller = controller;
@@ -99,7 +105,11 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
 
   Future<void> _setZoom(double zoom) async {
     final clamped = zoom.clamp(_minZoom, _maxZoom);
-    await _controller?.setZoomLevel(clamped);
+    try {
+      await _controller?.setZoomLevel(clamped);
+    } catch (_) {
+      return; // Zoom not supported (e.g. web).
+    }
     setState(() => _currentZoom = clamped);
   }
 

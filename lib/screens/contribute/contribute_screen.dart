@@ -27,6 +27,7 @@ import '../../models/fuel_type.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../services/distance_service.dart';
 import '../../widgets/brand_logo.dart';
 
@@ -497,11 +498,17 @@ class _PriceEntryStepState extends State<_PriceEntryStep> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     final price = double.tryParse(text);
     if (price == null) return;
+
+    final userProvider = context.read<UserProvider>();
+    if (!userProvider.isAuthenticated) {
+      await Navigator.pushNamed(context, AppRoutes.auth);
+      if (!mounted || !userProvider.isAuthenticated) return;
+    }
 
     // Navigate to the existing submit price screen with the station
     Navigator.pushNamed(
