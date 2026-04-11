@@ -33,7 +33,8 @@ class StationProvider extends ChangeNotifier {
   List<Station> _stations = [];
 
   // Separate state for the map view, populated by bbox fetches.
-  List<Station> _mapStations = [];
+  // Keyed by station ID so results accumulate across navigations.
+  final Map<String, Station> _mapStationCache = {};
   String? _bestMapStationId;
   FuelType _selectedFuelType = FuelType.petrol95;
   SortMode _sortMode = SortMode.cheapest;
@@ -200,7 +201,7 @@ class StationProvider extends ChangeNotifier {
   void _recomputeBestMapStation() {
     String? bestId;
     double bestPrice = double.infinity;
-    for (final station in _mapStations) {
+    for (final station in _mapStationCache.values) {
       final p = station.prices[_selectedFuelType];
       if (p != null && p.price < bestPrice) {
         bestPrice = p.price;
@@ -210,10 +211,10 @@ class StationProvider extends ChangeNotifier {
     _bestMapStationId = bestId;
   }
 
-  /// Stations from the last bbox fetch, filtered by brand/favorites.
-  /// Used exclusively by the map screen.
+  /// All stations fetched via bbox, filtered by brand/favorites.
+  /// Accumulates across navigations — stations are never evicted.
   List<Station> get mapStations {
-    Iterable<Station> result = _mapStations;
+    Iterable<Station> result = _mapStationCache.values;
 
     if (_selectedBrands.isNotEmpty) {
       result = result.where((s) => _selectedBrands.contains(s.brand));
@@ -281,12 +282,15 @@ class StationProvider extends ChangeNotifier {
   }) async {
     try {
       final client = BackendApiClient();
-      _mapStations = await client.getStationsByBbox(
+      final fetched = await client.getStationsByBbox(
         minLat: minLat,
         minLng: minLng,
         maxLat: maxLat,
         maxLng: maxLng,
       );
+      for (final station in fetched) {
+        _mapStationCache[station.id] = station;
+      }
       _recomputeBestMapStation();
       notifyListeners();
     } catch (e) {
