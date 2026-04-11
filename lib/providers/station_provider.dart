@@ -265,6 +265,12 @@ class StationProvider extends ChangeNotifier {
 
     try {
       await _fetchFromBackend();
+      final refreshed = {for (final s in _stations) s.id: s};
+      for (final id in _mapStationCache.keys.toList()) {
+        final updated = refreshed[id];
+        if (updated != null) _mapStationCache[id] = updated;
+      }
+      _recomputeBestMapStation();
     } catch (e) {
       debugPrint('Failed to refresh stations: $e');
       rethrow;
