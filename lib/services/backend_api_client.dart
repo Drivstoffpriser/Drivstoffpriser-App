@@ -108,7 +108,7 @@ class BackendApiClient {
       'sort': sort,
     };
     if (fuelType != null) params['fuelType'] = fuelType;
-    final data = await get('/stations/', queryParams: params);
+    final data = await get('/stations', queryParams: params);
     final raw = data['stations'] as List<dynamic>;
     return [
       for (final item in raw)
@@ -131,6 +131,15 @@ class BackendApiClient {
         'maxLng': maxLng.toString(),
       },
     );
+    final raw = data['stations'] as List<dynamic>;
+    return [
+      for (final item in raw)
+        Station.fromBackendJson(item as Map<String, dynamic>),
+    ];
+  }
+
+  Future<List<Station>> searchStations(String query) async {
+    final data = await get('/stations/search', queryParams: {'query': query});
     final raw = data['stations'] as List<dynamic>;
     return [
       for (final item in raw)
