@@ -108,7 +108,7 @@ class BackendApiClient {
       'sort': sort,
     };
     if (fuelType != null) params['fuelType'] = fuelType;
-    final data = await get('/stations/', queryParams: params);
+    final data = await get('/stations', queryParams: params);
     final raw = data['stations'] as List<dynamic>;
     return [
       for (final item in raw)
