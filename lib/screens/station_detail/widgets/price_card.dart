@@ -93,7 +93,10 @@ class PriceCard extends StatelessWidget {
             )
           else
             Text(
-              timeago.format(price.updatedAt!),
+              timeago.format(
+                price.updatedAt!,
+                locale: Localizations.localeOf(context).languageCode,
+              ),
               style: AppTextStyles.meta(context),
             ),
         ],
