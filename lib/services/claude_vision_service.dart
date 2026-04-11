@@ -19,10 +19,10 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:image/image.dart' as img;
 
 import '../models/fuel_type.dart';
 import 'backend_api_client.dart';
+import 'image_compressor.dart';
 
 const _tag = 'ClaudeVision';
 
@@ -35,29 +35,13 @@ class ClaudeVisionService {
 
   /// Compress and resize image bytes for the API call.
   ///
-  /// Returns JPEG bytes with reduced resolution.
+  /// Uses browser Canvas on web (fast), image package in isolate on mobile.
   static Future<Uint8List> compressImage(Uint8List imageBytes) async {
-    return compute(_compressInIsolate, imageBytes);
-  }
-
-  static Uint8List _compressInIsolate(Uint8List bytes) {
-    final original = img.decodeImage(bytes);
-    if (original == null) throw Exception('Failed to decode image');
-
-    // Resize if larger than max dimension
-    img.Image resized;
-    if (original.width > _maxDimension || original.height > _maxDimension) {
-      if (original.width >= original.height) {
-        resized = img.copyResize(original, width: _maxDimension);
-      } else {
-        resized = img.copyResize(original, height: _maxDimension);
-      }
-    } else {
-      resized = original;
-    }
-
-    // Encode as JPEG with reduced quality
-    return Uint8List.fromList(img.encodeJpg(resized, quality: _jpegQuality));
+    return compressImagePlatform(
+      imageBytes,
+      maxDimension: _maxDimension,
+      quality: _jpegQuality,
+    );
   }
 
   /// Send the image to the backend and extract fuel prices.

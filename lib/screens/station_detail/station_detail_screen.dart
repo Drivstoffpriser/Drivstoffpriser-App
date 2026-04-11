@@ -291,13 +291,21 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         icon: Icons.camera_alt_outlined,
                         label: 'Med kamera',
                         onPressed: () async {
+                          final userProvider = context.read<UserProvider>();
+                          if (!userProvider.isAuthenticated) {
+                            await Navigator.pushNamed(context, AppRoutes.auth);
+                            if (!context.mounted ||
+                                !userProvider.isAuthenticated) {
+                              return;
+                            }
+                          }
                           final priceProvider = context.read<PriceProvider>();
                           await Navigator.pushNamed(
                             context,
                             AppRoutes.submitPrice,
                             arguments: widget.station,
                           );
-                          if (mounted) {
+                          if (context.mounted) {
                             priceProvider.loadHistory(widget.station.id);
                           }
                         },
@@ -309,6 +317,14 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         icon: Icons.edit_outlined,
                         label: 'Manuelt',
                         onPressed: () async {
+                          final userProvider = context.read<UserProvider>();
+                          if (!userProvider.isAuthenticated) {
+                            await Navigator.pushNamed(context, AppRoutes.auth);
+                            if (!context.mounted ||
+                                !userProvider.isAuthenticated) {
+                              return;
+                            }
+                          }
                           final priceProvider = context.read<PriceProvider>();
                           await Navigator.push(
                             context,
@@ -317,7 +333,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                                   SubmitPriceScreen(station: widget.station),
                             ),
                           );
-                          if (mounted) {
+                          if (context.mounted) {
                             priceProvider.loadHistory(widget.station.id);
                           }
                         },

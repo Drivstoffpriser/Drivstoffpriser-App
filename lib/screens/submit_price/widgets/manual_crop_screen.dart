@@ -16,8 +16,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import 'dart:io';
-
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,12 +23,12 @@ import 'package:flutter/material.dart';
 import '../../../l10n/l10n_helper.dart';
 
 class ManualCropScreen extends StatefulWidget {
-  final File imageFile;
+  final Uint8List imageBytes;
   final Rect? initialArea;
 
   const ManualCropScreen({
     super.key,
-    required this.imageFile,
+    required this.imageBytes,
     this.initialArea,
   });
 
@@ -40,20 +38,7 @@ class ManualCropScreen extends StatefulWidget {
 
 class _ManualCropScreenState extends State<ManualCropScreen> {
   final _cropController = CropController();
-  Uint8List? _imageBytes;
   bool _isCropping = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadImage();
-  }
-
-  Future<void> _loadImage() async {
-    final bytes = await widget.imageFile.readAsBytes();
-    if (!mounted) return;
-    setState(() => _imageBytes = bytes);
-  }
 
   void _onCrop() {
     setState(() => _isCropping = true);
@@ -91,34 +76,31 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
           ),
         ],
       ),
-      body: _imageBytes == null
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    context.l10n.dragToSelect,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ),
-                Expanded(
-                  child: Crop(
-                    image: _imageBytes!,
-                    controller: _cropController,
-                    onCropped: _onCropped,
-                    initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
-                      size: 0.25,
-                      aspectRatio: 2 / 3,
-                    ),
-                    maskColor: Colors.black54,
-                    cornerDotBuilder: (size, edgeAlignment) => DotControl(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              context.l10n.dragToSelect,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
+          ),
+          Expanded(
+            child: Crop(
+              image: widget.imageBytes,
+              controller: _cropController,
+              onCropped: _onCropped,
+              initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
+                size: 0.25,
+                aspectRatio: 2 / 3,
+              ),
+              maskColor: Colors.black54,
+              cornerDotBuilder: (size, edgeAlignment) =>
+                  DotControl(color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -27,6 +27,7 @@ import '../../../l10n/l10n_helper.dart';
 import '../../../models/station.dart';
 import '../../../providers/location_provider.dart';
 import '../../../providers/station_provider.dart';
+import '../../../providers/user_provider.dart';
 import '../../../services/distance_service.dart';
 
 /// Distance threshold in meters to show the "nearby station" banner.
@@ -131,7 +132,14 @@ class _NearbyStationBannerState extends State<NearbyStationBanner> {
               _BannerAction(
                 icon: Icons.check_circle,
                 color: const Color(0xFF4CAF50),
-                onTap: () {
+                onTap: () async {
+                  final userProvider = context.read<UserProvider>();
+                  if (!userProvider.isAuthenticated) {
+                    await Navigator.pushNamed(context, AppRoutes.auth);
+                    if (!context.mounted || !userProvider.isAuthenticated) {
+                      return;
+                    }
+                  }
                   Navigator.pushNamed(
                     context,
                     AppRoutes.submitPrice,
