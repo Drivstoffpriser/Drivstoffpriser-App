@@ -299,7 +299,12 @@ class _StationTileState extends State<_StationTile> {
                           if (price != null)
                             price.isEstimate
                                 ? 'Estimat'
-                                : timeago.format(price.updatedAt!),
+                                : timeago.format(
+                                    price.updatedAt!,
+                                    locale: Localizations.localeOf(
+                                      context,
+                                    ).languageCode,
+                                  ),
                         ].join(' · '),
                         style: AppTextStyles.meta(context),
                       ),
