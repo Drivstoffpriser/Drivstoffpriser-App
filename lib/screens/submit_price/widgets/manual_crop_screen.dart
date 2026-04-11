@@ -77,32 +77,30 @@ class _ManualCropScreenState extends State<ManualCropScreen> {
         ],
       ),
       body: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    context.l10n.dragToSelect,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ),
-                Expanded(
-                  child: Crop(
-                    image: widget.imageBytes,
-                    controller: _cropController,
-                    onCropped: _onCropped,
-                    initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
-                      size: 0.25,
-                      aspectRatio: 2 / 3,
-                    ),
-                    maskColor: Colors.black54,
-                    cornerDotBuilder: (size, edgeAlignment) => DotControl(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ],
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              context.l10n.dragToSelect,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
+          ),
+          Expanded(
+            child: Crop(
+              image: widget.imageBytes,
+              controller: _cropController,
+              onCropped: _onCropped,
+              initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
+                size: 0.25,
+                aspectRatio: 2 / 3,
+              ),
+              maskColor: Colors.black54,
+              cornerDotBuilder: (size, edgeAlignment) =>
+                  DotControl(color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
-

@@ -171,9 +171,7 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
     ImageMetadata metadata;
 
     if (kIsWeb) {
-      final picked = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-      );
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (picked == null) {
         debugPrint('[$_tag] User cancelled gallery');
         return;
@@ -201,7 +199,10 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
   }
 
   /// Common flow: crop → scan → confirm → callback.
-  Future<void> _cropAndScan(Uint8List imageBytes, ImageMetadata metadata) async {
+  Future<void> _cropAndScan(
+    Uint8List imageBytes,
+    ImageMetadata metadata,
+  ) async {
     if (!mounted) return;
 
     final croppedBytes = await Navigator.push<dynamic>(

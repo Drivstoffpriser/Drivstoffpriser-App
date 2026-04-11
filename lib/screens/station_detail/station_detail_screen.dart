@@ -293,10 +293,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         onPressed: () async {
                           final userProvider = context.read<UserProvider>();
                           if (!userProvider.isAuthenticated) {
-                            await Navigator.pushNamed(
-                              context,
-                              AppRoutes.auth,
-                            );
+                            await Navigator.pushNamed(context, AppRoutes.auth);
                             if (!context.mounted ||
                                 !userProvider.isAuthenticated) {
                               return;
@@ -322,10 +319,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         onPressed: () async {
                           final userProvider = context.read<UserProvider>();
                           if (!userProvider.isAuthenticated) {
-                            await Navigator.pushNamed(
-                              context,
-                              AppRoutes.auth,
-                            );
+                            await Navigator.pushNamed(context, AppRoutes.auth);
                             if (!context.mounted ||
                                 !userProvider.isAuthenticated) {
                               return;

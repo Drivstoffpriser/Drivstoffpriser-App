@@ -95,9 +95,7 @@ class _PriceCaptureScreenState extends State<PriceCaptureScreen> {
     ImageMetadata metadata;
 
     if (kIsWeb) {
-      final picked = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-      );
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (picked == null) {
         debugPrint('[$_tag] User cancelled gallery');
         if (!mounted) return;
@@ -128,7 +126,10 @@ class _PriceCaptureScreenState extends State<PriceCaptureScreen> {
     await _cropAndScan(imageBytes, metadata);
   }
 
-  Future<void> _cropAndScan(Uint8List imageBytes, ImageMetadata metadata) async {
+  Future<void> _cropAndScan(
+    Uint8List imageBytes,
+    ImageMetadata metadata,
+  ) async {
     if (!mounted) return;
 
     final croppedBytes = await Navigator.push<dynamic>(

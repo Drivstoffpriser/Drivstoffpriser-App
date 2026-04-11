@@ -25,10 +25,7 @@ Future<Uint8List> compressImagePlatform(
   int maxDimension = 800,
   int quality = 70,
 }) {
-  return compute(
-    _compress,
-    (bytes, maxDimension, quality),
-  );
+  return compute(_compress, (bytes, maxDimension, quality));
 }
 
 Uint8List _compress((Uint8List, int, int) args) {
