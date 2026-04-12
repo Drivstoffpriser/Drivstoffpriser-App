@@ -140,11 +140,14 @@ class _NearbyStationBannerState extends State<NearbyStationBanner> {
                       return;
                     }
                   }
-                  Navigator.pushNamed(
+                  final submitted = await Navigator.pushNamed(
                     context,
                     AppRoutes.submitPrice,
                     arguments: station,
                   );
+                  if (submitted == true) {
+                    setState(() => _dismissedStationId = station.id);
+                  }
                 },
               ),
               const SizedBox(width: 8),
