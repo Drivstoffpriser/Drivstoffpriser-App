@@ -81,8 +81,7 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'sign-in-cancelled' ||
-          e.code == 'popup-closed-by-user') {
+      if (e.code == 'sign-in-cancelled' || e.code == 'popup-closed-by-user') {
       } else {
         setState(() => _error = _friendlyError(context, e.code));
       }
