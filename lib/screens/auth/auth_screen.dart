@@ -18,6 +18,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
@@ -281,12 +282,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   else ...[
-                    Text(
-                      'G',
-                      style: AppTextStyles.heading(context).copyWith(
-                        fontSize: 18,
-                        color: AppColors.primaryContainer(context),
-                      ),
+                    const FaIcon(
+                      FontAwesomeIcons.google,
+                      size: 18,
+                      color: Color(0xFF4285F4),
                     ),
                     const SizedBox(width: 10),
                     Text(
