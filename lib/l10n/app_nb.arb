@@ -304,5 +304,8 @@
   "emailNotVerified": "Bekreft e-posten din",
   "emailNotVerifiedSubtitle": "Sjekk innboksen din for en bekreftelseslenke",
   "resendVerificationEmail": "Send på nytt",
-  "verificationEmailSent": "Bekreftelses-e-post sendt"
+  "verificationEmailSent": "Bekreftelses-e-post sendt",
+
+  "cameraZoomTipTitle": "Zoom-tips",
+  "cameraZoomTipBody": "Bruk knip-for-å-zoome for å zoome nærmere prisskiltet. Du kan også trykke på zoom-knappene under søkeren."
 }
