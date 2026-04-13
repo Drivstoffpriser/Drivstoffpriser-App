@@ -21,6 +21,7 @@
   "searchRadius": "Søkeradius",
   "filterByBrand": "Filtrer etter merke",
   "showFavoritesOnly": "Vis kun favoritter",
+  "allowMapRotation": "Tillat kartrotasjon",
   "clearAll": "Fjern alle",
   "favorites": "Favoritter",
 
@@ -132,7 +133,7 @@
   "dontShowAgain": "Ikke vis igjen",
   "gotIt": "Forstått",
   "takePhoto": "Ta bilde",
-  "chooseFromGallery": "Velg fra galleri",
+  "chooseFromGallery": "Galleri",
   "cameraPermissionRequired": "Kameratillatelse kreves",
   "failedToProcessImage": "Kunne ikke behandle bildet",
 
@@ -147,10 +148,10 @@
   "dragToSelect": "Dra for å velge området med drivstoffpriser",
   "cropFailed": "Beskjæring mislyktes: {cause}",
 
-  "priceRange": "Område: 5–50 kr",
+  "priceRange": "Område: 10–40 kr",
   "enterAPrice": "Skriv inn en pris",
   "invalidNumber": "Ugyldig tall",
-  "priceMustBeBetween": "Prisen må være mellom 5 og 50 kr",
+  "priceMustBeBetween": "Prisen må være mellom 10 og 40 kr",
 
   "bugReportTitle": "Rapporter en feil",
   "bugReportIntro": "Fant du et problem? Gi oss detaljene, så ser vi på det.",
@@ -180,6 +181,7 @@
   "googleEmailAccount": "Google + E-postkonto",
   "googleAccount": "Google-konto",
   "emailAccount": "E-postkonto",
+  "emailConfirmed": "E-post bekreftet",
 
   "contributeData": "BIDRA MED DATA",
   "station": "Stasjon",
@@ -304,5 +306,12 @@
   "tips": "Tips",
   "tipsSubtitle": "Lær om appens funksjoner",
   "onboardingStepOf": "{current} av {total}",
-  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } }
+  "@onboardingStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
+
+  "nearbyStationPrompt": "Du er i nærheten av {stationName}. Rapportere pris?",
+  "@nearbyStationPrompt": { "placeholders": { "stationName": { "type": "String" } } },
+  "emailNotVerified": "Bekreft e-posten din",
+  "emailNotVerifiedSubtitle": "Sjekk innboksen din for en bekreftelseslenke",
+  "resendVerificationEmail": "Send på nytt",
+  "verificationEmailSent": "Bekreftelses-e-post sendt"
 }

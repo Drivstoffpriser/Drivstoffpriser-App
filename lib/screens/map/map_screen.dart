@@ -16,6 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -31,13 +32,17 @@ import '../../config/routes.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../services/backend_api_client.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
 import 'widgets/brand_filter_bar.dart';
 import 'widgets/fuel_filter_bar.dart';
+import 'widgets/nearby_station_banner.dart';
 import 'widgets/station_marker.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import '../../widgets/web_constrained.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -54,7 +59,13 @@ class _MapScreenState extends State<MapScreen> {
   bool _hasSetUserLocation = false;
   bool _isSearching = false;
   String _searchQuery = '';
+  List<Station> _searchApiResults = [];
+  bool _searchLoading = false;
+  Timer? _searchDebounce;
   LatLngBounds? _visibleBounds;
+  bool? _previousAllowMapRotation;
+  Timer? _bboxDebounce;
+  bool _hasLoadedInitialBbox = false;
 
   @override
   void initState() {
@@ -63,7 +74,24 @@ class _MapScreenState extends State<MapScreen> {
       context.read<LocationProvider>().fetchLocation();
     });
     _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.trim());
+      final query = _searchController.text.trim();
+      _searchDebounce?.cancel();
+      if (query.isEmpty) {
+        setState(() {
+          _searchQuery = query;
+          _searchApiResults = [];
+          _searchLoading = false;
+        });
+      } else {
+        setState(() {
+          _searchQuery = query;
+          _searchLoading = true;
+        });
+        _searchDebounce = Timer(
+          const Duration(milliseconds: 500),
+          () => _fetchSearchResults(query),
+        );
+      }
     });
     _searchFocus.addListener(() {
       setState(() => _isSearching = _searchFocus.hasFocus);
@@ -72,6 +100,8 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    _bboxDebounce?.cancel();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -104,52 +134,70 @@ class _MapScreenState extends State<MapScreen> {
     Navigator.pushNamed(context, AppRoutes.stationDetail, arguments: station);
   }
 
-  void _onMapEvent(MapCamera camera, bool hasGesture) {
-    final bounds = camera.visibleBounds;
-    if (_visibleBounds != bounds) {
-      setState(() => _visibleBounds = bounds);
+  Future<void> _fetchSearchResults(String query) async {
+    try {
+      final results = await BackendApiClient().searchStations(query);
+      if (mounted) {
+        setState(() {
+          _searchApiResults = results;
+          _searchLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _searchApiResults = [];
+          _searchLoading = false;
+        });
+      }
     }
   }
 
-  List<Station> _visibleStations(List<Station> stations) {
-    final bounds = _visibleBounds;
-    if (bounds == null) return stations;
-
-    // Add padding so stations at the edge don't pop in/out abruptly
-    final latPad = (bounds.north - bounds.south) * 0.2;
-    final lngPad = (bounds.east - bounds.west) * 0.2;
-    final south = bounds.south - latPad;
-    final north = bounds.north + latPad;
-    final west = bounds.west - lngPad;
-    final east = bounds.east + lngPad;
-
-    return stations.where((s) {
-      return s.latitude >= south &&
-          s.latitude <= north &&
-          s.longitude >= west &&
-          s.longitude <= east;
-    }).toList();
-  }
-
-  List<Station> _searchResults(List<Station> stations) {
-    if (_searchQuery.isEmpty) return [];
-    final q = _searchQuery.toLowerCase();
-    return stations
-        .where((s) {
-          return s.name.toLowerCase().contains(q) ||
-              s.brand.toLowerCase().contains(q) ||
-              s.city.toLowerCase().contains(q) ||
-              s.address.toLowerCase().contains(q);
-        })
-        .take(8)
-        .toList();
+  void _onMapEvent(MapCamera camera, bool hasGesture) {
+    final bounds = camera.visibleBounds;
+    if (_visibleBounds != bounds) {
+      _visibleBounds = bounds;
+      _bboxDebounce?.cancel();
+      if (!_hasLoadedInitialBbox) {
+        // First position event — load immediately without debounce so
+        // stations appear even if onMapReady fired before layout.
+        _hasLoadedInitialBbox = true;
+        context.read<StationProvider>().loadStationsByBbox(
+          minLat: bounds.south,
+          minLng: bounds.west,
+          maxLat: bounds.north,
+          maxLng: bounds.east,
+        );
+      } else {
+        _bboxDebounce = Timer(const Duration(milliseconds: 600), () {
+          if (!mounted) return;
+          context.read<StationProvider>().loadStationsByBbox(
+            minLat: bounds.south,
+            minLng: bounds.west,
+            maxLat: bounds.north,
+            maxLng: bounds.east,
+          );
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final stationProvider = context.watch<StationProvider>();
     final locationProvider = context.watch<LocationProvider>();
+    final allowMapRotation = context.select<UserProvider, bool>(
+      (provider) => provider.allowMapRotation,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_previousAllowMapRotation == true && !allowMapRotation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _mapController.camera.rotation == 0) return;
+        _mapController.rotate(0);
+      });
+    }
+    _previousAllowMapRotation = allowMapRotation;
 
     if (locationProvider.hasLocation && !_hasCenteredOnUser) {
       _hasCenteredOnUser = true;
@@ -180,20 +228,8 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
-    final allBrandFiltered = stationProvider.brandFilteredStations;
-    final filtered = _visibleStations(allBrandFiltered);
-    final results = _searchResults(stationProvider.stations);
-
-    // Find best (cheapest) station for the selected fuel type
-    String? bestStationId;
-    double bestPrice = double.infinity;
-    for (final station in filtered) {
-      final p = stationProvider.getPriceForStation(station.id);
-      if (p != null && p.price < bestPrice) {
-        bestPrice = p.price;
-        bestStationId = station.id;
-      }
-    }
+    final filtered = stationProvider.mapStations;
+    final bestStationId = stationProvider.bestMapStationId;
 
     final tileUrl = isDark
         ? 'https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png'
@@ -215,9 +251,25 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: AppConstants.defaultMapCenter,
                 initialZoom: AppConstants.defaultMapZoom,
+                interactionOptions: InteractionOptions(
+                  flags: allowMapRotation
+                      ? InteractiveFlag.all
+                      : InteractiveFlag.all & ~InteractiveFlag.rotate,
+                ),
                 onMapReady: () {
-                  setState(() {
-                    _visibleBounds = _mapController.camera.visibleBounds;
+                  // Defer bounds read until after layout so the camera
+                  // has the correct viewport size (not 0×0).
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    final bounds = _mapController.camera.visibleBounds;
+                    _visibleBounds = bounds;
+                    _hasLoadedInitialBbox = true;
+                    context.read<StationProvider>().loadStationsByBbox(
+                      minLat: bounds.south,
+                      minLng: bounds.west,
+                      maxLat: bounds.north,
+                      maxLng: bounds.east,
+                    );
                   });
                   // Nudge tiles to load — flutter_map may not render
                   // tiles when built behind a dialog or IndexedStack.
@@ -283,15 +335,15 @@ class _MapScreenState extends State<MapScreen> {
                     maxZoom: 15,
                     showPolygon: false,
                     markers: filtered.map((station) {
-                      final price = stationProvider.getPriceForStation(
-                        station.id,
-                      );
+                      final price =
+                          station.prices[stationProvider.selectedFuelType];
                       final isBest = station.id == bestStationId;
                       return Marker(
                         point: LatLng(station.latitude, station.longitude),
                         width: 72,
                         height: price != null ? 72 : 48,
                         child: StationMarker(
+                          key: ValueKey(station.id),
                           station: station,
                           price: price,
                           isBestPrice: isBest,
@@ -348,69 +400,80 @@ class _MapScreenState extends State<MapScreen> {
             top: topPadding + 8,
             left: 16,
             right: 16,
-            child: GestureDetector(
-              onTap: () => _searchFocus.requestFocus(),
-              behavior: HitTestBehavior.opaque,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurface.withValues(alpha: 0.85)
-                          : Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppColors.border(context).withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.search,
-                          size: 20,
-                          color: AppColors.textMuted(context),
+            child: WebConstrained(
+              child: GestureDetector(
+                onTap: () => _searchFocus.requestFocus(),
+                behavior: HitTestBehavior.opaque,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurface.withValues(alpha: 0.85)
+                            : Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.border(
+                            context,
+                          ).withValues(alpha: 0.5),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            focusNode: _searchFocus,
-                            style: AppTextStyles.body(context),
-                            textAlignVertical: TextAlignVertical.center,
-                            decoration: InputDecoration(
-                              hintText: context.l10n.searchStations,
-                              hintStyle: AppTextStyles.body(
-                                context,
-                              ).copyWith(color: AppColors.textMuted(context)),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                              isCollapsed: true,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.search,
+                            size: 20,
+                            color: AppColors.textMuted(context),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocus,
+                              style: AppTextStyles.body(context),
+                              decoration: InputDecoration(
+                                hintText: context.l10n.searchStations,
+                                hintStyle: AppTextStyles.body(
+                                  context,
+                                ).copyWith(color: AppColors.textMuted(context)),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                filled: false,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        if (_searchQuery.isNotEmpty)
-                          GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                            },
-                            child: Icon(
-                              Icons.close,
-                              size: 18,
-                              color: AppColors.textMuted(context),
-                            ),
-                          )
-                        else
-                          const BrandFilterButton(),
-                      ],
+                          const SizedBox(width: 10),
+                          if (_searchLoading)
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.textMuted(context),
+                              ),
+                            )
+                          else if (_searchQuery.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                              },
+                              child: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: AppColors.textMuted(context),
+                              ),
+                            )
+                          else
+                            const BrandFilterButton(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -423,7 +486,15 @@ class _MapScreenState extends State<MapScreen> {
             top: topPadding + 60,
             left: 0,
             right: 0,
-            child: FuelFilterBar(),
+            child: WebConstrained(child: FuelFilterBar()),
+          ),
+
+          // Nearby station prompt — below fuel filter bar
+          Positioned(
+            top: topPadding + 100,
+            left: 16,
+            right: 16,
+            child: const NearbyStationBanner(),
           ),
 
           // Add Station button — bottom right, above locate button
@@ -466,15 +537,70 @@ class _MapScreenState extends State<MapScreen> {
           ),
 
           // Search results dropdown
-          if (_isSearching && _searchQuery.isNotEmpty && results.isNotEmpty)
+          if (_isSearching &&
+              _searchQuery.isNotEmpty &&
+              _searchApiResults.isNotEmpty)
             Positioned(
               top: topPadding + 60,
               left: 16,
               right: 16,
-              child: Material(
-                color: Colors.transparent,
+              child: WebConstrained(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    constraints: const BoxConstraints(maxHeight: 320),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.border(context),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        itemCount: _searchApiResults.length,
+                        separatorBuilder: (_, _) => Divider(
+                          height: 1,
+                          indent: 56,
+                          color: AppColors.border(context),
+                        ),
+                        itemBuilder: (context, index) {
+                          final station = _searchApiResults[index];
+                          return _SearchResultTile(
+                            station: station,
+                            onTap: () => _selectSearchResult(station),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // "No results" message
+          if (_isSearching &&
+              _searchQuery.isNotEmpty &&
+              !_searchLoading &&
+              _searchApiResults.isEmpty)
+            Positioned(
+              top: topPadding + 60,
+              left: 16,
+              right: 16,
+              child: WebConstrained(
                 child: Container(
-                  constraints: const BoxConstraints(maxHeight: 320),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkSurface : Colors.white,
                     borderRadius: BorderRadius.circular(14),
@@ -490,57 +616,11 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: results.length,
-                      separatorBuilder: (_, _) => Divider(
-                        height: 1,
-                        indent: 56,
-                        color: AppColors.border(context),
-                      ),
-                      itemBuilder: (context, index) {
-                        final station = results[index];
-                        return _SearchResultTile(
-                          station: station,
-                          onTap: () => _selectSearchResult(station),
-                        );
-                      },
-                    ),
+                  child: Text(
+                    context.l10n.noStationsFound(_searchQuery),
+                    style: AppTextStyles.label(context),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ),
-            ),
-
-          // "No results" message
-          if (_isSearching && _searchQuery.isNotEmpty && results.isEmpty)
-            Positioned(
-              top: topPadding + 60,
-              left: 16,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppColors.border(context),
-                    width: 0.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  context.l10n.noStationsFound(_searchQuery),
-                  style: AppTextStyles.label(context),
-                  textAlign: TextAlign.center,
                 ),
               ),
             ),

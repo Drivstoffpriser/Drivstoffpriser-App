@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Show favorites only'**
   String get showFavoritesOnly;
 
+  /// No description provided for @allowMapRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow map rotation'**
+  String get allowMapRotation;
+
   /// No description provided for @clearAll.
   ///
   /// In en, this message translates to:
@@ -833,7 +839,7 @@ abstract class AppLocalizations {
   /// No description provided for @chooseFromGallery.
   ///
   /// In en, this message translates to:
-  /// **'Choose from gallery'**
+  /// **'Gallery'**
   String get chooseFromGallery;
 
   /// No description provided for @cameraPermissionRequired.
@@ -905,7 +911,7 @@ abstract class AppLocalizations {
   /// No description provided for @priceRange.
   ///
   /// In en, this message translates to:
-  /// **'Range: 5-50 kr'**
+  /// **'Range: 10-40 kr'**
   String get priceRange;
 
   /// No description provided for @enterAPrice.
@@ -923,7 +929,7 @@ abstract class AppLocalizations {
   /// No description provided for @priceMustBeBetween.
   ///
   /// In en, this message translates to:
-  /// **'Price must be between 5 and 50 kr'**
+  /// **'Price must be between 10 and 40 kr'**
   String get priceMustBeBetween;
 
   /// No description provided for @bugReportTitle.
@@ -1075,6 +1081,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email account'**
   String get emailAccount;
+
+  /// No description provided for @emailConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Email confirmed'**
+  String get emailConfirmed;
 
   /// No description provided for @contributeData.
   ///
@@ -1747,6 +1759,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{current} of {total}'**
   String onboardingStepOf(int current, int total);
+
+  /// No description provided for @nearbyStationPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks like you are close to {stationName}. Report a price?'**
+  String nearbyStationPrompt(String stationName);
+
+  /// No description provided for @emailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get emailNotVerified;
+
+  /// No description provided for @emailNotVerifiedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox for a verification link'**
+  String get emailNotVerifiedSubtitle;
+
+  /// No description provided for @resendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get resendVerificationEmail;
+
+  /// No description provided for @verificationEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent'**
+  String get verificationEmailSent;
 }
 
 class _AppLocalizationsDelegate

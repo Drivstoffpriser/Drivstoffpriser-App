@@ -21,20 +21,20 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
-import '../../../l10n/l10n_helper.dart';
 import '../../../models/current_price.dart';
 
 class PriceCard extends StatelessWidget {
   final CurrentPrice price;
+  final bool compact;
 
-  const PriceCard({super.key, required this.price});
+  const PriceCard({super.key, required this.price, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     final activeColor = AppColors.primaryContainer(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 10 : 16),
       decoration: BoxDecoration(
         color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(16),
@@ -61,21 +61,44 @@ class PriceCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            price.price.toStringAsFixed(2),
-            style: AppTextStyles.priceLarge(
-              context,
-            ).copyWith(fontSize: 24, color: AppColors.textPrimary(context)),
-          ),
-          Text(
-            context.l10n.krPerUnit(price.fuelType.unit),
-            style: AppTextStyles.meta(context),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                price.price.toStringAsFixed(2),
+                style: AppTextStyles.priceLarge(context).copyWith(
+                  fontSize: compact ? 20 : 24,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text('kr', style: AppTextStyles.meta(context)),
+            ],
           ),
           const SizedBox(height: 8),
-          Text(
-            '${context.l10n.reportsCount(price.reportCount)} · ${timeago.format(price.updatedAt)}',
-            style: AppTextStyles.meta(context),
-          ),
+          if (price.isEstimate)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'Estimat',
+                style: AppTextStyles.meta(
+                  context,
+                ).copyWith(color: Colors.orange, fontWeight: FontWeight.w600),
+              ),
+            )
+          else
+            Text(
+              timeago.format(
+                price.updatedAt!,
+                locale: Localizations.localeOf(context).languageCode,
+              ),
+              style: AppTextStyles.meta(context),
+            ),
         ],
       ),
     );

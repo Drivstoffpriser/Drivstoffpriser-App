@@ -58,35 +58,9 @@ class StationListScreen extends StatelessWidget {
       body: Column(
         children: [
           FuelFilterBar(
-            trailing: Consumer<StationProvider>(
-              builder: (context, provider, _) {
-                final hasFavorites = provider.favoriteStationIds.isNotEmpty;
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (hasFavorites)
-                      GestureDetector(
-                        onTap: () => provider.setShowFavoritesOnly(
-                          !provider.showFavoritesOnly,
-                        ),
-                        child: Icon(
-                          provider.showFavoritesOnly
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          size: 18,
-                          color: provider.showFavoritesOnly
-                              ? Colors.red
-                              : AppColors.textPrimary(context),
-                        ),
-                      ),
-                    if (hasFavorites) const SizedBox(width: 8),
-                    const BrandFilterButton(
-                      heroTag: 'brandFilterList',
-                      filterLocation: FilterLocation.list,
-                    ),
-                  ],
-                );
-              },
+            trailing: const BrandFilterButton(
+              heroTag: 'brandFilterList',
+              filterLocation: FilterLocation.list,
             ),
           ),
           Padding(
@@ -164,9 +138,8 @@ class StationListScreen extends StatelessWidget {
                       itemCount: sorted.length,
                       itemBuilder: (context, index) {
                         final station = sorted[index];
-                        final price = stationProvider.getPriceForStation(
-                          station.id,
-                        );
+                        final price =
+                            station.prices[stationProvider.selectedFuelType];
 
                         String? distanceStr;
                         if (locationProvider.hasLocation) {
@@ -187,6 +160,7 @@ class StationListScreen extends StatelessWidget {
                           distance: distanceStr,
                           price: price?.price,
                           lastUpdated: price?.updatedAt,
+                          isEstimate: price?.isEstimate ?? false,
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -213,6 +187,7 @@ class _StationListTile extends StatefulWidget {
   final String? distance;
   final double? price;
   final DateTime? lastUpdated;
+  final bool isEstimate;
   final VoidCallback onTap;
 
   const _StationListTile({
@@ -223,6 +198,7 @@ class _StationListTile extends StatefulWidget {
     this.distance,
     this.price,
     this.lastUpdated,
+    this.isEstimate = false,
     required this.onTap,
   });
 
@@ -275,16 +251,28 @@ class _StationListTileState extends State<_StationListTile> {
                               TextSpan(text: widget.city),
                             if (widget.city.isNotEmpty &&
                                 (widget.distance != null ||
-                                    widget.lastUpdated != null))
+                                    widget.lastUpdated != null ||
+                                    widget.isEstimate))
                               const TextSpan(text: ' · '),
                             if (widget.distance != null)
                               TextSpan(text: widget.distance),
                             if (widget.distance != null &&
-                                widget.lastUpdated != null)
+                                (widget.lastUpdated != null ||
+                                    widget.isEstimate))
                               const TextSpan(text: ' · '),
-                            if (widget.lastUpdated != null)
+                            if (widget.isEstimate)
                               TextSpan(
-                                text: timeago.format(widget.lastUpdated!),
+                                text: 'Estimat',
+                                style: TextStyle(color: Colors.orange),
+                              )
+                            else if (widget.lastUpdated != null)
+                              TextSpan(
+                                text: timeago.format(
+                                  widget.lastUpdated!,
+                                  locale: Localizations.localeOf(
+                                    context,
+                                  ).languageCode,
+                                ),
                                 style: TextStyle(
                                   color: AppColors.freshness(
                                     DateTime.now().difference(

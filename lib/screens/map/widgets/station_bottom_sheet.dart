@@ -243,7 +243,7 @@ class _StationTileState extends State<_StationTile> {
   Widget build(BuildContext context) {
     final stationProvider = context.read<StationProvider>();
     final locationProvider = context.read<LocationProvider>();
-    final price = stationProvider.getPriceForStation(widget.station.id);
+    final price = widget.station.prices[stationProvider.selectedFuelType];
 
     String? distanceStr;
     if (locationProvider.hasLocation) {
@@ -296,7 +296,15 @@ class _StationTileState extends State<_StationTile> {
                           if (widget.station.city.isNotEmpty)
                             widget.station.city,
                           ?distanceStr,
-                          if (price != null) timeago.format(price.updatedAt),
+                          if (price != null)
+                            price.isEstimate
+                                ? 'Estimat'
+                                : timeago.format(
+                                    price.updatedAt!,
+                                    locale: Localizations.localeOf(
+                                      context,
+                                    ).languageCode,
+                                  ),
                         ].join(' · '),
                         style: AppTextStyles.meta(context),
                       ),

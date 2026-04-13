@@ -9,4 +9,4 @@ BUILD_NUMBER=$(git rev-list --count HEAD)
 VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
 
 echo "Building iOS: version=$VERSION build=$BUILD_NUMBER"
-flutter build ipa --build-name="$VERSION" --build-number="$BUILD_NUMBER" "$@"
+flutter build ipa --build-name="$VERSION" --build-number="$BUILD_NUMBER" --dart-define=BACKEND_URL="https://api.drivstoffpriser.net" "$@"

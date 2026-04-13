@@ -61,6 +61,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showFavoritesOnly => 'Show favorites only';
 
   @override
+  String get allowMapRotation => 'Allow map rotation';
+
+  @override
   String get clearAll => 'Clear all';
 
   @override
@@ -409,7 +412,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takePhoto => 'Take photo';
 
   @override
-  String get chooseFromGallery => 'Choose from gallery';
+  String get chooseFromGallery => 'Gallery';
 
   @override
   String get cameraPermissionRequired => 'Camera permission required';
@@ -447,7 +450,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get priceRange => 'Range: 5-50 kr';
+  String get priceRange => 'Range: 10-40 kr';
 
   @override
   String get enterAPrice => 'Enter a price';
@@ -456,7 +459,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidNumber => 'Invalid number';
 
   @override
-  String get priceMustBeBetween => 'Price must be between 5 and 50 kr';
+  String get priceMustBeBetween => 'Price must be between 10 and 40 kr';
 
   @override
   String get bugReportTitle => 'Report a Bug';
@@ -537,6 +540,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emailAccount => 'Email account';
+
+  @override
+  String get emailConfirmed => 'Email confirmed';
 
   @override
   String get contributeData => 'CONTRIBUTE DATA';
@@ -909,4 +915,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String onboardingStepOf(int current, int total) {
     return '$current of $total';
   }
+
+  @override
+  String nearbyStationPrompt(String stationName) {
+    return 'Looks like you are close to $stationName. Report a price?';
+  }
+
+  @override
+  String get emailNotVerified => 'Verify your email';
+
+  @override
+  String get emailNotVerifiedSubtitle =>
+      'Check your inbox for a verification link';
+
+  @override
+  String get resendVerificationEmail => 'Resend email';
+
+  @override
+  String get verificationEmailSent => 'Verification email sent';
 }

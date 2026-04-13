@@ -67,6 +67,7 @@ class _AddStationScreenState extends State<AddStationScreen> {
   File? _pickedLogo;
 
   static const _knownBrands = [
+    'Automat1',
     'Circle K',
     'Esso',
     'Shell',
@@ -290,6 +291,9 @@ class _AddStationScreenState extends State<AddStationScreen> {
                   options: MapOptions(
                     initialCenter: _selectedLocation,
                     initialZoom: 17,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
                     onTap: (_, point) => _onMapTap(point),
                   ),
                   children: [

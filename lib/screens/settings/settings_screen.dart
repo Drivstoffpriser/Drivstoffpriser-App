@@ -16,6 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -27,7 +29,6 @@ import '../../config/app_text_styles.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../l10n/l10n_helper.dart';
-import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/onboarding_dialog.dart';
@@ -40,43 +41,33 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isRefreshing = false;
+  bool _isResendingEmail = false;
   int _stationSubmissionCount = 0;
-  bool _hasLoadedCount = false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.isAuthenticated) {
+        _loadSubmissionCount();
+      }
+    });
+  }
 
   Future<void> _loadSubmissionCount() async {
     final userProvider = context.read<UserProvider>();
-    if (!userProvider.isAuthenticated) return;
-    final submissions = await FirestoreService.getUserStationSubmissions(
-      userProvider.user.id,
-    );
-    if (mounted) {
-      setState(() {
-        _stationSubmissionCount = submissions.length;
-        _hasLoadedCount = true;
-      });
-    }
-  }
-
-  Future<void> _refreshStations() async {
-    setState(() => _isRefreshing = true);
-
-    final stationProvider = context.read<StationProvider>();
+    await userProvider.initialized;
     try {
-      await stationProvider.refreshStations();
+      final submissions = await FirestoreService.getUserStationSubmissions(
+        userProvider.user.id,
+      );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.stationsRefreshed)));
+        setState(() {
+          _stationSubmissionCount = submissions.length;
+        });
       }
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.refreshFailed)));
-      }
-    } finally {
-      if (mounted) setState(() => _isRefreshing = false);
+      // Non-critical — count stays hidden if Firestore denies access.
     }
   }
 
@@ -88,83 +79,196 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);
 
-    if (isAuth && !_hasLoadedCount) {
-      _loadSubmissionCount();
-    }
-
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: RefreshIndicator(
-        onRefresh: _refreshStations,
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              backgroundColor: AppColors.background(context),
-              surfaceTintColor: Colors.transparent,
-              pinned: true,
-              expandedHeight: 100,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                title: Text(
-                  context.l10n.profile,
-                  style: AppTextStyles.heading(context).copyWith(fontSize: 28),
-                ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.background(context),
+            surfaceTintColor: Colors.transparent,
+            pinned: true,
+            expandedHeight: 100,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
+              title: Text(
+                context.l10n.profile,
+                style: AppTextStyles.heading(context).copyWith(fontSize: 28),
               ),
             ),
-            SliverPadding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 100,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // ── Profile Hero ──
-                  _ProfileHero(
-                    user: user,
-                    isAuthenticated: isAuth,
-                    userProvider: userProvider,
-                  ),
-                  const SizedBox(height: 20),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 100,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── Profile Hero ──
+                _ProfileHero(
+                  user: user,
+                  isAuthenticated: isAuth,
+                  userProvider: userProvider,
+                ),
 
-                  // ── Contributions Card ──
-                  if (isAuth) ...[
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface(context),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.border(context),
-                          width: 0.5,
-                        ),
+                // ── Email Verification Banner ──
+                if (isAuth &&
+                    userProvider.hasEmailProvider &&
+                    !userProvider.isEmailVerified) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.orange.withValues(alpha: 0.15)
+                          : Colors.orange.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                        width: 0.5,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.mark_email_unread_outlined,
+                          color: Colors.orange,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.bar_chart_rounded,
-                                size: 20,
-                                color: activeColor,
-                              ),
-                              const SizedBox(width: 8),
                               Text(
-                                context.l10n.totalContributions,
+                                context.l10n.emailNotVerified,
                                 style: AppTextStyles.bodyMedium(context),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                context.l10n.emailNotVerifiedSubtitle,
+                                style: AppTextStyles.label(context),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              // Price reports
-                              Expanded(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    minHeight: 80,
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: _isResendingEmail
+                              ? null
+                              : () async {
+                                  setState(() => _isResendingEmail = true);
+                                  try {
+                                    await userProvider.sendVerificationEmail();
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          context.l10n.verificationEmailSent,
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.toString())),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isResendingEmail = false);
+                                    }
+                                  }
+                                },
+                          child: Text(context.l10n.resendVerificationEmail),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+
+                // ── Contributions Card ──
+                if (isAuth) ...[
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface(context),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.border(context),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.bar_chart_rounded,
+                              size: 20,
+                              color: activeColor,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.l10n.totalContributions,
+                              style: AppTextStyles.bodyMedium(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            // Price reports
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minHeight: 80,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceLow(context),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${user.reportCount}',
+                                        style: AppTextStyles.priceLarge(
+                                          context,
+                                        ).copyWith(fontSize: 24),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        context.l10n.priceReportsSubmitted,
+                                        style: AppTextStyles.meta(context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            // Station submissions — clickable
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minHeight: 80,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(10),
+                                  onTap: () async {
+                                    await Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.myStationSubmissions,
+                                    );
+                                    _loadSubmissionCount();
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
@@ -177,15 +281,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          '${user.reportCount}',
-                                          style: AppTextStyles.priceLarge(
-                                            context,
-                                          ).copyWith(fontSize: 24),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              '$_stationSubmissionCount',
+                                              style: AppTextStyles.priceLarge(
+                                                context,
+                                              ).copyWith(fontSize: 24),
+                                            ),
+                                            const Spacer(),
+                                            Icon(
+                                              Icons.chevron_right,
+                                              size: 18,
+                                              color: AppColors.textMuted(
+                                                context,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          context.l10n.priceReportsSubmitted,
+                                          context.l10n.stationsSubmitted,
                                           style: AppTextStyles.meta(context),
                                         ),
                                       ],
@@ -193,384 +309,306 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              // Station submissions — clickable
-                              Expanded(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    minHeight: 80,
-                                  ),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(10),
-                                    onTap: () async {
-                                      await Navigator.pushNamed(
-                                        context,
-                                        AppRoutes.myStationSubmissions,
-                                      );
-                                      _hasLoadedCount = false;
-                                      _loadSubmissionCount();
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(14),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceLow(context),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '$_stationSubmissionCount',
-                                                style: AppTextStyles.priceLarge(
-                                                  context,
-                                                ).copyWith(fontSize: 24),
-                                              ),
-                                              const Spacer(),
-                                              Icon(
-                                                Icons.chevron_right,
-                                                size: 18,
-                                                color: AppColors.textMuted(
-                                                  context,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            context.l10n.stationsSubmitted,
-                                            style: AppTextStyles.meta(context),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // Trust score bar
-                          Row(
-                            children: [
-                              Text(
-                                context.l10n.trustScore,
-                                style: AppTextStyles.label(context),
-                              ),
-                              const Spacer(),
-                              Text(
-                                '${(user.trustScore * 100).toStringAsFixed(0)}%',
-                                style: AppTextStyles.labelBold(
-                                  context,
-                                ).copyWith(color: activeColor),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: user.trustScore,
-                              minHeight: 6,
-                              backgroundColor: AppColors.surfaceLow(context),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                activeColor,
-                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // ── Sign In / Create Account ──
-                  if (!isAuth) ...[
-                    _ActionCard(
-                      icon: Icons.person_add_rounded,
-                      iconColor: activeColor,
-                      title: context.l10n.createAccount,
-                      subtitle: context.l10n.signUpSubtitle,
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.auth),
-                      isPrimary: true,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // ── Admin Panel ──
-                  if (userProvider.isAdmin) ...[
-                    Text(
-                      context.l10n.adminSection,
-                      style: AppTextStyles.sectionHeader(context),
-                    ),
-                    const SizedBox(height: 12),
-                    _SettingsCard(
-                      children: [
-                        _SettingsTile(
-                          icon: Icons.admin_panel_settings_outlined,
-                          iconColor: Colors.orange,
-                          title: context.l10n.adminPanel,
-                          subtitle: context.l10n.adminPanelSubtitle,
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            AppRoutes.adminSubmissions,
-                          ),
+                          ],
                         ),
-                        const _CardDivider(),
-                        _SettingsTile(
-                          icon: Icons.edit_note_outlined,
-                          iconColor: Colors.orange,
-                          title: context.l10n.modifyRequests,
-                          subtitle: context.l10n.modifyRequestsSubtitle,
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            AppRoutes.adminModifyRequests,
+                        const SizedBox(height: 12),
+                        // Trust score bar
+                        Row(
+                          children: [
+                            Text(
+                              context.l10n.trustScore,
+                              style: AppTextStyles.label(context),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${(user.trustScore * 100).toStringAsFixed(0)}%',
+                              style: AppTextStyles.labelBold(
+                                context,
+                              ).copyWith(color: activeColor),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: user.trustScore,
+                            minHeight: 6,
+                            backgroundColor: AppColors.surfaceLow(context),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              activeColor,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // ── Sign In / Create Account ──
+                if (!isAuth) ...[
+                  _ActionCard(
+                    icon: Icons.person_add_rounded,
+                    iconColor: activeColor,
+                    title: context.l10n.createAccount,
+                    subtitle: context.l10n.signUpSubtitle,
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.auth),
+                    isPrimary: true,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // ── Admin Panel ──
+                if (userProvider.isAdmin) ...[
+                  Text(
+                    context.l10n.adminSection,
+                    style: AppTextStyles.sectionHeader(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    children: [
+                      _SettingsTile(
+                        icon: Icons.admin_panel_settings_outlined,
+                        iconColor: Colors.orange,
+                        title: context.l10n.adminPanel,
+                        subtitle: context.l10n.adminPanelSubtitle,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.adminSubmissions,
+                        ),
+                      ),
+                      const _CardDivider(),
+                      _SettingsTile(
+                        icon: Icons.edit_note_outlined,
+                        iconColor: Colors.orange,
+                        title: context.l10n.modifyRequests,
+                        subtitle: context.l10n.modifyRequestsSubtitle,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.adminModifyRequests,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // ── Map Preferences ──
+                Text(
+                  context.l10n.mapPreferences,
+                  style: AppTextStyles.sectionHeader(context),
+                ),
+                const SizedBox(height: 12),
+                _SettingsCard(
+                  children: [
+                    _ThemeModeTile(themeMode: userProvider.themeMode),
+                    const _CardDivider(),
+                    _LanguageTile(locale: userProvider.locale),
                   ],
+                ),
+                const SizedBox(height: 24),
 
-                  // ── Map Preferences ──
-                  Text(
-                    context.l10n.mapPreferences,
-                    style: AppTextStyles.sectionHeader(context),
-                  ),
-                  const SizedBox(height: 12),
-                  _SettingsCard(
-                    children: [
-                      _ThemeModeTile(themeMode: userProvider.themeMode),
-                      const _CardDivider(),
-                      _LanguageTile(locale: userProvider.locale),
-                      const _CardDivider(),
-                      _SettingsTile(
-                        icon: Icons.my_location_outlined,
-                        iconColor: isDark
-                            ? const Color(0xFF6fddaa)
-                            : const Color(0xFF10B981),
-                        title: context.l10n.refreshStations,
-                        subtitle: context.l10n.updateNearbyStations,
-                        trailing: _isRefreshing
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: activeColor,
-                                ),
-                              )
-                            : null,
-                        onTap: _isRefreshing ? null : _refreshStations,
+                // ── Support ──
+                Text(
+                  context.l10n.support,
+                  style: AppTextStyles.sectionHeader(context),
+                ),
+                const SizedBox(height: 12),
+                _SettingsCard(
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.lightbulb_outline,
+                      iconColor: isDark
+                          ? const Color(0xFFffd166)
+                          : const Color(0xFFF59E0B),
+                      title: context.l10n.tips,
+                      subtitle: context.l10n.tipsSubtitle,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textMuted(context),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Support ──
-                  Text(
-                    context.l10n.support,
-                    style: AppTextStyles.sectionHeader(context),
-                  ),
-                  const SizedBox(height: 12),
-                  _SettingsCard(
-                    children: [
-                      _SettingsTile(
-                        icon: Icons.lightbulb_outline,
-                        iconColor: isDark
-                            ? const Color(0xFFffd166)
-                            : const Color(0xFFF59E0B),
-                        title: context.l10n.tips,
-                        subtitle: context.l10n.tipsSubtitle,
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                          color: AppColors.textMuted(context),
-                        ),
-                        onTap: () => showOnboarding(context),
-                      ),
-                      const _CardDivider(),
-                      _SettingsTile(
-                        icon: Icons.bug_report_outlined,
-                        iconColor: isDark
-                            ? const Color(0xFFffd166)
-                            : const Color(0xFFF59E0B),
-                        title: context.l10n.reportABug,
-                        subtitle: context.l10n.foundIssue,
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                          color: AppColors.textMuted(context),
-                        ),
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.bugReport),
-                      ),
-                      const _CardDivider(),
-                      _SettingsTile(
-                        icon: Icons.info_outline,
-                        iconColor: isDark
-                            ? const Color(0xFFa4e6ff)
-                            : const Color(0xFF6366F1),
-                        title: context.l10n.about,
-                        subtitle: AppConstants.appName,
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                          color: AppColors.textMuted(context),
-                        ),
-                        onTap: () async {
-                          final info = await PackageInfo.fromPlatform();
-                          if (!context.mounted) return;
-                          showAboutDialog(
-                            context: context,
-                            applicationName: AppConstants.appName,
-                            applicationVersion:
-                                '${info.version}+${info.buildNumber}',
-                            children: [
-                              Text(context.l10n.aboutDescription),
-                              const SizedBox(height: 16),
-                              OutlinedButton.icon(
-                                icon: ClipOval(
-                                  child: Image.asset(
-                                    'assets/logos/github.png',
-                                    width: 18,
-                                    height: 18,
-                                  ),
-                                ),
-                                label: Text(context.l10n.viewOnGithub),
-                                onPressed: () {
-                                  launchUrl(
-                                    Uri.parse(
-                                      'https://github.com/Drivstoffpriser/Drivstoffpriser-App',
-                                    ),
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const _CardDivider(),
-                      _SettingsTile(
-                        icon: Icons.privacy_tip_outlined,
-                        iconColor: isDark
-                            ? const Color(0xFF6fddaa)
-                            : const Color(0xFF10B981),
-                        title: context.l10n.privacyPolicy,
-                        subtitle: context.l10n.privacyPolicySubtitle,
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                          color: AppColors.textMuted(context),
-                        ),
-                        onTap: () {
-                          launchUrl(
-                            Uri.parse(
-                              'https://drivstoffpriser.github.io/Drivstoffpriser-App/privacy-policy.html',
-                            ),
-                            mode: LaunchMode.externalApplication,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Account Management ──
-                  if (isAuth) ...[
-                    Text(
-                      context.l10n.account,
-                      style: AppTextStyles.sectionHeader(context),
+                      onTap: () => showOnboarding(context),
                     ),
-                    const SizedBox(height: 12),
-                    _SettingsCard(
-                      children: [
-                        _SettingsTile(
-                          icon: Icons.delete_forever_rounded,
-                          iconColor: isDark
-                              ? AppColors.darkError
-                              : const Color(0xFFDC2626),
-                          title: context.l10n.deleteAccount,
-                          subtitle: context.l10n.deleteAccountSubtitle,
-                          onTap: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(ctx.l10n.deleteAccountConfirmTitle),
-                                content: Text(
-                                  ctx.l10n.deleteAccountConfirmBody,
+                    const _CardDivider(),
+                    _SettingsTile(
+                      icon: Icons.bug_report_outlined,
+                      iconColor: isDark
+                          ? const Color(0xFFffd166)
+                          : const Color(0xFFF59E0B),
+                      title: context.l10n.reportABug,
+                      subtitle: context.l10n.foundIssue,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textMuted(context),
+                      ),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.bugReport),
+                    ),
+                    const _CardDivider(),
+                    _SettingsTile(
+                      icon: Icons.info_outline,
+                      iconColor: isDark
+                          ? const Color(0xFFa4e6ff)
+                          : const Color(0xFF6366F1),
+                      title: context.l10n.about,
+                      subtitle: AppConstants.appName,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textMuted(context),
+                      ),
+                      onTap: () async {
+                        final info = await PackageInfo.fromPlatform();
+                        if (!context.mounted) return;
+                        showAboutDialog(
+                          context: context,
+                          applicationName: AppConstants.appName,
+                          applicationVersion:
+                              '${info.version}+${info.buildNumber}',
+                          children: [
+                            Text(context.l10n.aboutDescription),
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              icon: ClipOval(
+                                child: Image.asset(
+                                  'assets/logos/github.png',
+                                  width: 18,
+                                  height: 18,
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text(ctx.l10n.cancel),
+                              ),
+                              label: Text(context.l10n.viewOnGithub),
+                              onPressed: () {
+                                launchUrl(
+                                  Uri.parse(
+                                    'https://github.com/Drivstoffpriser/Drivstoffpriser-App',
                                   ),
-                                  TextButton(
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: const Color(0xFFDC2626),
-                                    ),
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text(
-                                      ctx.l10n.deleteAccountConfirmButton,
-                                    ),
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                      showLoadingOnTap: false,
+                    ),
+                    const _CardDivider(),
+                    _SettingsTile(
+                      icon: Icons.privacy_tip_outlined,
+                      iconColor: isDark
+                          ? const Color(0xFF6fddaa)
+                          : const Color(0xFF10B981),
+                      title: context.l10n.privacyPolicy,
+                      subtitle: context.l10n.privacyPolicySubtitle,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textMuted(context),
+                      ),
+                      onTap: () {
+                        launchUrl(
+                          Uri.parse(
+                            'https://drivstoffpriser.github.io/Drivstoffpriser-App/privacy-policy.html',
+                          ),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // ── Account Management ──
+                if (isAuth) ...[
+                  Text(
+                    context.l10n.account,
+                    style: AppTextStyles.sectionHeader(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _SettingsCard(
+                    children: [
+                      _SettingsTile(
+                        icon: Icons.delete_forever_rounded,
+                        iconColor: isDark
+                            ? AppColors.darkError
+                            : const Color(0xFFDC2626),
+                        title: context.l10n.deleteAccount,
+                        subtitle: context.l10n.deleteAccountSubtitle,
+                        onTap: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(ctx.l10n.deleteAccountConfirmTitle),
+                              content: Text(ctx.l10n.deleteAccountConfirmBody),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: Text(ctx.l10n.cancel),
+                                ),
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFFDC2626),
                                   ),
-                                ],
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: Text(
+                                    ctx.l10n.deleteAccountConfirmButton,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true || !context.mounted) return;
+                          try {
+                            await userProvider.deleteAccount();
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(context.l10n.accountDeleted),
                               ),
                             );
-                            if (confirmed != true || !context.mounted) return;
-                            try {
-                              await userProvider.deleteAccount();
-                              if (!context.mounted) return;
+                          } on FirebaseAuthException catch (e) {
+                            if (!context.mounted) return;
+                            if (e.code == 'requires-recent-login') {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(context.l10n.accountDeleted),
+                                  content: Text(
+                                    context.l10n.deleteAccountReauth,
+                                  ),
                                 ),
                               );
-                            } on FirebaseAuthException catch (e) {
-                              if (!context.mounted) return;
-                              if (e.code == 'requires-recent-login') {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      context.l10n.deleteAccountReauth,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(e.message ?? e.code)),
-                                );
-                              }
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.message ?? e.code)),
+                              );
                             }
-                          },
-                        ),
-                        const _CardDivider(),
-                        _SettingsTile(
-                          icon: Icons.logout_rounded,
-                          iconColor: isDark
-                              ? AppColors.darkError
-                              : const Color(0xFFDC2626),
-                          title: context.l10n.signOut,
-                          subtitle: context.l10n.signOutSubtitle,
-                          onTap: () async {
-                            await userProvider.signOut();
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
+                          }
+                        },
+                        showLoadingOnTap: false,
+                      ),
+                      const _CardDivider(),
+                      _SettingsTile(
+                        icon: Icons.logout_rounded,
+                        iconColor: isDark
+                            ? AppColors.darkError
+                            : const Color(0xFFDC2626),
+                        title: context.l10n.signOut,
+                        subtitle: context.l10n.signOutSubtitle,
+                        onTap: () async {
+                          await userProvider.signOut();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
 
-                  const SizedBox(height: 32),
-                ]),
-              ),
+                const SizedBox(height: 32),
+              ]),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -676,14 +714,15 @@ class _ProfileHero extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    switch (userProvider.accountType) {
-                      AccountType.anonymous =>
-                        context.l10n.anonymousBrowsingOnly,
-                      AccountType.email => context.l10n.emailAccount,
-                      AccountType.google => context.l10n.googleAccount,
-                      AccountType.googleEmail =>
-                        context.l10n.googleEmailAccount,
-                    },
+                    userProvider.email ??
+                        switch (userProvider.accountType) {
+                          AccountType.anonymous =>
+                            context.l10n.anonymousBrowsingOnly,
+                          AccountType.email => context.l10n.emailAccount,
+                          AccountType.google => context.l10n.googleAccount,
+                          AccountType.googleEmail =>
+                            context.l10n.googleEmailAccount,
+                        },
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -691,8 +730,27 @@ class _ProfileHero extends StatelessWidget {
                           ? activeColor
                           : AppColors.textMuted(context),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (userProvider.isEmailVerified) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified, size: 13, color: activeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        context.l10n.emailConfirmed,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: activeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (isAuthenticated) ...[
                   const SizedBox(height: 8),
                   Row(
@@ -704,7 +762,7 @@ class _ProfileHero extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       _StatBadge(
-                        icon: Icons.verified,
+                        icon: Icons.groups,
                         value: '${(user.trustScore * 100).toStringAsFixed(0)}%',
                         label: context.l10n.trust,
                       ),
@@ -714,6 +772,28 @@ class _ProfileHero extends StatelessWidget {
               ],
             ),
           ),
+          if (!isAuthenticated) ...[
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                AppRoutes.auth,
+                arguments: false,
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: activeColor,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: activeColor.withValues(alpha: 0.4)),
+                ),
+              ),
+              child: Text(context.l10n.signIn),
+            ),
+          ],
         ],
       ),
     );
@@ -922,7 +1002,8 @@ class _SettingsTile extends StatefulWidget {
   final String title;
   final String subtitle;
   final Widget? trailing;
-  final VoidCallback? onTap;
+  final FutureOr<void> Function()? onTap;
+  final bool showLoadingOnTap;
 
   const _SettingsTile({
     required this.icon,
@@ -931,6 +1012,7 @@ class _SettingsTile extends StatefulWidget {
     required this.subtitle,
     this.trailing,
     this.onTap,
+    this.showLoadingOnTap = true,
   });
 
   @override
@@ -939,27 +1021,36 @@ class _SettingsTile extends StatefulWidget {
 
 class _SettingsTileState extends State<_SettingsTile> {
   bool _isPressed = false;
+  bool _isLoading = false;
+
+  Future<void> _handleTap() async {
+    if (_isLoading) return;
+    setState(() {
+      _isPressed = false;
+      if (widget.showLoadingOnTap) _isLoading = true;
+    });
+    try {
+      await widget.onTap?.call();
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: widget.onTap != null
+      onTapDown: widget.onTap != null && !_isLoading
           ? (_) => setState(() => _isPressed = true)
           : null,
-      onTapUp: widget.onTap != null
-          ? (_) {
-              setState(() => _isPressed = false);
-              widget.onTap?.call();
-            }
-          : null,
+      onTapUp: widget.onTap != null && !_isLoading ? (_) => _handleTap() : null,
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOutCubic,
         child: AnimatedOpacity(
-          opacity: _isPressed ? 0.7 : 1.0,
+          opacity: _isLoading ? 0.4 : (_isPressed ? 0.7 : 1.0),
           duration: const Duration(milliseconds: 100),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -973,7 +1064,16 @@ class _SettingsTileState extends State<_SettingsTile> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: Icon(widget.icon, size: 20, color: widget.iconColor),
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: widget.iconColor,
+                            ),
+                          )
+                        : Icon(widget.icon, size: 20, color: widget.iconColor),
                   ),
                 ),
                 const SizedBox(width: 14),

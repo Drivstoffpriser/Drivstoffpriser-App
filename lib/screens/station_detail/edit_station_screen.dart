@@ -61,6 +61,7 @@ class _EditStationScreenState extends State<EditStationScreen> {
   File? _pickedLogo;
 
   static const _knownBrands = [
+    'Automat1',
     'Circle K',
     'Esso',
     'Shell',
@@ -271,6 +272,9 @@ class _EditStationScreenState extends State<EditStationScreen> {
                   options: MapOptions(
                     initialCenter: _selectedLocation,
                     initialZoom: 17,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
                     onTap: (_, point) => _onMapTap(point),
                   ),
                   children: [

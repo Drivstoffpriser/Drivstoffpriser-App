@@ -19,17 +19,24 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_profile.dart';
+import '../services/backend_api_client.dart';
 import '../services/firestore_service.dart';
 
 class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   StreamSubscription<User?>? _authSub;
+
+  final _initCompleter = Completer<void>();
+
+  /// Completes once [initialize] has finished and the auth token is ready.
+  Future<void> get initialized => _initCompleter.future;
 
   UserProfile _user = const UserProfile(
     id: '',
@@ -40,12 +47,14 @@ class UserProvider extends ChangeNotifier {
 
   ThemeMode _themeMode = ThemeMode.system;
   Locale? _locale;
+  bool _allowMapRotation = true;
 
   UserProfile get user => _user;
   bool get isAdmin => _user.isAdmin;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   Locale? get locale => _locale;
+  bool get allowMapRotation => _allowMapRotation;
 
   /// True when the user has linked email/password or Google credentials.
   bool get isAuthenticated {
@@ -85,9 +94,9 @@ class UserProvider extends ChangeNotifier {
     );
 
     final localePref = prefs.getString('locale');
-    if (localePref != null) {
-      _locale = Locale(localePref);
-    }
+    _locale = localePref != null ? Locale(localePref) : const Locale('nb');
+
+    _allowMapRotation = prefs.getBool('allowMapRotation') ?? true;
 
     // Wait for Firebase Auth to restore the persisted session before
     // deciding whether to create a new anonymous account.
@@ -106,17 +115,28 @@ class UserProvider extends ChangeNotifier {
         await _loadProfile(firebaseUser);
       }
     });
+
+    _initCompleter.complete();
   }
+
+  final _apiClient = BackendApiClient();
 
   Future<void> _loadProfile(User firebaseUser) async {
     final existing = await FirestoreService.getUserProfile(firebaseUser.uid);
+    final reportCount = await _apiClient.getPriceRegistrations();
     if (existing != null) {
-      _user = existing;
+      _user = UserProfile(
+        id: existing.id,
+        displayName: existing.displayName,
+        reportCount: reportCount,
+        trustScore: existing.trustScore,
+        isAdmin: existing.isAdmin,
+      );
     } else {
       _user = UserProfile(
         id: firebaseUser.uid,
         displayName: firebaseUser.displayName ?? 'Anonymous',
-        reportCount: 0,
+        reportCount: reportCount,
         trustScore: 1.0,
       );
       await FirestoreService.setUserProfile(_user);
@@ -169,6 +189,31 @@ class UserProvider extends ChangeNotifier {
       );
     }
     await FirestoreService.setUserProfile(_user);
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// True when the user has linked an email/password credential.
+  bool get hasEmailProvider =>
+      _auth.currentUser?.providerData.any((i) => i.providerId == 'password') ??
+      false;
+
+  /// The current user's email address, if any.
+  String? get email => _auth.currentUser?.email;
+
+  /// Whether the current user's email has been verified.
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  /// Re-send the verification email.
+  Future<void> sendVerificationEmail() async {
+    await _auth.currentUser?.sendEmailVerification();
+  }
+
+  /// Reload the Firebase user to pick up email-verified status, etc.
+  Future<void> reloadUser() async {
+    await _auth.currentUser?.reload();
     notifyListeners();
   }
 
@@ -189,6 +234,36 @@ class UserProvider extends ChangeNotifier {
   /// Sign in with Google. Links to anonymous account when possible;
   /// falls back to direct sign-in if the credential is already used.
   Future<void> signInWithGoogle() async {
+    if (kIsWeb) {
+      await _signInWithGoogleWeb();
+    } else {
+      await _signInWithGoogleNative();
+    }
+  }
+
+  Future<void> _signInWithGoogleWeb() async {
+    final provider = GoogleAuthProvider();
+
+    final currentUser = _auth.currentUser;
+    UserCredential result;
+    if (currentUser != null) {
+      try {
+        result = await currentUser.linkWithPopup(provider);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'credential-already-in-use') {
+          result = await _auth.signInWithPopup(provider);
+        } else {
+          rethrow;
+        }
+      }
+    } else {
+      result = await _auth.signInWithPopup(provider);
+    }
+
+    await _completeGoogleSignIn(result.user);
+  }
+
+  Future<void> _signInWithGoogleNative() async {
     final GoogleSignInAccount googleUser;
     try {
       googleUser = await _googleSignIn.authenticate();
@@ -222,8 +297,10 @@ class UserProvider extends ChangeNotifier {
       await _auth.signInWithCredential(credential);
     }
 
-    // Use Google display name if available
-    final signedInUser = _auth.currentUser;
+    await _completeGoogleSignIn(_auth.currentUser);
+  }
+
+  Future<void> _completeGoogleSignIn(User? signedInUser) async {
     if (signedInUser == null) {
       throw FirebaseAuthException(
         code: 'sign-in-failed',
@@ -231,8 +308,7 @@ class UserProvider extends ChangeNotifier {
       );
     }
 
-    final displayName =
-        signedInUser.displayName ?? googleUser.displayName ?? 'User';
+    final displayName = signedInUser.displayName ?? 'User';
     // Read existing profile to preserve reportCount/trustScore
     final existing = await FirestoreService.getUserProfile(signedInUser.uid);
     if (existing != null) {
@@ -273,15 +349,17 @@ class UserProvider extends ChangeNotifier {
     await _loadProfile(_auth.currentUser!);
   }
 
-  /// Refresh the user profile from Firestore to pick up the latest report count.
-  /// Called after submitting reports (the count is incremented atomically
-  /// inside the same Firestore batch as the report write).
+  /// Refresh the report count from the backend after submitting a price.
   Future<void> refreshProfile() async {
-    final existing = await FirestoreService.getUserProfile(_user.id);
-    if (existing != null) {
-      _user = existing;
-      notifyListeners();
-    }
+    final reportCount = await _apiClient.getPriceRegistrations();
+    _user = UserProfile(
+      id: _user.id,
+      displayName: _user.displayName,
+      reportCount: reportCount,
+      trustScore: _user.trustScore,
+      isAdmin: _user.isAdmin,
+    );
+    notifyListeners();
   }
 
   void setThemeMode(ThemeMode mode) {
@@ -302,6 +380,14 @@ class UserProvider extends ChangeNotifier {
       } else {
         prefs.setString('locale', locale.languageCode);
       }
+    });
+  }
+
+  void setAllowMapRotation(bool value) {
+    _allowMapRotation = value;
+    notifyListeners();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('allowMapRotation', value);
     });
   }
 

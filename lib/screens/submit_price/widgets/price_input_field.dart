@@ -23,6 +23,51 @@ import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 
+class _AutoDecimalFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    String digitsOnly = newValue.text.replaceAll('.', '');
+
+    // When user backspaces over the auto-inserted dot (e.g. "19." → "19"),
+    // also remove the last digit so they can actually delete backwards.
+    if (oldValue.text.endsWith('.') &&
+        newValue.text == oldValue.text.substring(0, oldValue.text.length - 1)) {
+      digitsOnly = digitsOnly.substring(0, digitsOnly.length - 1);
+    }
+
+    if (digitsOnly.isEmpty) {
+      return const TextEditingValue();
+    }
+
+    if (!RegExp(r'^\d+$').hasMatch(digitsOnly)) {
+      return oldValue;
+    }
+
+    // Max 4 digits: XX.XX
+    if (digitsOnly.length > 4) {
+      return oldValue;
+    }
+
+    String formatted;
+    if (digitsOnly.length < 2) {
+      formatted = digitsOnly;
+    } else if (digitsOnly.length == 2) {
+      // Show trailing dot immediately after two digits so the separator is visible.
+      formatted = '$digitsOnly.';
+    } else {
+      formatted = '${digitsOnly.substring(0, 2)}.${digitsOnly.substring(2)}';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class PriceInputField extends StatelessWidget {
   final TextEditingController controller;
   final FuelType fuelType;
@@ -39,10 +84,8 @@ class PriceInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-      ],
+      keyboardType: const TextInputType.numberWithOptions(decimal: false),
+      inputFormatters: [_AutoDecimalFormatter()],
       style: AppTextStyles.body(context),
       decoration: InputDecoration(
         labelText: '${fuelType.localizedName(context)} (${fuelType.unit})',
@@ -55,7 +98,7 @@ class PriceInputField extends StatelessWidget {
         }
         final price = double.tryParse(value);
         if (price == null) return context.l10n.invalidNumber;
-        if (price < 5.0 || price > 50.0) {
+        if (price < 10.0 || price > 40.0) {
           return context.l10n.priceMustBeBetween;
         }
         return null;

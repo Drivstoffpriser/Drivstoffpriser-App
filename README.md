@@ -27,6 +27,29 @@ Drivstoffpriser er et hobbyprosjekt som lar brukere finne og dele drivstoffprise
 - **Metadata-analyse** — Last opp bilder senere fra hjemmet. Appen leser bildets metadata for å knytte det til riktig stasjon (innenfor 1 km radius).
 - **Offentlig database** — Stasjons- og prisinformasjon eksporteres til et offentlig depot hver 12. time: [Drivstoffpriser/data](https://drivstoffpriser.github.io/Drivstoffpriser-App/data/index.html)
 
+### Installasjon
+
+#### Android
+
+##### APK
+Last ned den nyeste .apk fra [releases](https://github.com/Drivstoffpriser/Drivstoffpriser-App/releases).
+
+##### Google Play Store
+Under publisering — trenger 12 testere for å oppfylle Googles krav. Ta kontakt på [Discord](https://discord.gg/Wn63s7AW) for å bli Android-tester.
+
+#### App Store / IOS
+[Drivstoffpriser Norge](https://apps.apple.com/no/app/drivstoffpriser-norge/id6761013916) er tilgjengelig på App Store for iPhone.
+
+### Bidra
+
+Drivstoffpriser trenger frivillige bidragsytere! Spesielt folk med erfaring innen design, backend og mobilutvikling. Målet er at hele konseptet, fra design til kode til data, tilhører fellesskapet
+
+Sjekk issues, åpne en PR, eller bli med på [Discord](https://discord.gg/Wn63s7AW).
+
+#### Husk å formatere koden
+
+CI-pipelinen kjører et **Check formatting**-steg på alle PRer. Det feiler hvis koden ikke er formatert. Kjør `dart format .` før du åpner en PR.
+
 ### Kostnader og drift
 
 Appen har to gjentagende kostnader:
@@ -42,31 +65,10 @@ Drivstoffpriser er non-profit. Målet er at driftskostnader dekkes av frivillige
 ### Tech stack
 
 - **Frontend:** Flutter (Dart) med Material 3
-- **Backend:** Firebase (Firestore, Auth)
+- **Backend:** Firebase (Firestore, Auth) + Python (FastAPI)
 - **Kart:** `flutter_map` + `latlong2` (OpenStreetMap)
 - **OCR:** Claude Haiku 4.5 (begrenset til 256 output tokens)
 - **Typisk bruk per bruker per dag:** ~12 reads
-
-### Installasjon
-
-#### Android
-Last ned den nyeste .apk fra [releases](https://github.com/Drivstoffpriser/Drivstoffpriser-App/releases).
-
-#### Google Play Store
-Under publisering — trenger 12 testere for å oppfylle Googles krav.
-
-#### App Store
-Ikke tilgjengelig enda. Trenger hjelp med Apple developer konto og publisering.
-
-### Bidra
-
-Drivstoffpriser trenger frivillige bidragsytere! Spesielt folk med erfaring innen backend og mobilutvikling. Målet er at jeg selv bare er en bruker, ikke eieren — appen tilhører fellesskapet.
-
-Sjekk issues, åpne en PR, eller bli med på [Discord](link).
-
-#### Husk å formatere koden
-
-CI-pipelinen kjører et **Check formatting**-steg på alle PRer. Det feiler hvis koden ikke er formatert. Kjør `dart format .` før du åpner en PR.
 
 ### Lisens
 
@@ -100,6 +102,25 @@ Drivstoffpriser is a hobby project that lets users find and share fuel prices in
 - **Metadata analysis** — Upload photos later from home. The app reads the image metadata to link it to the correct station (within 1 km radius).
 - **Public database** — Station and price data is exported to a public repository every 12 hours: [Drivstoffpriser/data](https://drivstoffpriser.github.io/Drivstoffpriser-App/data/index.html)
 
+### Installation
+
+#### Android
+
+##### APK
+Download latest .apk from [releases](https://github.com/Drivstoffpriser/Drivstoffpriser-App/releases).
+
+##### Google Play Store
+Publishing in progress — needs 12 testers to meet Google's requirements. Contact us on [Discord](https://discord.gg/Wn63s7AW) to become an Android tester.
+
+#### App Store / iOS
+[Drivstoffpriser Norge](https://apps.apple.com/no/app/drivstoffpriser-norge/id6761013916) is available on the App Store for iPhone.
+
+### Contributing
+
+Drivstoffpriser needs volunteer contributors! Especially people with experience in design, backend and mobile development. The goal is that the whole concept — from design to code to data — belongs to the community.
+
+Check issues, open a PR, or join the [Discord](https://discord.gg/Wn63s7AW).
+
 ### Costs and operations
 
 The app has two recurring costs:
@@ -115,21 +136,10 @@ Drivstoffpriser is non-profit. The goal is for operating costs to be covered by 
 ### Tech stack
 
 - **Frontend:** Flutter (Dart) with Material 3
-- **Backend:** Firebase (Firestore, Auth)
+- **Backend:** Firebase (Firestore, Auth) + Python (FastAPI)
 - **Maps:** `flutter_map` + `latlong2` (OpenStreetMap)
 - **OCR:** Claude Haiku 4.5 (limited to 256 output tokens)
 - **Typical usage per user per day:** ~12 reads
-
-### Installation
-
-#### Android
-Download latest .apk from [releases](https://github.com/Drivstoffpriser/Drivstoffpriser-App/releases).
-
-#### Google Play Store
-Publishing in progress — needs 12 testers to meet Google's requirements.
-
-#### App Store
-Not available yet. Need help with Apple developer account and publishing.
 
 ### Getting started (development)
 
@@ -151,7 +161,7 @@ Not available yet. Need help with Apple developer account and publishing.
     npm install -g firebase-tools
     ```
 
-    Ask a maintainer on Discord to be added to the Firebase project.
+    Ask a maintainer on [Discord](https://discord.gg/Wn63s7AW) to be added to the Firebase project. (This step will soon be replaced by simply running a local backend)
 
     Login to Firebase CLI
 
@@ -179,13 +189,6 @@ Not available yet. Need help with Apple developer account and publishing.
 5. **Choose target**
     Choose target platform (Android, iOS, or Web) and run the app.
     For native platforms you can connect your own device or use a simulator, Xcode for iOS and Android Studio for Android.
-
-
-### Contributing
-
-Drivstoffpriser needs volunteer contributors! Especially people with experience in backend and mobile development. The goal is that I'm just a user, not the owner — the app belongs to the community.
-
-Check issues, open a PR, or join the [Discord](link).
 
 #### Remember to format your code
 

@@ -32,6 +32,7 @@ import '../screens/settings/settings_screen.dart';
 import '../screens/station_detail/station_list_screen.dart';
 import '../services/firestore_service.dart';
 import 'onboarding_dialog.dart';
+import 'web_constrained.dart';
 
 class FloatingPillNav extends StatefulWidget {
   const FloatingPillNav({super.key});
@@ -60,25 +61,30 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
 
   Future<void> _checkForFeedback() async {
     final userProvider = context.read<UserProvider>();
+    await userProvider.initialized;
     if (!userProvider.isAuthenticated) return;
     final uid = userProvider.user.id;
 
-    // Check new station submission feedback
-    final unread = await FirestoreService.getUnreadFeedback(uid);
-    if (mounted) {
-      for (final submission in unread) {
-        if (!mounted) return;
-        await _showFeedbackDialog(submission);
+    try {
+      // Check new station submission feedback
+      final unread = await FirestoreService.getUnreadFeedback(uid);
+      if (mounted) {
+        for (final submission in unread) {
+          if (!mounted) return;
+          await _showFeedbackDialog(submission);
+        }
       }
-    }
 
-    // Check modify request feedback
-    final unreadModify = await FirestoreService.getUnreadModifyFeedback(uid);
-    if (mounted) {
-      for (final req in unreadModify) {
-        if (!mounted) return;
-        await _showModifyFeedbackDialog(req);
+      // Check modify request feedback
+      final unreadModify = await FirestoreService.getUnreadModifyFeedback(uid);
+      if (mounted) {
+        for (final req in unreadModify) {
+          if (!mounted) return;
+          await _showModifyFeedbackDialog(req);
+        }
       }
+    } catch (_) {
+      // Non-critical — feedback check silently skipped if Firestore denies access.
     }
   }
 
@@ -194,7 +200,14 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(index: _currentIndex, children: _screens),
+          IndexedStack(
+            index: _currentIndex,
+            children: [
+              _screens[0],
+              WebConstrained(child: _screens[1]),
+              WebConstrained(child: _screens[2]),
+            ],
+          ),
           Positioned(
             left: 0,
             right: 0,
@@ -255,7 +268,11 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                             activeIcon: Icons.person,
                             label: context.l10n.navProfile,
                             isActive: _currentIndex == 2,
-                            onTap: () => setState(() => _currentIndex = 2),
+                            onTap: () {
+                              setState(() => _currentIndex = 2);
+                              context.read<UserProvider>().reloadUser();
+                              context.read<UserProvider>().refreshProfile();
+                            },
                           ),
                         ],
                       ),
@@ -352,8 +369,9 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
         : AppColors.lightPrimaryContainer;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
+      onTap: () {
         setState(() => _isPressed = false);
         widget.onTap();
       },

@@ -19,8 +19,9 @@
 import 'dart:io' show Platform;
 
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
@@ -34,6 +35,7 @@ import 'providers/user_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  timeago.setLocaleMessages('nb', timeago.NbNoMessages());
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -45,7 +47,7 @@ void main() async {
   // App Check is only enforced for Android in the Firebase Console.
   // Activating on iOS causes UNAVAILABLE errors because DeviceCheck
   // tokens fail and the client SDK blocks requests.
-  if (Platform.isAndroid) {
+  if (!kIsWeb && Platform.isAndroid) {
     await FirebaseAppCheck.instance.activate(
       androidProvider: kDebugMode
           ? AndroidProvider.debug
@@ -57,12 +59,14 @@ void main() async {
   // Don't block the UI on auth — UserProvider has sensible defaults
   // (Anonymous user) so the app can render immediately.
   final userProvider = UserProvider();
-  userProvider.initialize();
+  final authReady = userProvider.initialize();
 
-  // Load stations from cache or Firestore aggregate (≤2 reads).
   final stationProvider = StationProvider();
-  stationProvider.loadStations();
-  stationProvider.loadFavorites();
+  // Delay both favorites and station fetch until auth is established.
+  authReady.then((_) {
+    stationProvider.loadFavorites();
+    stationProvider.loadStations();
+  });
 
   runApp(
     MultiProvider(

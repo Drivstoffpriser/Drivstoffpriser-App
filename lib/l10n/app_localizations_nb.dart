@@ -61,6 +61,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get showFavoritesOnly => 'Vis kun favoritter';
 
   @override
+  String get allowMapRotation => 'Tillat kartrotasjon';
+
+  @override
   String get clearAll => 'Fjern alle';
 
   @override
@@ -412,7 +415,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get takePhoto => 'Ta bilde';
 
   @override
-  String get chooseFromGallery => 'Velg fra galleri';
+  String get chooseFromGallery => 'Galleri';
 
   @override
   String get cameraPermissionRequired => 'Kameratillatelse kreves';
@@ -450,7 +453,7 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
-  String get priceRange => 'Område: 5–50 kr';
+  String get priceRange => 'Område: 10–40 kr';
 
   @override
   String get enterAPrice => 'Skriv inn en pris';
@@ -459,7 +462,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get invalidNumber => 'Ugyldig tall';
 
   @override
-  String get priceMustBeBetween => 'Prisen må være mellom 5 og 50 kr';
+  String get priceMustBeBetween => 'Prisen må være mellom 10 og 40 kr';
 
   @override
   String get bugReportTitle => 'Rapporter en feil';
@@ -540,6 +543,9 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get emailAccount => 'E-postkonto';
+
+  @override
+  String get emailConfirmed => 'E-post bekreftet';
 
   @override
   String get contributeData => 'BIDRA MED DATA';
@@ -915,4 +921,22 @@ class AppLocalizationsNb extends AppLocalizations {
   String onboardingStepOf(int current, int total) {
     return '$current av $total';
   }
+
+  @override
+  String nearbyStationPrompt(String stationName) {
+    return 'Du er i nærheten av $stationName. Rapportere pris?';
+  }
+
+  @override
+  String get emailNotVerified => 'Bekreft e-posten din';
+
+  @override
+  String get emailNotVerifiedSubtitle =>
+      'Sjekk innboksen din for en bekreftelseslenke';
+
+  @override
+  String get resendVerificationEmail => 'Send på nytt';
+
+  @override
+  String get verificationEmailSent => 'Bekreftelses-e-post sendt';
 }

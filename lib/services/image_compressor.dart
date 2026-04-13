@@ -16,15 +16,5 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/// Configuration for the backend API.
-/// Provide the base URL at build time:
-///   flutter run --dart-define=BACKEND_URL=https://api.example.com
-class BackendConfig {
-  BackendConfig._();
-
-  /// Base URL of the backend API (no trailing slash).
-  static const String baseUrl = String.fromEnvironment(
-    'BACKEND_URL',
-    defaultValue: 'http://localhost:8000',
-  );
-}
+export 'image_compressor_io.dart'
+    if (dart.library.html) 'image_compressor_web.dart';

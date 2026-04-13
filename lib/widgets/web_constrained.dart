@@ -16,15 +16,26 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/// Configuration for the backend API.
-/// Provide the base URL at build time:
-///   flutter run --dart-define=BACKEND_URL=https://api.example.com
-class BackendConfig {
-  BackendConfig._();
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-  /// Base URL of the backend API (no trailing slash).
-  static const String baseUrl = String.fromEnvironment(
-    'BACKEND_URL',
-    defaultValue: 'http://localhost:8000',
-  );
+const kWebMaxWidth = 600.0;
+
+/// Constrains [child] to [kWebMaxWidth] and centers it on web.
+/// On non-web platforms returns [child] unchanged.
+class WebConstrained extends StatelessWidget {
+  const WebConstrained({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kWebMaxWidth),
+        child: child,
+      ),
+    );
+  }
 }

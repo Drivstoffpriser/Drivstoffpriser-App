@@ -26,7 +26,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/app_colors.dart';
 import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
-import '../../../services/auto_crop_service.dart';
 import '../../../services/image_metadata_service.dart';
 import '../../../services/native_image_picker_service.dart';
 import '../../../services/price_sign_scanner_service.dart';
@@ -160,52 +159,56 @@ class _ScanPriceButtonState extends State<ScanPriceButton> {
       'hasDateTime=${metadata.hasDateTime}, within24h=${metadata.isTakenWithin24Hours}',
     );
 
-    await _cropAndScan(File(picked.path), metadata);
+    await _cropAndScan(originalBytes, metadata);
   }
 
-  /// Pick from gallery using native method channel to preserve GPS EXIF data.
+  /// Pick from gallery. Uses native channel on mobile (preserves GPS EXIF),
+  /// falls back to ImagePicker on web.
   Future<void> _pickFromGallery() async {
     Navigator.pop(context);
 
-    final pickResult = await NativeImagePickerService.pickImageFromGallery();
-    if (pickResult == null) {
-      debugPrint('[$_tag] User cancelled gallery');
-      return;
+    Uint8List imageBytes;
+    ImageMetadata metadata;
+
+    if (kIsWeb) {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked == null) {
+        debugPrint('[$_tag] User cancelled gallery');
+        return;
+      }
+      imageBytes = await picked.readAsBytes();
+      metadata = await ImageMetadataService.extractMetadata(imageBytes);
+    } else {
+      final pickResult = await NativeImagePickerService.pickImageFromGallery();
+      if (pickResult == null) {
+        debugPrint('[$_tag] User cancelled gallery');
+        return;
+      }
+      debugPrint('[$_tag] Gallery image: ${pickResult.path}');
+      imageBytes = await File(pickResult.path).readAsBytes();
+      metadata = pickResult.metadata;
     }
 
-    debugPrint('[$_tag] Gallery image: ${pickResult.path}');
     debugPrint(
-      '[$_tag] Native EXIF: hasLocation=${pickResult.metadata.hasLocation}, '
-      'hasDateTime=${pickResult.metadata.hasDateTime}, '
-      'within24h=${pickResult.metadata.isTakenWithin24Hours}',
+      '[$_tag] Gallery EXIF: hasLocation=${metadata.hasLocation}, '
+      'hasDateTime=${metadata.hasDateTime}, '
+      'within24h=${metadata.isTakenWithin24Hours}',
     );
 
-    await _cropAndScan(File(pickResult.path), pickResult.metadata);
+    await _cropAndScan(imageBytes, metadata);
   }
 
-  /// Common flow: auto-detect → crop → scan → confirm → callback.
-  Future<void> _cropAndScan(File imageFile, ImageMetadata metadata) async {
+  /// Common flow: crop → scan → confirm → callback.
+  Future<void> _cropAndScan(
+    Uint8List imageBytes,
+    ImageMetadata metadata,
+  ) async {
     if (!mounted) return;
-
-    setState(() => _isProcessing = true);
-    debugPrint('[$_tag] Running auto-crop detection...');
-    final detectedArea = await AutoCropService.detectPriceRegion(
-      imageFile.path,
-    );
-    if (!mounted) return;
-    setState(() => _isProcessing = false);
-
-    if (detectedArea != null) {
-      debugPrint('[$_tag] Auto-crop area found: $detectedArea');
-    } else {
-      debugPrint('[$_tag] No auto-crop area detected, using full image');
-    }
 
     final croppedBytes = await Navigator.push<dynamic>(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            ManualCropScreen(imageFile: imageFile, initialArea: detectedArea),
+        builder: (_) => ManualCropScreen(imageBytes: imageBytes),
       ),
     );
 

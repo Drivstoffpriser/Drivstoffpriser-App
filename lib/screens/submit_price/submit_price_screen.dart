@@ -40,8 +40,13 @@ import 'widgets/scan_price_button.dart';
 
 class SubmitPriceScreen extends StatefulWidget {
   final Station station;
+  final ScanResult? initialScanResult;
 
-  const SubmitPriceScreen({super.key, required this.station});
+  const SubmitPriceScreen({
+    super.key,
+    required this.station,
+    this.initialScanResult,
+  });
 
   @override
   State<SubmitPriceScreen> createState() => _SubmitPriceScreenState();
@@ -57,6 +62,17 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
   bool _scanParsedPrices = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialScanResult != null) {
+      // Apply scan result after the first frame so the form is built.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleScanResult(widget.initialScanResult!, autoSubmit: true);
+      });
+    }
+  }
+
+  @override
   void dispose() {
     for (final c in _controllers.values) {
       c.dispose();
@@ -64,7 +80,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     super.dispose();
   }
 
-  void _handleScanResult(ScanResult result) {
+  void _handleScanResult(ScanResult result, {bool autoSubmit = false}) {
     if (result.prices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.couldNotRecognizePrices)),
@@ -104,10 +120,9 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       ),
     );
 
-    // Auto-submit when photo has valid location metadata (within 1km of station
-    // and taken within 24h). The user already confirmed prices on the scan
-    // screen, so no need to press "Submit Report" again.
-    if (_hasValidPhotoMetadata) {
+    // Auto-submit when coming from the capture flow (user already confirmed
+    // prices on the scan screen) or when photo has valid location metadata.
+    if (autoSubmit || _hasValidPhotoMetadata) {
       _submit(autoSubmit: true);
     }
   }
@@ -246,8 +261,6 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
         fuelType: entry.key,
         price: entry.value,
         userId: userId,
-        // Count as one station report regardless of how many fuel types
-        incrementUserReport: successCount == 0,
       );
       if (success) {
         successCount++;
@@ -263,7 +276,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       final userProvider = context.read<UserProvider>();
       final stationProvider = context.read<StationProvider>();
       await userProvider.refreshProfile();
-      stationProvider.refreshFromFirestore();
+      stationProvider.refreshStations();
     }
 
     if (!mounted) return;

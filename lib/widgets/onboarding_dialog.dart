@@ -104,118 +104,140 @@ class _OnboardingDialogState extends State<_OnboardingDialog> {
 
     final isLastPage = _currentPage == tips.length - 1;
 
-    return AlertDialog(
-      title: Text(
-        _currentPage == 0 ? l10n.onboardingTitle : tips[_currentPage].title,
-        style: AppTextStyles.heading(context).copyWith(fontSize: 20),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: 40.0,
+        vertical: 24.0,
       ),
-      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                itemCount: tips.length,
-                itemBuilder: (context, index) {
-                  final tip = tips[index];
-                  return SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_currentPage != 0 || index != 0)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              tip.body,
-                              style: AppTextStyles.body(context),
-                            ),
-                          )
-                        else ...[
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Text(
-                              tip.body,
-                              style: AppTextStyles.body(context),
-                            ),
-                          ),
-                        ],
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(tip.image, fit: BoxFit.contain),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 620,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _currentPage == 0
+                    ? l10n.onboardingTitle
+                    : tips[_currentPage].title,
+                style: AppTextStyles.heading(context).copyWith(fontSize: 20),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                tips.length,
-                (i) => Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: i == _currentPage
-                        ? AppColors.primaryContainer(context)
-                        : AppColors.textMuted(context).withValues(alpha: 0.3),
-                  ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _controller,
+                        onPageChanged: (i) {
+                          setState(() {
+                            _currentPage = i;
+                            if (i == tips.length - 1 &&
+                                widget.requireDismiss &&
+                                !_dontShowAgain) {
+                              _dontShowAgain = true;
+                              widget.onDontShowAgainChanged?.call(true);
+                            }
+                          });
+                        },
+                        itemCount: tips.length,
+                        itemBuilder: (context, index) {
+                          final tip = tips[index];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Text(
+                                  tip.body,
+                                  style: AppTextStyles.body(context),
+                                ),
+                              ),
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    tip.image,
+                                    fit: BoxFit.contain,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        tips.length,
+                        (i) => Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i == _currentPage
+                                ? AppColors.primaryContainer(context)
+                                : AppColors.textMuted(
+                                    context,
+                                  ).withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.onboardingStepOf(_currentPage + 1, tips.length),
+                      style: AppTextStyles.meta(context),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.onboardingStepOf(_currentPage + 1, tips.length),
-              style: AppTextStyles.meta(context),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        if (isLastPage && widget.requireDismiss)
-          Row(
-            children: [
-              Checkbox(
-                value: _dontShowAgain,
-                onChanged: (value) {
-                  setState(() => _dontShowAgain = value ?? false);
-                  widget.onDontShowAgainChanged?.call(_dontShowAgain);
-                },
+              const SizedBox(height: 8),
+              if (isLastPage && widget.requireDismiss)
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _dontShowAgain,
+                      onChanged: (value) {
+                        setState(() => _dontShowAgain = value ?? false);
+                        widget.onDontShowAgainChanged?.call(_dontShowAgain);
+                      },
+                    ),
+                    Flexible(child: Text(l10n.dontShowAgain)),
+                  ],
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (isLastPage)
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.gotIt),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: () {
+                        _controller.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Text(l10n.onboardingNext),
+                    ),
+                ],
               ),
-              Flexible(child: Text(l10n.dontShowAgain)),
             ],
           ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            if (isLastPage)
-              FilledButton(
-                onPressed: !widget.requireDismiss || _dontShowAgain
-                    ? () => Navigator.pop(context)
-                    : null,
-                child: Text(l10n.gotIt),
-              )
-            else
-              FilledButton(
-                onPressed: () {
-                  _controller.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                child: Text(l10n.onboardingNext),
-              ),
-          ],
         ),
-      ],
+      ),
     );
   }
 }
