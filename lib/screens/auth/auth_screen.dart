@@ -167,16 +167,9 @@ class _AuthScreenState extends State<AuthScreen> {
       final userProvider = context.read<UserProvider>();
 
       if (_isRegister) {
-        await userProvider.registerWithEmail(
-          email,
-          password,
-          name,
-        );
+        await userProvider.registerWithEmail(email, password, name);
       } else {
-        await userProvider.signInWithEmail(
-          email,
-          password,
-        );
+        await userProvider.signInWithEmail(email, password);
       }
 
       if (mounted) {
@@ -453,9 +446,9 @@ class _AuthScreenState extends State<AuthScreen> {
       style: AppTextStyles.body(context),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles.body(context).copyWith(
-          color: AppColors.textMuted(context),
-        ),
+        hintStyle: AppTextStyles.body(
+          context,
+        ).copyWith(color: AppColors.textMuted(context)),
         filled: true,
         fillColor: AppColors.surface(context),
         contentPadding: const EdgeInsets.symmetric(
