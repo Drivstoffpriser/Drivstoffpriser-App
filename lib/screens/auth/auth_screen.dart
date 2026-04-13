@@ -344,8 +344,13 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: _isLoading ? null : _sendPasswordReset,
+              child: TextButton(
+                onPressed: _isLoading ? null : _sendPasswordReset,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(44, 44),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: Text(
                   context.l10n.forgotPassword,
                   style: AppTextStyles.label(context).copyWith(
