@@ -114,7 +114,11 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        _showSnackBar(_friendlyError(context, e));
+        if (e.code == 'user-not-found') {
+          _showSnackBar(context.l10n.passwordResetSent);
+        } else {
+          _showSnackBar(_friendlyError(context, e));
+        }
       }
     } catch (e) {
       if (mounted) {
