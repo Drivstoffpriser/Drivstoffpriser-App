@@ -86,10 +86,9 @@ class PriceProvider extends ChangeNotifier {
     return cooldownDuration - elapsed;
   }
 
-  Future<bool> submitReport({
+  Future<bool> submitReports({
     required String stationId,
-    required FuelType fuelType,
-    required double price,
+    required Map<FuelType, double> prices,
     required String userId,
   }) async {
     _isSubmitting = true;
@@ -99,12 +98,15 @@ class PriceProvider extends ChangeNotifier {
     try {
       final client = BackendApiClient();
       await client.registerPrices(stationId, [
-        (fuelType: fuelType, price: price),
+        for (final entry in prices.entries)
+          (fuelType: entry.key, price: entry.value),
       ]);
 
       final prefs = await SharedPreferences.getInstance();
-      final key = 'lastReport_${stationId}_${fuelType.name}';
-      await prefs.setString(key, DateTime.now().toIso8601String());
+      final now = DateTime.now().toIso8601String();
+      for (final fuelType in prices.keys) {
+        await prefs.setString('lastReport_${stationId}_${fuelType.name}', now);
+      }
 
       _isSubmitting = false;
       notifyListeners();
