@@ -1735,6 +1735,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verification email sent'**
   String get verificationEmailSent;
+
+  /// No description provided for @cameraZoomTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom Tip'**
+  String get cameraZoomTipTitle;
+
+  /// No description provided for @cameraZoomTipBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder.'**
+  String get cameraZoomTipBody;
 }
 
 class _AppLocalizationsDelegate
