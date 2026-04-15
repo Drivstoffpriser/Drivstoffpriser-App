@@ -274,6 +274,7 @@
   "approveStationBody": "Dette vil legge stasjonen til på kartet. Du kan eventuelt sende tilbakemelding til brukeren.",
   "deleteStationTitle": "Slette stasjon?",
   "deleteStationBody": "Dette vil permanent fjerne denne stasjonen fra kartet.",
+  "deleteStationFailed": "Kunne ikke slette stasjonen",
 
   "editStationInfo": "Foreslå endring",
   "submitChanges": "Send inn endringer",

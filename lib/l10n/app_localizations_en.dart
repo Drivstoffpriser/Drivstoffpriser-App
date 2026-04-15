@@ -815,6 +815,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will permanently remove this station from the map.';
 
   @override
+  String get deleteStationFailed => 'Failed to delete station';
+
+  @override
   String get editStationInfo => 'Suggest Edit';
 
   @override

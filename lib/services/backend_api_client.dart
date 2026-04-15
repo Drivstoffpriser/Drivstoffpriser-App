@@ -92,6 +92,26 @@ class BackendApiClient {
     _checkStatus(response);
   }
 
+  Future<void> deleteNoBody(String path) async {
+    final response = await http.delete(
+      _uri(path),
+      headers: await _authHeaders(),
+    );
+    _checkStatus(response);
+  }
+
+  Future<Map<String, dynamic>> patch(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await http.patch(
+      _uri(path),
+      headers: await _authHeaders(),
+      body: jsonEncode(body),
+    );
+    return _decodeMap(response);
+  }
+
   // ── Domain methods ────────────────────────────────────────────────────────
 
   Future<List<Station>> getStations({
@@ -157,6 +177,30 @@ class BackendApiClient {
           {'fuelType': r.fuelType.backendString, 'price': r.price},
       ],
     });
+  }
+
+  Future<void> deleteStation(String stationId) async {
+    await deleteNoBody('/stations/$stationId');
+  }
+
+  Future<void> updateStation(
+    String stationId, {
+    String? name,
+    String? provider,
+    String? address,
+    String? city,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (provider != null) body['provider'] = provider;
+    if (address != null) body['address'] = address;
+    if (city != null) body['city'] = city;
+    if (latitude != null && longitude != null) {
+      body['location'] = {'lat': latitude, 'lng': longitude};
+    }
+    await patch('/stations/$stationId', body);
   }
 
   Future<Set<String>> getFavorites() async {
