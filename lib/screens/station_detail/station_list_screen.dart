@@ -110,12 +110,14 @@ class StationListScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: stationProvider.isLoading && stationProvider.stations.isEmpty
+            child:
+                (stationProvider.isLoading || stationProvider.isListLoading) &&
+                    sorted.isEmpty
                 ? const LoadingIndicator()
                 : RefreshIndicator(
                     onRefresh: () async {
                       try {
-                        await stationProvider.refreshStations();
+                        await stationProvider.loadSortedStations();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

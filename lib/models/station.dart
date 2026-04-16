@@ -57,6 +57,20 @@ class Station {
     this.prices = const {},
   });
 
+  /// Returns a copy of this station with the given prices merged in.
+  Station copyWithPrices(Map<FuelType, CurrentPrice> newPrices) {
+    return Station(
+      id: id,
+      name: name,
+      brand: brand,
+      address: address,
+      city: city,
+      latitude: latitude,
+      longitude: longitude,
+      prices: newPrices,
+    );
+  }
+
   factory Station.fromJson(Map<String, dynamic> json) {
     final rawPrices = json['prices'] as List<dynamic>? ?? [];
     final prices = <FuelType, CurrentPrice>{};
@@ -98,6 +112,21 @@ class Station {
       latitude: (location['lat'] as num).toDouble(),
       longitude: (location['lng'] as num).toDouble(),
       prices: prices,
+    );
+  }
+
+  /// Parses a station from the `/stations/all` endpoint (no prices).
+  factory Station.fromBaseJson(Map<String, dynamic> json) {
+    final provider = json['provider'] as String;
+    final location = json['location'] as Map<String, dynamic>;
+    return Station(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      brand: _providerToDisplayName[provider] ?? provider,
+      address: json['address'] as String,
+      city: json['city'] as String,
+      latitude: (location['lat'] as num).toDouble(),
+      longitude: (location['lng'] as num).toDouble(),
     );
   }
 

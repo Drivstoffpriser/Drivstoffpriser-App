@@ -23,23 +23,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/station.dart';
 
 class CacheService {
-  static const _stationsKey = 'cached_stations';
-  static const _stationsTsKey = 'cached_stations_ts';
+  static const _allStationsKey = 'cached_all_stations';
+  static const _serverLastUpdatedKey = 'stations_server_last_updated';
 
-  /// Cache TTL — data older than this is considered stale.
-  static const _ttl = Duration(minutes: 30);
-
-  static Future<void> cacheStations(List<Station> stations) async {
+  /// Cache all stations (base data, no prices).
+  static Future<void> cacheAllStations(
+    List<Station> stations,
+    DateTime serverLastUpdated,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final json = jsonEncode(stations.map((s) => s.toJson()).toList());
-    await prefs.setString(_stationsKey, json);
-    await prefs.setInt(_stationsTsKey, DateTime.now().millisecondsSinceEpoch);
+    await prefs.setString(_allStationsKey, json);
+    await prefs.setString(
+      _serverLastUpdatedKey,
+      serverLastUpdated.toIso8601String(),
+    );
   }
 
-  static Future<List<Station>?> getCachedStations() async {
+  /// Returns cached stations, or null if no cache exists.
+  static Future<List<Station>?> getCachedAllStations() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!_isFresh(prefs, _stationsTsKey)) return null;
-    final json = prefs.getString(_stationsKey);
+    final json = prefs.getString(_allStationsKey);
     if (json == null) return null;
     final list = jsonDecode(json) as List;
     return list
@@ -47,10 +51,18 @@ class CacheService {
         .toList();
   }
 
-  static bool _isFresh(SharedPreferences prefs, String tsKey) {
-    final ts = prefs.getInt(tsKey);
-    if (ts == null) return false;
-    final age = DateTime.now().millisecondsSinceEpoch - ts;
-    return age < _ttl.inMilliseconds;
+  /// Returns the server's lastUpdatedAt timestamp from the last cache, or null.
+  static Future<DateTime?> getStoredLastUpdatedAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_serverLastUpdatedKey);
+    if (raw == null) return null;
+    return DateTime.parse(raw);
+  }
+
+  /// Remove legacy cache keys from pre-lazy-loading versions of the app.
+  static Future<void> clearLegacyCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('cached_stations');
+    await prefs.remove('cached_stations_ts');
   }
 }

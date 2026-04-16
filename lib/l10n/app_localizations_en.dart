@@ -933,4 +933,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationEmailSent => 'Verification email sent';
+
+  @override
+  String get cameraZoomTipTitle => 'Zoom Tip';
+
+  @override
+  String get cameraZoomTipBody =>
+      'Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder.';
 }

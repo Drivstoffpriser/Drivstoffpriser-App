@@ -939,4 +939,11 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get verificationEmailSent => 'Bekreftelses-e-post sendt';
+
+  @override
+  String get cameraZoomTipTitle => 'Zoom-tips';
+
+  @override
+  String get cameraZoomTipBody =>
+      'Bruk knip-for-å-zoome for å zoome nærmere prisskiltet. Du kan også trykke på zoom-knappene under søkeren.';
 }
