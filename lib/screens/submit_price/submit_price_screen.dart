@@ -299,7 +299,7 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
     ).showSnackBar(SnackBar(content: Text(parts.join('. '))));
 
     if (successCount > 0) {
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 
