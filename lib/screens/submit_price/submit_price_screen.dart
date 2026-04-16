@@ -267,7 +267,9 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       final userProvider = context.read<UserProvider>();
       final stationProvider = context.read<StationProvider>();
       await userProvider.refreshProfile();
-      stationProvider.refreshStations();
+      stationProvider.invalidatePriceCache(widget.station.id);
+      // ignore: unawaited_futures
+      stationProvider.loadPricesForStations([widget.station.id]);
     }
 
     if (!mounted) return;
