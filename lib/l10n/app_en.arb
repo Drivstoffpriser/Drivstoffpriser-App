@@ -296,6 +296,7 @@
   "approveStationBody": "This will add the station to the map. You can optionally send feedback to the user.",
   "deleteStationTitle": "Delete Station?",
   "deleteStationBody": "This will permanently remove this station from the map.",
+  "deleteStationFailed": "Failed to delete station",
 
   "editStationInfo": "Suggest Edit",
   "submitChanges": "Submit Changes",

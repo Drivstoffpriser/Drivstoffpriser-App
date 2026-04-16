@@ -1580,6 +1580,12 @@ abstract class AppLocalizations {
   /// **'This will permanently remove this station from the map.'**
   String get deleteStationBody;
 
+  /// No description provided for @deleteStationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete station'**
+  String get deleteStationFailed;
+
   /// No description provided for @editStationInfo.
   ///
   /// In en, this message translates to:

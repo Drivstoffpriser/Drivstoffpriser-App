@@ -30,6 +30,7 @@ import '../../models/station.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/backend_api_client.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
@@ -111,7 +112,16 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await FirestoreService.deleteStation(widget.station.id);
+    try {
+      await BackendApiClient().deleteStation(widget.station.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${context.l10n.deleteStationFailed}: $e')),
+        );
+      }
+      return;
+    }
     if (mounted) {
       await stationProvider.refreshStations();
       if (mounted) Navigator.pop(context);

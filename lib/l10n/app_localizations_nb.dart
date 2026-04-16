@@ -820,6 +820,9 @@ class AppLocalizationsNb extends AppLocalizations {
       'Dette vil permanent fjerne denne stasjonen fra kartet.';
 
   @override
+  String get deleteStationFailed => 'Kunne ikke slette stasjonen';
+
+  @override
   String get editStationInfo => 'Foreslå endring';
 
   @override
