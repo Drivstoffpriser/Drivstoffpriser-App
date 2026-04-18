@@ -477,6 +477,12 @@ class StationProvider extends ChangeNotifier {
 
   // ── Refresh ───────────────────────────────────────────────────────────────
 
+  /// Invalidate the price cache for a single station, forcing the next
+  /// [loadPricesForStations] call to re-fetch from the backend.
+  void invalidatePriceCache(String stationId) {
+    _priceFetchedAt.remove(stationId);
+  }
+
   /// Re-fetch all stations unconditionally and clear price cache.
   Future<void> refreshStations() async {
     _isLoading = true;
