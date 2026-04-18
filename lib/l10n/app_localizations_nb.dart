@@ -263,10 +263,29 @@ class AppLocalizationsNb extends AppLocalizations {
   String get passwordMinLength => 'Passordet må være minst 6 tegn';
 
   @override
+  String get createAccountSubtitle => 'Spor priser og hjelp fellesskapet.';
+
+  @override
+  String get signInSubtitle => 'Velkommen tilbake.';
+
+  @override
+  String get alreadyHaveAccountPrefix => 'Har du allerede en konto? ';
+
+  @override
+  String get needAccountPrefix => 'Trenger du en konto? ';
+
+  @override
   String get alreadyHaveAccount => 'Har du allerede en konto? Logg inn';
 
   @override
   String get needAccount => 'Trenger du en konto? Opprett en';
+
+  @override
+  String get forgotPassword => 'Glemt passord?';
+
+  @override
+  String get passwordResetSent =>
+      'Hvis det finnes en konto for denne e-postadressen, vil du motta en e-post for tilbakestilling av passord.';
 
   @override
   String get errorEmailInUse =>
@@ -288,6 +307,17 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get errorCredentialInUse =>
       'Denne legitimasjonen er allerede knyttet til en annen konto.';
+
+  @override
+  String get errorUserDisabled => 'Denne kontoen er deaktivert.';
+
+  @override
+  String get errorTooManyRequests =>
+      'For mange forsøk. Vent litt og prøv igjen.';
+
+  @override
+  String get errorNetworkRequestFailed =>
+      'Nettverksfeil. Sjekk tilkoblingen og prøv igjen.';
 
   @override
   String errorAuthFailed(String code) {

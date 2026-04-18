@@ -578,6 +578,30 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get passwordMinLength;
 
+  /// No description provided for @createAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track prices and help the community.'**
+  String get createAccountSubtitle;
+
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back.'**
+  String get signInSubtitle;
+
+  /// No description provided for @alreadyHaveAccountPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get alreadyHaveAccountPrefix;
+
+  /// No description provided for @needAccountPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Need an account? '**
+  String get needAccountPrefix;
+
   /// No description provided for @alreadyHaveAccount.
   ///
   /// In en, this message translates to:
@@ -589,6 +613,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Need an account? Create one'**
   String get needAccount;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @passwordResetSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for this email, you will receive a password reset email.'**
+  String get passwordResetSent;
 
   /// No description provided for @errorEmailInUse.
   ///
@@ -625,6 +661,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This credential is already associated with another account.'**
   String get errorCredentialInUse;
+
+  /// No description provided for @errorUserDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been disabled.'**
+  String get errorUserDisabled;
+
+  /// No description provided for @errorTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a bit and try again.'**
+  String get errorTooManyRequests;
+
+  /// No description provided for @errorNetworkRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Check your connection and try again.'**
+  String get errorNetworkRequestFailed;
 
   /// No description provided for @errorAuthFailed.
   ///
