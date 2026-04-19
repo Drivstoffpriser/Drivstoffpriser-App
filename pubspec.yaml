@@ -59,7 +59,7 @@ dependencies:
   image: ^4.7.2
   crop_your_image: ^2.0.0
   exif: ^3.3.0
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ">=7.0.0 <7.1.0"
   google_fonts: ^8.0.2
   camera: ^0.11.1
   font_awesome_flutter: ^10.8.0
