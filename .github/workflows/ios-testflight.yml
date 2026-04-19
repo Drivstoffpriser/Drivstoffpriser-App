@@ -3,6 +3,7 @@ name: iOS TestFlight Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
