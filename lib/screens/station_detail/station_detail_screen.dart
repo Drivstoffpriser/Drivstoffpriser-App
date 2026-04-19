@@ -63,6 +63,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       final provider = context.read<PriceProvider>();
       provider.clear();
       provider.loadHistory(widget.station.id);
+      context.read<StationProvider>().loadPricesForStations([
+        widget.station.id,
+      ]);
     });
   }
 
@@ -129,10 +132,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final stationProvider = context.watch<StationProvider>();
     final priceProvider = context.watch<PriceProvider>();
     final userProvider = context.watch<UserProvider>();
-    final station = stationProvider.stations.firstWhere(
-      (s) => s.id == widget.station.id,
-      orElse: () => widget.station,
-    );
+    final station =
+        stationProvider.getStation(widget.station.id) ?? widget.station;
     final prices = station.prices.values.toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = AppColors.primaryContainer(context);

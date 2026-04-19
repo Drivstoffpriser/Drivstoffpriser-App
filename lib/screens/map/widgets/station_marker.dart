@@ -28,6 +28,7 @@ class StationMarker extends StatefulWidget {
   final Station station;
   final CurrentPrice? price;
   final bool isBestPrice;
+  final bool isLoadingPrice;
   final VoidCallback onTap;
 
   const StationMarker({
@@ -35,6 +36,7 @@ class StationMarker extends StatefulWidget {
     required this.station,
     this.price,
     this.isBestPrice = false,
+    this.isLoadingPrice = false,
     required this.onTap,
   });
 
@@ -151,21 +153,19 @@ class _StationMarkerState extends State<StationMarker> {
       child: AnimatedScale(
         scale: _isPressed ? 0.93 : 1.0,
         duration: const Duration(milliseconds: 80),
-        child: widget.price != null
-            ? _buildLogoWithPrice(context)
-            : _buildCircleMarker(context),
+        child: _buildLogoWithPrice(context),
       ),
     );
   }
 
   /// Logo circle with freshness-colored border, time badge, and price tag.
   Widget _buildLogoWithPrice(BuildContext context) {
-    final price = widget.price!;
+    final price = widget.price;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color borderColor;
     final String? ageLabel;
-    if (price.isEstimate) {
+    if (price == null || price.isEstimate) {
       borderColor = AppColors.border(context);
       ageLabel = null;
     } else {
@@ -226,7 +226,7 @@ class _StationMarkerState extends State<StationMarker> {
                   ),
                 ),
               )
-            else if (price.isEstimate)
+            else if (price != null && price.isEstimate)
               Positioned(
                 top: 0,
                 right: 0,
@@ -247,97 +247,89 @@ class _StationMarkerState extends State<StationMarker> {
           ],
         ),
         const SizedBox(height: 2),
-        // Price tag
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: widget.isBestPrice
-                ? AppColors.primaryContainer(context)
-                : (isDark ? AppColors.darkSurfaceHigh : Colors.white),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: widget.isBestPrice
-                  ? AppColors.primaryContainer(context)
-                  : AppColors.border(context),
-              width: widget.isBestPrice ? 1 : 0.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.isBestPrice
-                    ? AppColors.primaryContainer(
-                        context,
-                      ).withValues(alpha: 0.35)
-                    : Colors.black.withValues(alpha: 0.1),
-                blurRadius: widget.isBestPrice ? 8 : 4,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.isBestPrice && !price.isEstimate)
-                Padding(
-                  padding: const EdgeInsets.only(right: 2),
-                  child: Icon(
-                    Icons.star_rounded,
-                    size: 10,
-                    color: isDark ? AppColors.darkBackground : Colors.white,
-                  ),
-                ),
-              Text(
-                price.price.toStringAsFixed(2),
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: widget.isBestPrice
-                      ? (isDark ? AppColors.darkBackground : Colors.white)
-                      : AppColors.textPrimary(context),
-                ),
-              ),
-            ],
-          ),
-        ),
+        // Price tag — always visible. Shows price when loaded, a spinner
+        // while fetching, and a dash placeholder when the backend has no
+        // price for this station.
+        _buildPricePill(context, price, isDark),
       ],
     );
   }
 
-  /// No price — plain circle with logo or initials.
-  Widget _buildCircleMarker(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: _isPressed ? 0.85 : 1.0,
-      duration: const Duration(milliseconds: 80),
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated(context),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.border(context),
-                  width: 0.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+  Widget _buildPricePill(
+    BuildContext context,
+    CurrentPrice? price,
+    bool isDark,
+  ) {
+    final hasPrice = price != null;
+    final highlight = widget.isBestPrice && hasPrice;
+    final textColor = highlight
+        ? (isDark ? AppColors.darkBackground : Colors.white)
+        : AppColors.textPrimary(context);
+
+    // Min width so the pill is at least wide enough to fit a two-decimal
+    // price like "99.99" with the star prefix for best-price.
+    const pillMinWidth = 44.0;
+
+    return Container(
+      constraints: const BoxConstraints(minWidth: pillMinWidth),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: highlight
+            ? AppColors.primaryContainer(context)
+            : (isDark ? AppColors.darkSurfaceHigh : Colors.white),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: highlight
+              ? AppColors.primaryContainer(context)
+              : AppColors.border(context),
+          width: highlight ? 1 : 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: highlight
+                ? AppColors.primaryContainer(context).withValues(alpha: 0.35)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: highlight ? 8 : 4,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (hasPrice) ...[
+            if (highlight && !price.isEstimate)
+              Padding(
+                padding: const EdgeInsets.only(right: 2),
+                child: Icon(Icons.star_rounded, size: 10, color: textColor),
+              ),
+            Text(
+              price.price.toStringAsFixed(2),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: textColor,
               ),
             ),
+          ] else if (widget.isLoadingPrice)
             SizedBox(
-              width: 32,
-              height: 32,
-              child: _buildBrandImage(context, size: 32),
+              width: 10,
+              height: 10,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: AppColors.textMuted(context),
+              ),
+            )
+          else
+            Text(
+              '—',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMuted(context),
+              ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

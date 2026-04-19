@@ -263,10 +263,29 @@ class AppLocalizationsNb extends AppLocalizations {
   String get passwordMinLength => 'Passordet må være minst 6 tegn';
 
   @override
+  String get createAccountSubtitle => 'Spor priser og hjelp fellesskapet.';
+
+  @override
+  String get signInSubtitle => 'Velkommen tilbake.';
+
+  @override
+  String get alreadyHaveAccountPrefix => 'Har du allerede en konto? ';
+
+  @override
+  String get needAccountPrefix => 'Trenger du en konto? ';
+
+  @override
   String get alreadyHaveAccount => 'Har du allerede en konto? Logg inn';
 
   @override
   String get needAccount => 'Trenger du en konto? Opprett en';
+
+  @override
+  String get forgotPassword => 'Glemt passord?';
+
+  @override
+  String get passwordResetSent =>
+      'Hvis det finnes en konto for denne e-postadressen, vil du motta en e-post for tilbakestilling av passord.';
 
   @override
   String get errorEmailInUse =>
@@ -288,6 +307,17 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get errorCredentialInUse =>
       'Denne legitimasjonen er allerede knyttet til en annen konto.';
+
+  @override
+  String get errorUserDisabled => 'Denne kontoen er deaktivert.';
+
+  @override
+  String get errorTooManyRequests =>
+      'For mange forsøk. Vent litt og prøv igjen.';
+
+  @override
+  String get errorNetworkRequestFailed =>
+      'Nettverksfeil. Sjekk tilkoblingen og prøv igjen.';
 
   @override
   String errorAuthFailed(String code) {
@@ -867,20 +897,14 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get manageAdminsSubtitle =>
-      'Forfremme eller degradere brukere etter Firebase-UID';
+      'Forfremme eller degradere brukere etter e-post';
 
   @override
   String get manageAdminsIntro =>
-      'Lim inn en brukers Firebase-UID og forfremme dem til administrator eller fjern administratortilgangen. Endringer trer i kraft neste gang brukeren logger inn.';
+      'Skriv inn en brukers e-post for å forfremme dem til administrator eller fjerne administratortilgangen. Endringer trer i kraft neste gang brukeren logger inn.';
 
   @override
-  String get firebaseUid => 'Firebase-UID';
-
-  @override
-  String get firebaseUidHint => 'f.eks. HPcfQndrCHQfDg1w9UHo8mClQ8G3';
-
-  @override
-  String get pleaseEnterUid => 'Vennligst skriv inn en UID';
+  String get manageAdminsEmailHint => 'f.eks. bruker@eksempel.no';
 
   @override
   String get promote => 'Forfremme';

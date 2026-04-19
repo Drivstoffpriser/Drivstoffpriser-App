@@ -62,10 +62,16 @@ void main() async {
   final authReady = userProvider.initialize();
 
   final stationProvider = StationProvider();
-  // Delay both favorites and station fetch until auth is established.
+  // Start station initialization (loads cache, checks last-updated).
+  // The authenticated fetch is deferred until auth is ready.
+  stationProvider.initialize();
+
   authReady.then((_) {
+    stationProvider.onAuthReady();
     stationProvider.loadFavorites();
-    stationProvider.loadStations();
+    // Preload the sorted station list so it's ready when the user
+    // navigates to the list screen.
+    stationProvider.loadSortedStations();
   });
 
   runApp(

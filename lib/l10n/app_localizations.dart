@@ -578,6 +578,30 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get passwordMinLength;
 
+  /// No description provided for @createAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track prices and help the community.'**
+  String get createAccountSubtitle;
+
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back.'**
+  String get signInSubtitle;
+
+  /// No description provided for @alreadyHaveAccountPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get alreadyHaveAccountPrefix;
+
+  /// No description provided for @needAccountPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Need an account? '**
+  String get needAccountPrefix;
+
   /// No description provided for @alreadyHaveAccount.
   ///
   /// In en, this message translates to:
@@ -589,6 +613,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Need an account? Create one'**
   String get needAccount;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @passwordResetSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for this email, you will receive a password reset email.'**
+  String get passwordResetSent;
 
   /// No description provided for @errorEmailInUse.
   ///
@@ -625,6 +661,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This credential is already associated with another account.'**
   String get errorCredentialInUse;
+
+  /// No description provided for @errorUserDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been disabled.'**
+  String get errorUserDisabled;
+
+  /// No description provided for @errorTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a bit and try again.'**
+  String get errorTooManyRequests;
+
+  /// No description provided for @errorNetworkRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Check your connection and try again.'**
+  String get errorNetworkRequestFailed;
 
   /// No description provided for @errorAuthFailed.
   ///
@@ -1661,32 +1715,20 @@ abstract class AppLocalizations {
   /// No description provided for @manageAdminsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Promote or demote users by Firebase UID'**
+  /// **'Promote or demote users by email'**
   String get manageAdminsSubtitle;
 
   /// No description provided for @manageAdminsIntro.
   ///
   /// In en, this message translates to:
-  /// **'Paste a user\'s Firebase UID and promote them to admin or remove their admin access. Changes take effect next time the user signs in.'**
+  /// **'Enter a user\'s email to promote them to admin or remove their admin access. Changes take effect next time the user signs in.'**
   String get manageAdminsIntro;
 
-  /// No description provided for @firebaseUid.
+  /// No description provided for @manageAdminsEmailHint.
   ///
   /// In en, this message translates to:
-  /// **'Firebase UID'**
-  String get firebaseUid;
-
-  /// No description provided for @firebaseUidHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. HPcfQndrCHQfDg1w9UHo8mClQ8G3'**
-  String get firebaseUidHint;
-
-  /// No description provided for @pleaseEnterUid.
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a UID'**
-  String get pleaseEnterUid;
+  /// **'e.g. user@example.com'**
+  String get manageAdminsEmailHint;
 
   /// No description provided for @promote.
   ///

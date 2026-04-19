@@ -227,6 +227,11 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Send a password-reset email via Firebase Auth.
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
   /// Sign in with an existing email/password account.
   Future<void> signInWithEmail(String email, String password) async {
     final result = await _auth.signInWithEmailAndPassword(

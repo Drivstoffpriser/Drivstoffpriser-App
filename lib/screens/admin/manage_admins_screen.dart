@@ -32,29 +32,32 @@ class ManageAdminsScreen extends StatefulWidget {
 
 class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _uidController = TextEditingController();
+  final _emailController = TextEditingController();
   final _apiClient = BackendApiClient();
   bool _isBusy = false;
 
   @override
   void dispose() {
-    _uidController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
   Future<void> _run(
-    Future<void> Function(String) action,
+    Future<void> Function(String userId) action,
     String successMessage,
   ) async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isBusy = true);
     try {
-      await action(_uidController.text.trim());
+      final userId = await _apiClient.getUserIdByEmail(
+        _emailController.text.trim(),
+      );
+      await action(userId);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(successMessage)));
-      _uidController.clear();
+      _emailController.clear();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,17 +91,18 @@ class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
             ),
             const SizedBox(height: 24),
             TextFormField(
-              controller: _uidController,
+              controller: _emailController,
               style: AppTextStyles.body(context),
               autocorrect: false,
               enableSuggestions: false,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                labelText: context.l10n.firebaseUid,
-                hintText: context.l10n.firebaseUidHint,
+                labelText: context.l10n.email,
+                hintText: context.l10n.manageAdminsEmailHint,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return context.l10n.pleaseEnterUid;
+                  return context.l10n.enterYourEmail;
                 }
                 return null;
               },

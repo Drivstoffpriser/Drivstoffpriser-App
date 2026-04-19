@@ -24,6 +24,7 @@ import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 import '../../../services/price_sign_scanner_service.dart';
+import 'price_input_field.dart';
 
 class ConfirmPricesScreen extends StatefulWidget {
   final Uint8List imageBytes;
@@ -142,13 +143,9 @@ class _ConfirmPricesScreenState extends State<ConfirmPricesScreen> {
                               controller: _controllers[type],
                               keyboardType:
                                   const TextInputType.numberWithOptions(
-                                    decimal: true,
+                                    decimal: false,
                                   ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d*\.?\d{0,2}'),
-                                ),
-                              ],
+                              inputFormatters: [AutoDecimalFormatter()],
                               style: AppTextStyles.body(context),
                               decoration: InputDecoration(
                                 isDense: true,
