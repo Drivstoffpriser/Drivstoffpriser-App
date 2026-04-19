@@ -803,6 +803,11 @@ class AppLocalizationsNb extends AppLocalizations {
       'Dette vil permanent fjerne denne prisrapporten.';
 
   @override
+  String deleteReportFailed(String error) {
+    return 'Kunne ikke slette rapport: $error';
+  }
+
+  @override
   String get coordinates => 'Koordinater';
 
   @override
@@ -855,6 +860,43 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get manageAdmins => 'Administrer administratorer';
+
+  @override
+  String get manageAdminsSubtitle =>
+      'Forfremme eller degradere brukere etter Firebase-UID';
+
+  @override
+  String get manageAdminsIntro =>
+      'Lim inn en brukers Firebase-UID og forfremme dem til administrator eller fjern administratortilgangen. Endringer trer i kraft neste gang brukeren logger inn.';
+
+  @override
+  String get firebaseUid => 'Firebase-UID';
+
+  @override
+  String get firebaseUidHint => 'f.eks. HPcfQndrCHQfDg1w9UHo8mClQ8G3';
+
+  @override
+  String get pleaseEnterUid => 'Vennligst skriv inn en UID';
+
+  @override
+  String get promote => 'Forfremme';
+
+  @override
+  String get demote => 'Degradere';
+
+  @override
+  String get adminPromoted => 'Brukeren ble forfremmet til administrator.';
+
+  @override
+  String get adminDemoted => 'Administratortilgang fjernet.';
+
+  @override
+  String adminUpdateFailed(String error) {
+    return 'Kunne ikke oppdatere administratorstatus: $error';
   }
 
   @override

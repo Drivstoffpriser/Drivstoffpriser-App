@@ -37,7 +37,6 @@ class UserProfile {
       displayName: json['displayName'] as String,
       reportCount: json['reportCount'] as int,
       trustScore: (json['trustScore'] as num).toDouble(),
-      isAdmin: json['isAdmin'] as bool? ?? false,
     );
   }
 

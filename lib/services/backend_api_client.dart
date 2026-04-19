@@ -167,6 +167,10 @@ class BackendApiClient {
     ];
   }
 
+  Future<void> deletePriceRegistration(String stationId, String priceId) async {
+    await deleteNoBody('/stations/$stationId/prices/$priceId');
+  }
+
   Future<void> registerPrices(
     String stationId,
     List<({FuelType fuelType, double price})> registrations,
@@ -201,6 +205,18 @@ class BackendApiClient {
       body['location'] = {'lat': latitude, 'lng': longitude};
     }
     await patch('/stations/$stationId', body);
+  }
+
+  Future<void> promoteAdmin(String firebaseUid) async {
+    final response = await http.post(
+      _uri('/users/$firebaseUid/admin'),
+      headers: await _authHeaders(),
+    );
+    _checkStatus(response);
+  }
+
+  Future<void> demoteAdmin(String firebaseUid) async {
+    await deleteNoBody('/users/$firebaseUid/admin');
   }
 
   Future<Set<String>> getFavorites() async {

@@ -798,6 +798,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will permanently remove this price report.';
 
   @override
+  String deleteReportFailed(String error) {
+    return 'Failed to delete report: $error';
+  }
+
+  @override
   String get coordinates => 'Coordinates';
 
   @override
@@ -849,6 +854,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get manageAdmins => 'Manage Admins';
+
+  @override
+  String get manageAdminsSubtitle => 'Promote or demote users by Firebase UID';
+
+  @override
+  String get manageAdminsIntro =>
+      'Paste a user\'s Firebase UID and promote them to admin or remove their admin access. Changes take effect next time the user signs in.';
+
+  @override
+  String get firebaseUid => 'Firebase UID';
+
+  @override
+  String get firebaseUidHint => 'e.g. HPcfQndrCHQfDg1w9UHo8mClQ8G3';
+
+  @override
+  String get pleaseEnterUid => 'Please enter a UID';
+
+  @override
+  String get promote => 'Promote';
+
+  @override
+  String get demote => 'Demote';
+
+  @override
+  String get adminPromoted => 'User promoted to admin.';
+
+  @override
+  String get adminDemoted => 'Admin access removed.';
+
+  @override
+  String adminUpdateFailed(String error) {
+    return 'Failed to update admin status: $error';
   }
 
   @override

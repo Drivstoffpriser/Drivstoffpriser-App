@@ -121,16 +121,22 @@ class UserProvider extends ChangeNotifier {
 
   final _apiClient = BackendApiClient();
 
+  Future<bool> _readAdminClaim(User firebaseUser) async {
+    final tokenResult = await firebaseUser.getIdTokenResult();
+    return tokenResult.claims?['admin'] == true;
+  }
+
   Future<void> _loadProfile(User firebaseUser) async {
     final existing = await FirestoreService.getUserProfile(firebaseUser.uid);
     final reportCount = await _apiClient.getPriceRegistrations();
+    final isAdmin = await _readAdminClaim(firebaseUser);
     if (existing != null) {
       _user = UserProfile(
         id: existing.id,
         displayName: existing.displayName,
         reportCount: reportCount,
         trustScore: existing.trustScore,
-        isAdmin: existing.isAdmin,
+        isAdmin: isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -138,6 +144,7 @@ class UserProvider extends ChangeNotifier {
         displayName: firebaseUser.displayName ?? 'Anonymous',
         reportCount: reportCount,
         trustScore: 1.0,
+        isAdmin: isAdmin,
       );
       await FirestoreService.setUserProfile(_user);
     }
@@ -170,15 +177,17 @@ class UserProvider extends ChangeNotifier {
 
     // Read existing profile to preserve reportCount/trustScore,
     // only create a new one if the user has never been seen before.
-    final uid = _auth.currentUser!.uid;
+    final firebaseUser = _auth.currentUser!;
+    final uid = firebaseUser.uid;
     final existing = await FirestoreService.getUserProfile(uid);
+    final isAdmin = await _readAdminClaim(firebaseUser);
     if (existing != null) {
       _user = UserProfile(
         id: uid,
         displayName: displayName,
         reportCount: existing.reportCount,
         trustScore: existing.trustScore,
-        isAdmin: existing.isAdmin,
+        isAdmin: isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -186,11 +195,12 @@ class UserProvider extends ChangeNotifier {
         displayName: displayName,
         reportCount: 0,
         trustScore: 1.0,
+        isAdmin: isAdmin,
       );
     }
     await FirestoreService.setUserProfile(_user);
     try {
-      await _auth.currentUser?.sendEmailVerification();
+      await firebaseUser.sendEmailVerification();
     } catch (_) {}
     notifyListeners();
   }
@@ -306,13 +316,14 @@ class UserProvider extends ChangeNotifier {
     final displayName = signedInUser.displayName ?? 'User';
     // Read existing profile to preserve reportCount/trustScore
     final existing = await FirestoreService.getUserProfile(signedInUser.uid);
+    final isAdmin = await _readAdminClaim(signedInUser);
     if (existing != null) {
       _user = UserProfile(
         id: signedInUser.uid,
         displayName: displayName,
         reportCount: existing.reportCount,
         trustScore: existing.trustScore,
-        isAdmin: existing.isAdmin,
+        isAdmin: isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -320,6 +331,7 @@ class UserProvider extends ChangeNotifier {
         displayName: displayName,
         reportCount: 0,
         trustScore: 1.0,
+        isAdmin: isAdmin,
       );
     }
     await FirestoreService.setUserProfile(_user);

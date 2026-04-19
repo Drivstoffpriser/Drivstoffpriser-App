@@ -1550,6 +1550,12 @@ abstract class AppLocalizations {
   /// **'This will permanently remove this price report.'**
   String get deleteReportBody;
 
+  /// No description provided for @deleteReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete report: {error}'**
+  String deleteReportFailed(String error);
+
   /// No description provided for @coordinates.
   ///
   /// In en, this message translates to:
@@ -1645,6 +1651,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID: {id}'**
   String stationId(String id);
+
+  /// No description provided for @manageAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Admins'**
+  String get manageAdmins;
+
+  /// No description provided for @manageAdminsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Promote or demote users by Firebase UID'**
+  String get manageAdminsSubtitle;
+
+  /// No description provided for @manageAdminsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a user\'s Firebase UID and promote them to admin or remove their admin access. Changes take effect next time the user signs in.'**
+  String get manageAdminsIntro;
+
+  /// No description provided for @firebaseUid.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase UID'**
+  String get firebaseUid;
+
+  /// No description provided for @firebaseUidHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. HPcfQndrCHQfDg1w9UHo8mClQ8G3'**
+  String get firebaseUidHint;
+
+  /// No description provided for @pleaseEnterUid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a UID'**
+  String get pleaseEnterUid;
+
+  /// No description provided for @promote.
+  ///
+  /// In en, this message translates to:
+  /// **'Promote'**
+  String get promote;
+
+  /// No description provided for @demote.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote'**
+  String get demote;
+
+  /// No description provided for @adminPromoted.
+  ///
+  /// In en, this message translates to:
+  /// **'User promoted to admin.'**
+  String get adminPromoted;
+
+  /// No description provided for @adminDemoted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin access removed.'**
+  String get adminDemoted;
+
+  /// No description provided for @adminUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update admin status: {error}'**
+  String adminUpdateFailed(String error);
 
   /// No description provided for @onboardingTitle.
   ///
