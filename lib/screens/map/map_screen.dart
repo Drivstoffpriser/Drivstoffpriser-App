@@ -52,6 +52,7 @@ class MapScreen extends StatefulWidget {
 
 const _kClusterRadiusPx = 95.0;
 const _kClusterMaxZoom = 12.0;
+const _kPriceFetchAllThreshold = 30;
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
@@ -164,7 +165,9 @@ class _MapScreenState extends State<MapScreen> {
       // regardless of cluster state — every marker should show a price.
       // Otherwise fetch only for the individually-rendered (unclustered) ones,
       // since cluster bubbles never display prices.
-      final ids = visibleIds.length <= 10 ? visibleIds : unclusteredVisibleIds;
+      final ids = visibleIds.length <= _kPriceFetchAllThreshold
+          ? visibleIds
+          : unclusteredVisibleIds;
       if (ids.isEmpty) return;
       stationProvider.loadPricesForStations(ids);
     });
@@ -359,38 +362,53 @@ class _MapScreenState extends State<MapScreen> {
                       // cluster bubble. The set is cleared on each map event
                       // (see `_onMapEvent`), so by the time the price-fetch
                       // debounce fires it holds the current clustered set.
+                      final clusterStationIds = <String>[];
                       for (final m in markers) {
                         final k = m.key;
                         if (k is ValueKey<String>) {
                           _clusteredStationIds.add(k.value);
+                          clusterStationIds.add(k.value);
                         }
                       }
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: clusterColor,
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.darkBackground
-                                : Colors.white,
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: clusterColor.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            markers.length.toString(),
-                            style: TextStyle(
+                      return Listener(
+                        // onPointerDown is a raw pointer event — it bypasses
+                        // the gesture arena entirely, so the cluster library's
+                        // own tap handler (zoom-to-fit) is not affected.
+                        behavior: HitTestBehavior.translucent,
+                        onPointerDown: (_) {
+                          if (clusterStationIds.isNotEmpty) {
+                            context
+                                .read<StationProvider>()
+                                .loadPricesForStations(clusterStationIds);
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: clusterColor,
+                            border: Border.all(
                               color: isDark
                                   ? AppColors.darkBackground
                                   : Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: clusterColor.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              markers.length.toString(),
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppColors.darkBackground
+                                    : Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
