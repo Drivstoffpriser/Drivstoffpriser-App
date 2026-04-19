@@ -833,6 +833,11 @@ class AppLocalizationsNb extends AppLocalizations {
       'Dette vil permanent fjerne denne prisrapporten.';
 
   @override
+  String deleteReportFailed(String error) {
+    return 'Kunne ikke slette rapport: $error';
+  }
+
+  @override
   String get coordinates => 'Koordinater';
 
   @override
@@ -848,6 +853,9 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get deleteStationBody =>
       'Dette vil permanent fjerne denne stasjonen fra kartet.';
+
+  @override
+  String get deleteStationFailed => 'Kunne ikke slette stasjonen';
 
   @override
   String get editStationInfo => 'Foreslå endring';
@@ -882,6 +890,37 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get manageAdmins => 'Administrer administratorer';
+
+  @override
+  String get manageAdminsSubtitle =>
+      'Forfremme eller degradere brukere etter e-post';
+
+  @override
+  String get manageAdminsIntro =>
+      'Skriv inn en brukers e-post for å forfremme dem til administrator eller fjerne administratortilgangen. Endringer trer i kraft neste gang brukeren logger inn.';
+
+  @override
+  String get manageAdminsEmailHint => 'f.eks. bruker@eksempel.no';
+
+  @override
+  String get promote => 'Forfremme';
+
+  @override
+  String get demote => 'Degradere';
+
+  @override
+  String get adminPromoted => 'Brukeren ble forfremmet til administrator.';
+
+  @override
+  String get adminDemoted => 'Administratortilgang fjernet.';
+
+  @override
+  String adminUpdateFailed(String error) {
+    return 'Kunne ikke oppdatere administratorstatus: $error';
   }
 
   @override

@@ -28,4 +28,5 @@ class AppRoutes {
   static const String myStationSubmissions = '/my-station-submissions';
   static const String adminSubmissions = '/admin-submissions';
   static const String adminModifyRequests = '/admin-modify-requests';
+  static const String manageAdmins = '/manage-admins';
 }

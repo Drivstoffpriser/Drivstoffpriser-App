@@ -30,7 +30,7 @@ import '../../models/station.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../services/firestore_service.dart';
+import '../../services/backend_api_client.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/loading_indicator.dart';
 import 'edit_station_screen.dart';
@@ -111,7 +111,16 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await FirestoreService.deleteStation(widget.station.id);
+    try {
+      await BackendApiClient().deleteStation(widget.station.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${context.l10n.deleteStationFailed}: $e')),
+        );
+      }
+      return;
+    }
     if (mounted) {
       await stationProvider.refreshStations();
       if (mounted) Navigator.pop(context);
@@ -466,6 +475,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                             GestureDetector(
                               onTap: () async {
                                 final provider = context.read<PriceProvider>();
+                                final messenger = ScaffoldMessenger.of(context);
+                                final l10n = context.l10n;
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder: (ctx) => AlertDialog(
@@ -490,14 +501,24 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                                     ],
                                   ),
                                 );
-                                if (confirmed != true || !mounted) return;
-                                await FirestoreService.deleteReport(
-                                  widget.station.id,
-                                  report.id,
-                                );
-                                if (mounted) {
-                                  provider.loadHistory(widget.station.id);
+                                if (confirmed != true) return;
+                                try {
+                                  await BackendApiClient()
+                                      .deletePriceRegistration(
+                                        widget.station.id,
+                                        report.id,
+                                      );
+                                } catch (e) {
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        l10n.deleteReportFailed(e.toString()),
+                                      ),
+                                    ),
+                                  );
+                                  return;
                                 }
+                                provider.loadHistory(widget.station.id);
                               },
                               child: Icon(
                                 Icons.delete_outline,

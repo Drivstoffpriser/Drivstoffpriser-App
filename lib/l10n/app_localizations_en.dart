@@ -828,6 +828,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will permanently remove this price report.';
 
   @override
+  String deleteReportFailed(String error) {
+    return 'Failed to delete report: $error';
+  }
+
+  @override
   String get coordinates => 'Coordinates';
 
   @override
@@ -843,6 +848,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteStationBody =>
       'This will permanently remove this station from the map.';
+
+  @override
+  String get deleteStationFailed => 'Failed to delete station';
 
   @override
   String get editStationInfo => 'Suggest Edit';
@@ -876,6 +884,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get manageAdmins => 'Manage Admins';
+
+  @override
+  String get manageAdminsSubtitle => 'Promote or demote users by email';
+
+  @override
+  String get manageAdminsIntro =>
+      'Enter a user\'s email to promote them to admin or remove their admin access. Changes take effect next time the user signs in.';
+
+  @override
+  String get manageAdminsEmailHint => 'e.g. user@example.com';
+
+  @override
+  String get promote => 'Promote';
+
+  @override
+  String get demote => 'Demote';
+
+  @override
+  String get adminPromoted => 'User promoted to admin.';
+
+  @override
+  String get adminDemoted => 'Admin access removed.';
+
+  @override
+  String adminUpdateFailed(String error) {
+    return 'Failed to update admin status: $error';
   }
 
   @override
