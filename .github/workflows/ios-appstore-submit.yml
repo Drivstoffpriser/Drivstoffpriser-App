@@ -3,6 +3,9 @@ name: iOS App Store Release
 on:
   workflow_dispatch:
     inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.1+42)'
+        required: true
       release_notes:
         description: "Release notes"
         required: true
@@ -17,12 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: stable
-          cache: true
-
       - name: Install Fastlane
         run: gem install fastlane
 
@@ -30,5 +27,6 @@ jobs:
         working-directory: ios
         env:
           APP_STORE_CONNECT_API_KEY_JSON: ${{ secrets.APP_STORE_CONNECT_API_KEY_JSON }}
+          GITHUB_TAG: ${{ inputs.tag }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
         run: fastlane release_appstore

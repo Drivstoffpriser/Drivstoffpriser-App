@@ -42,10 +42,21 @@ platform :ios do
       json_key: ENV["APP_STORE_CONNECT_API_KEY_JSON"]
     )
 
-    UI.message("Submitting latest TestFlight build to App Store")
+    tag = ENV["GITHUB_TAG"]
+    UI.user_error!("Missing GITHUB_TAG") unless tag
+
+    version, build = tag.gsub("v", "").split("+")
+
+    UI.message("Version: #{version}")
+    UI.message("Build: #{build}")
+
+    UI.message("Submitting build #{build} (#{version}) to App Store")
 
     upload_to_app_store(
       api_key: api_key,
+      app_version: version,
+      build_number: build,
+      release_notes: { "no" => ENV["RELEASE_NOTES"] },
       submit_for_review: true,
       automatic_release: false,
       force: true
