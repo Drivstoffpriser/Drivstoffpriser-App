@@ -80,6 +80,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ steps.app-token.outputs.token }}
           tag_name: v${{ inputs.version }}+${{ steps.build_number.outputs.value }}
           name: Release ${{ inputs.version }} (${{ steps.build_number.outputs.value }})
           files: |
