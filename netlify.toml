@@ -1,5 +1,5 @@
 [build]
-  command = "bash build.sh"
+  command = "bash build_web.sh"
   publish = "build/web"
 
 [[redirects]]
