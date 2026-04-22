@@ -2,10 +2,13 @@
 set -e
 
 echo "--- Installing Flutter (stable) ---"
-git clone https://github.com/flutter/flutter.git \
-  --depth 1 \
-  --branch stable \
-  flutter-sdk
+if [ -d flutter-sdk/.git ]; then
+  echo "flutter-sdk exists — fetching latest"
+  git -C flutter-sdk fetch --depth=1 origin || true
+  git -C flutter-sdk reset --hard origin/stable || true
+else
+  git clone --depth 1 --branch stable https://github.com/flutter/flutter.git flutter-sdk
+fi
 
 export PATH="$PWD/flutter-sdk/bin:$PATH"
 
