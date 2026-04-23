@@ -26,6 +26,7 @@ import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/price_history_point.dart';
 import '../models/price_report.dart';
+import '../models/price_statistics.dart';
 import '../models/station.dart';
 
 /// Thrown when the backend returns a non-2xx response.
@@ -250,6 +251,100 @@ class BackendApiClient {
     }).toList();
 
     return (history: history, recentUpdates: recentUpdates);
+  }
+
+  /// GET /statistics/provider-prices — no auth required.
+  Future<
+    ({
+      Map<String, Map<FuelType, List<ProviderPriceDayPoint>>> prices,
+      Map<String, Map<FuelType, double>> last24h,
+    })
+  >
+  getProviderPrices() async {
+    final uri = _uri('/statistics/provider-prices');
+    final response = await http.get(uri);
+    _checkStatus(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final raw = data['last30d'] as Map<String, dynamic>;
+
+    final result = <String, Map<FuelType, List<ProviderPriceDayPoint>>>{};
+    for (final providerEntry in raw.entries) {
+      final fuelMap = <FuelType, List<ProviderPriceDayPoint>>{};
+      for (final fuelEntry
+          in (providerEntry.value as Map<String, dynamic>).entries) {
+        try {
+          final fuelType = FuelType.fromBackendString(fuelEntry.key);
+          final points = (fuelEntry.value as List<dynamic>).map((p) {
+            final map = p as Map<String, dynamic>;
+            return ProviderPriceDayPoint(
+              date: DateTime.parse(map['date'] as String),
+              price: double.parse(map['averagePrice'] as String),
+            );
+          }).toList()..sort((a, b) => a.date.compareTo(b.date));
+          if (points.isNotEmpty) fuelMap[fuelType] = points;
+        } catch (_) {
+          // skip unknown fuel types
+        }
+      }
+      if (fuelMap.isNotEmpty) result[providerEntry.key] = fuelMap;
+    }
+
+    final rawLast24h = data['last24h'] as Map<String, dynamic>? ?? {};
+    final last24h = <String, Map<FuelType, double>>{};
+    for (final providerEntry in rawLast24h.entries) {
+      final fuelMap = <FuelType, double>{};
+      for (final fuelEntry
+          in (providerEntry.value as Map<String, dynamic>).entries) {
+        try {
+          final fuelType = FuelType.fromBackendString(fuelEntry.key);
+          fuelMap[fuelType] = _toDouble(fuelEntry.value);
+        } catch (_) {
+          // skip unknown fuel types
+        }
+      }
+      if (fuelMap.isNotEmpty) last24h[providerEntry.key] = fuelMap;
+    }
+
+    return (prices: result, last24h: last24h);
+  }
+
+  /// GET /statistics/contributors — auth required.
+  Future<ContributorStats> getContributors() async {
+    final data = await get('/statistics/contributors');
+    return ContributorStats.fromJson(data);
+  }
+
+  /// GET /statistics/latest — no auth required.
+  Future<PriceStatistics> getStatistics() async {
+    final uri = _uri('/statistics/latest');
+    final response = await http.get(uri);
+    _checkStatus(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return PriceStatistics.fromJson(data);
+  }
+
+  /// GET /statistics/nearest — no auth required. lat/lng are required.
+  Future<Map<FuelType, PriceExtremes>> getNearestStatistics({
+    required double lat,
+    required double lng,
+    double? distanceMeters,
+  }) async {
+    final params = <String, String>{
+      'lat': lat.toString(),
+      'lng': lng.toString(),
+    };
+    if (distanceMeters != null) params['distance'] = distanceMeters.toString();
+    final uri = _uri('/statistics/nearest', queryParams: params);
+    final response = await http.get(uri);
+    _checkStatus(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final raw = data['nearbyStations'] as Map<String, dynamic>;
+    return {
+      for (final entry in raw.entries)
+        FuelType.fromBackendString(entry.key): PriceExtremes.fromJson(
+          entry.value as Map<String, dynamic>,
+        ),
+    };
   }
 
   /// GET /stations/last-updated — no auth required.
