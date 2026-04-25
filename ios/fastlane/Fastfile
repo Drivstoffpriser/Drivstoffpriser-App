@@ -1,0 +1,68 @@
+
+default_platform(:ios)
+
+platform :ios do
+
+  # =========================
+  # 🧪 TESTFLIGHT RELEASE
+  # =========================
+  lane :beta do
+    api_key = app_store_connect_api_key(
+      json_key: ENV["APP_STORE_CONNECT_API_KEY_JSON"]
+    )
+
+    tag = ENV["GITHUB_TAG"]
+    UI.user_error!("Missing GITHUB_TAG") unless tag
+
+    version, build = tag.gsub("v", "").split("+")
+
+    UI.message("Version: #{version}")
+    UI.message("Build: #{build}")
+
+    increment_version_number(version_number: version)
+    increment_build_number(build_number: build)
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # =========================
+  # 🚀 APP STORE RELEASE
+  # =========================
+  lane :release_appstore do
+    api_key = app_store_connect_api_key(
+      json_key: ENV["APP_STORE_CONNECT_API_KEY_JSON"]
+    )
+
+    tag = ENV["GITHUB_TAG"]
+    UI.user_error!("Missing GITHUB_TAG") unless tag
+
+    version, build = tag.gsub("v", "").split("+")
+
+    UI.message("Version: #{version}")
+    UI.message("Build: #{build}")
+
+    UI.message("Submitting build #{build} (#{version}) to App Store")
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_version: version,
+      build_number: build,
+      release_notes: { "no" => ENV["RELEASE_NOTES"] },
+      submit_for_review: true,
+      automatic_release: false,
+      force: true
+    )
+
+    UI.message("App submitted for review 🚀")
+  end
+
+end

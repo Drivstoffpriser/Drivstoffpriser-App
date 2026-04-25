@@ -80,6 +80,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ steps.app-token.outputs.token }}
           tag_name: v${{ inputs.version }}+${{ steps.build_number.outputs.value }}
           name: Release ${{ inputs.version }} (${{ steps.build_number.outputs.value }})
           files: |
@@ -97,3 +98,4 @@ jobs:
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore: release ${NEW_VERSION} [release]"
           git push
+          git push origin HEAD:release

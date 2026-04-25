@@ -715,15 +715,17 @@ class FirestoreService {
 
     final batch = _db.batch();
 
-    // Update the station with proposed values
-    batch.update(stationRef, {
+    // Update the station with proposed values (use set+merge so it works
+    // even when the station has no individual document yet).
+    batch.set(stationRef, {
+      'id': request.stationId,
       'name': request.proposedName,
       'brand': request.proposedBrand,
       'address': request.proposedAddress,
       'city': request.proposedCity,
       'latitude': request.proposedLatitude,
       'longitude': request.proposedLongitude,
-    });
+    }, SetOptions(merge: true));
 
     // Update request status
     final updateData = <String, dynamic>{'status': 'approved'};
@@ -746,7 +748,7 @@ class FirestoreService {
         final idx = list.indexWhere((s) => s['id'] == request.stationId);
         if (idx != -1) {
           list[idx] = {
-            'id': request.stationId,
+            ...list[idx],
             'name': request.proposedName,
             'brand': request.proposedBrand,
             'address': request.proposedAddress,

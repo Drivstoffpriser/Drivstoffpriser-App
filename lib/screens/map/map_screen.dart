@@ -21,28 +21,27 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
-import '../../l10n/l10n_helper.dart';
 import '../../config/constants.dart';
 import '../../config/routes.dart';
+import '../../l10n/l10n_helper.dart';
 import '../../models/station.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../services/backend_api_client.dart';
-import 'package:geolocator/geolocator.dart';
 import '../../services/location_service.dart';
 import '../../widgets/brand_logo.dart';
+import '../../widgets/web_constrained.dart';
 import 'widgets/brand_filter_bar.dart';
 import 'widgets/fuel_filter_bar.dart';
 import 'widgets/nearby_station_banner.dart';
 import 'widgets/station_marker.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import '../../widgets/web_constrained.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -51,21 +50,27 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
+const _kClusterRadiusPx = 95.0;
+const _kClusterMaxZoom = 12.0;
+const _kPriceFetchAllThreshold = 30;
+
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   bool _hasCenteredOnUser = false;
   bool _hasSetUserLocation = false;
+  bool _hasTriggeredInitialPriceLoad = false;
   bool _isSearching = false;
   String _searchQuery = '';
-  List<Station> _searchApiResults = [];
-  bool _searchLoading = false;
-  Timer? _searchDebounce;
-  LatLngBounds? _visibleBounds;
+  Timer? _priceDebounce;
   bool? _previousAllowMapRotation;
-  Timer? _bboxDebounce;
-  bool _hasLoadedInitialBbox = false;
+
+  // Station IDs currently rendered inside a cluster bubble. Populated by the
+  // `MarkerClusterLayerOptions.builder` callback as it's invoked per cluster
+  // during the library's render pass, and cleared in `_onMapEvent` so each
+  // new camera state starts from a clean slate.
+  final Set<String> _clusteredStationIds = {};
 
   @override
   void initState() {
@@ -75,23 +80,7 @@ class _MapScreenState extends State<MapScreen> {
     });
     _searchController.addListener(() {
       final query = _searchController.text.trim();
-      _searchDebounce?.cancel();
-      if (query.isEmpty) {
-        setState(() {
-          _searchQuery = query;
-          _searchApiResults = [];
-          _searchLoading = false;
-        });
-      } else {
-        setState(() {
-          _searchQuery = query;
-          _searchLoading = true;
-        });
-        _searchDebounce = Timer(
-          const Duration(milliseconds: 500),
-          () => _fetchSearchResults(query),
-        );
-      }
+      setState(() => _searchQuery = query);
     });
     _searchFocus.addListener(() {
       setState(() => _isSearching = _searchFocus.hasFocus);
@@ -100,8 +89,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
-    _bboxDebounce?.cancel();
-    _searchDebounce?.cancel();
+    _priceDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -111,6 +99,12 @@ class _MapScreenState extends State<MapScreen> {
     final pos = context.read<LocationProvider>().position;
     if (pos != null) {
       _mapController.move(LatLng(pos.latitude, pos.longitude), 13);
+      // On web, programmatic moves don't reliably fire onPositionChanged,
+      // so trigger a price load explicitly after the camera has settled.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _onMapEvent(_mapController.camera, false);
+      });
     }
   }
 
@@ -131,55 +125,52 @@ class _MapScreenState extends State<MapScreen> {
     _searchController.clear();
     _searchFocus.unfocus();
     _mapController.move(LatLng(station.latitude, station.longitude), 15);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _onMapEvent(_mapController.camera, false);
+    });
     Navigator.pushNamed(context, AppRoutes.stationDetail, arguments: station);
   }
 
-  Future<void> _fetchSearchResults(String query) async {
-    try {
-      final results = await BackendApiClient().searchStations(query);
-      if (mounted) {
-        setState(() {
-          _searchApiResults = results;
-          _searchLoading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _searchApiResults = [];
-          _searchLoading = false;
-        });
-      }
-    }
-  }
-
   void _onMapEvent(MapCamera camera, bool hasGesture) {
-    final bounds = camera.visibleBounds;
-    if (_visibleBounds != bounds) {
-      _visibleBounds = bounds;
-      _bboxDebounce?.cancel();
-      if (!_hasLoadedInitialBbox) {
-        // First position event — load immediately without debounce so
-        // stations appear even if onMapReady fired before layout.
-        _hasLoadedInitialBbox = true;
-        context.read<StationProvider>().loadStationsByBbox(
-          minLat: bounds.south,
-          minLng: bounds.west,
-          maxLat: bounds.north,
-          maxLng: bounds.east,
-        );
-      } else {
-        _bboxDebounce = Timer(const Duration(milliseconds: 600), () {
-          if (!mounted) return;
-          context.read<StationProvider>().loadStationsByBbox(
-            minLat: bounds.south,
-            minLng: bounds.west,
-            maxLat: bounds.north,
-            maxLng: bounds.east,
-          );
-        });
+    // Invalidate cluster memberships from the previous camera state. The
+    // rebuild that follows this event (on the next frame) will repopulate
+    // `_clusteredStationIds` via the cluster `builder` callback, so by the
+    // time the 500 ms debounce fires the set reflects the current render.
+    //
+    // flutter_map emits this callback synchronously from `moveRaw` BEFORE
+    // scheduling the rebuild (see flutter_map's `map_controller_impl.dart`),
+    // which makes clearing here safe.
+    _clusteredStationIds.clear();
+    _priceDebounce?.cancel();
+    _priceDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final stationProvider = context.read<StationProvider>();
+      final all = stationProvider.brandFilteredStations;
+      if (all.isEmpty) return;
+
+      final bounds = camera.visibleBounds;
+      final visibleIds = <String>[];
+      final unclusteredVisibleIds = <String>[];
+      for (final s in all) {
+        if (s.latitude < bounds.south || s.latitude > bounds.north) continue;
+        if (s.longitude < bounds.west || s.longitude > bounds.east) continue;
+        visibleIds.add(s.id);
+        if (!_clusteredStationIds.contains(s.id)) {
+          unclusteredVisibleIds.add(s.id);
+        }
       }
-    }
+
+      // If only a handful of stations are visible, just fetch for all of them
+      // regardless of cluster state — every marker should show a price.
+      // Otherwise fetch only for the individually-rendered (unclustered) ones,
+      // since cluster bubbles never display prices.
+      final ids = visibleIds.length <= _kPriceFetchAllThreshold
+          ? visibleIds
+          : unclusteredVisibleIds;
+      if (ids.isEmpty) return;
+      stationProvider.loadPricesForStations(ids);
+    });
   }
 
   @override
@@ -228,8 +219,25 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
 
-    final filtered = stationProvider.mapStations;
+    final filtered = stationProvider.brandFilteredStations;
     final bestStationId = stationProvider.bestMapStationId;
+
+    if (filtered.isNotEmpty && !_hasTriggeredInitialPriceLoad) {
+      _hasTriggeredInitialPriceLoad = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        try {
+          _onMapEvent(_mapController.camera, false);
+        } catch (_) {
+          // Map controller not ready yet — the onMapReady nudge will cover it.
+        }
+      });
+    }
+
+    // Client-side search results.
+    final searchResults = _searchQuery.isNotEmpty
+        ? stationProvider.searchStations(_searchQuery)
+        : <Station>[];
 
     final tileUrl = isDark
         ? 'https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png'
@@ -257,20 +265,6 @@ class _MapScreenState extends State<MapScreen> {
                       : InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
                 onMapReady: () {
-                  // Defer bounds read until after layout so the camera
-                  // has the correct viewport size (not 0×0).
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    final bounds = _mapController.camera.visibleBounds;
-                    _visibleBounds = bounds;
-                    _hasLoadedInitialBbox = true;
-                    context.read<StationProvider>().loadStationsByBbox(
-                      minLat: bounds.south,
-                      minLng: bounds.west,
-                      maxLat: bounds.north,
-                      maxLng: bounds.east,
-                    );
-                  });
                   // Nudge tiles to load — flutter_map may not render
                   // tiles when built behind a dialog or IndexedStack.
                   Future.delayed(const Duration(milliseconds: 200), () {
@@ -328,25 +322,31 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 MarkerClusterLayerWidget(
                   options: MarkerClusterLayerOptions(
-                    maxClusterRadius: 95,
+                    maxClusterRadius: _kClusterRadiusPx.toInt(),
                     size: const Size(40, 40),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(50),
-                    maxZoom: 15,
+                    maxZoom: _kClusterMaxZoom,
                     showPolygon: false,
                     markers: filtered.map((station) {
                       final price =
                           station.prices[stationProvider.selectedFuelType];
                       final isBest = station.id == bestStationId;
                       return Marker(
+                        // Key on the outer Marker so `builder:` below can
+                        // recover the station id for each clustered marker.
+                        key: ValueKey(station.id),
                         point: LatLng(station.latitude, station.longitude),
                         width: 72,
-                        height: price != null ? 72 : 48,
+                        height: 72,
                         child: StationMarker(
                           key: ValueKey(station.id),
                           station: station,
                           price: price,
                           isBestPrice: isBest,
+                          isLoadingPrice: stationProvider.isPriceLoading(
+                            station.id,
+                          ),
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -358,32 +358,57 @@ class _MapScreenState extends State<MapScreen> {
                       );
                     }).toList(),
                     builder: (context, markers) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: clusterColor,
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.darkBackground
-                                : Colors.white,
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: clusterColor.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            markers.length.toString(),
-                            style: TextStyle(
+                      // Record which stations are rendered inside this
+                      // cluster bubble. The set is cleared on each map event
+                      // (see `_onMapEvent`), so by the time the price-fetch
+                      // debounce fires it holds the current clustered set.
+                      final clusterStationIds = <String>[];
+                      for (final m in markers) {
+                        final k = m.key;
+                        if (k is ValueKey<String>) {
+                          _clusteredStationIds.add(k.value);
+                          clusterStationIds.add(k.value);
+                        }
+                      }
+                      return Listener(
+                        // onPointerDown is a raw pointer event — it bypasses
+                        // the gesture arena entirely, so the cluster library's
+                        // own tap handler (zoom-to-fit) is not affected.
+                        behavior: HitTestBehavior.translucent,
+                        onPointerDown: (_) {
+                          if (clusterStationIds.isNotEmpty) {
+                            context
+                                .read<StationProvider>()
+                                .loadPricesForStations(clusterStationIds);
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: clusterColor,
+                            border: Border.all(
                               color: isDark
                                   ? AppColors.darkBackground
                                   : Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: clusterColor.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              markers.length.toString(),
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppColors.darkBackground
+                                    : Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -450,16 +475,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          if (_searchLoading)
-                            SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.textMuted(context),
-                              ),
-                            )
-                          else if (_searchQuery.isNotEmpty)
+                          if (_searchQuery.isNotEmpty)
                             GestureDetector(
                               onTap: () {
                                 _searchController.clear();
@@ -539,7 +555,7 @@ class _MapScreenState extends State<MapScreen> {
           // Search results dropdown
           if (_isSearching &&
               _searchQuery.isNotEmpty &&
-              _searchApiResults.isNotEmpty)
+              searchResults.isNotEmpty)
             Positioned(
               top: topPadding + 60,
               left: 16,
@@ -569,14 +585,14 @@ class _MapScreenState extends State<MapScreen> {
                       child: ListView.separated(
                         shrinkWrap: true,
                         padding: const EdgeInsets.symmetric(vertical: 4),
-                        itemCount: _searchApiResults.length,
+                        itemCount: searchResults.length,
                         separatorBuilder: (_, _) => Divider(
                           height: 1,
                           indent: 56,
                           color: AppColors.border(context),
                         ),
                         itemBuilder: (context, index) {
-                          final station = _searchApiResults[index];
+                          final station = searchResults[index];
                           return _SearchResultTile(
                             station: station,
                             onTap: () => _selectSearchResult(station),
@@ -590,10 +606,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
 
           // "No results" message
-          if (_isSearching &&
-              _searchQuery.isNotEmpty &&
-              !_searchLoading &&
-              _searchApiResults.isEmpty)
+          if (_isSearching && _searchQuery.isNotEmpty && searchResults.isEmpty)
             Positioned(
               top: topPadding + 60,
               left: 16,

@@ -18,6 +18,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
@@ -40,14 +42,12 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
   late bool _isRegister;
   bool _isLoading = false;
-  String? _error;
 
   @override
   void initState() {
@@ -66,7 +66,6 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() {
       _isLoading = true;
-      _error = null;
     });
 
     try {
@@ -81,12 +80,16 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'sign-in-cancelled') {
+      if (e.code == 'sign-in-cancelled' || e.code == 'popup-closed-by-user') {
       } else {
-        setState(() => _error = _friendlyError(context, e.code));
+        if (mounted) {
+          _showSnackBar(_friendlyError(context, e));
+        }
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        _showSnackBar(e.toString());
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -94,30 +97,87 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _sendPasswordReset() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      _showSnackBar(context.l10n.enterValidEmail);
+      return;
+    }
 
     setState(() {
       _isLoading = true;
-      _error = null;
+    });
+
+    try {
+      await context.read<UserProvider>().sendPasswordResetEmail(email);
+      if (mounted) {
+        _showSnackBar(context.l10n.passwordResetSent);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        if (e.code == 'user-not-found') {
+          _showSnackBar(context.l10n.passwordResetSent);
+        } else {
+          _showSnackBar(_friendlyError(context, e));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showSnackBar(String message) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (_isRegister && name.isEmpty) {
+      _showSnackBar(context.l10n.enterYourName);
+      return;
+    }
+    if (email.isEmpty) {
+      _showSnackBar(context.l10n.enterYourEmail);
+      return;
+    }
+    if (!email.contains('@')) {
+      _showSnackBar(context.l10n.enterValidEmail);
+      return;
+    }
+    if (password.isEmpty) {
+      _showSnackBar(context.l10n.enterYourPassword);
+      return;
+    }
+    if (password.length < 6) {
+      _showSnackBar(context.l10n.passwordMinLength);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
     });
 
     try {
       final userProvider = context.read<UserProvider>();
 
       if (_isRegister) {
-        await userProvider.registerWithEmail(
-          _emailController.text.trim(),
-          _passwordController.text,
-          _nameController.text.trim(),
-        );
+        await userProvider.registerWithEmail(email, password, name);
       } else {
-        await userProvider.signInWithEmail(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+        await userProvider.signInWithEmail(email, password);
       }
 
+      TextInput.finishAutofillContext();
       if (mounted) {
         if (widget.popOnSuccess) {
           Navigator.pop(context, true);
@@ -126,9 +186,13 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      setState(() => _error = _friendlyError(context, e.code));
+      if (mounted) {
+        _showSnackBar(_friendlyError(context, e));
+      }
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        _showSnackBar(e.toString());
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -136,8 +200,8 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  String _friendlyError(BuildContext context, String code) {
-    switch (code) {
+  String _friendlyError(BuildContext context, FirebaseAuthException exception) {
+    switch (exception.code) {
       case 'email-already-in-use':
         return context.l10n.errorEmailInUse;
       case 'invalid-email':
@@ -146,13 +210,23 @@ class _AuthScreenState extends State<AuthScreen> {
         return context.l10n.errorWeakPassword;
       case 'user-not-found':
         return context.l10n.errorUserNotFound;
+      case 'user-disabled':
+        return context.l10n.errorUserDisabled;
       case 'wrong-password':
       case 'invalid-credential':
         return context.l10n.errorWrongPassword;
       case 'credential-already-in-use':
         return context.l10n.errorCredentialInUse;
+      case 'too-many-requests':
+        return context.l10n.errorTooManyRequests;
+      case 'network-request-failed':
+        return context.l10n.errorNetworkRequestFailed;
       default:
-        return context.l10n.errorAuthFailed(code);
+        final message = exception.message?.trim();
+        if (message != null && message.isNotEmpty) {
+          return message;
+        }
+        return context.l10n.errorAuthFailed(exception.code);
     }
   }
 
@@ -163,209 +237,281 @@ class _AuthScreenState extends State<AuthScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background(context),
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           _isRegister ? context.l10n.createAccount : context.l10n.signIn,
           style: AppTextStyles.title(context),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (_error != null) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  _error!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        children: [
+          const SizedBox(height: 8),
+
+          // ── Subtitle ──
+          Text(
+            _isRegister
+                ? context.l10n.createAccountSubtitle
+                : context.l10n.signInSubtitle,
+            style: AppTextStyles.label(context).copyWith(fontSize: 15),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── Google sign-in ──
+          _PressableButton(
+            onPressed: _isLoading ? () {} : _signInWithGoogle,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.border(context),
+                  width: 0.5,
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
-            _PressableButton(
-              onPressed: _isLoading ? () {} : _signInWithGoogle,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface(context),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.border(context),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isLoading)
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    else ...[
-                      const Text(
-                        'G',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        context.l10n.continueWithGoogle,
-                        style: AppTextStyles.bodyMedium(context),
-                      ),
-                    ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isLoading)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else ...[
+                    const FaIcon(
+                      FontAwesomeIcons.google,
+                      size: 18,
+                      color: Color(0xFF4285F4),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      context.l10n.continueWithGoogle,
+                      style: AppTextStyles.bodyMedium(context),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(child: Divider(color: AppColors.border(context))),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    context.l10n.or,
-                    style: AppTextStyles.label(context),
-                  ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── Divider ──
+          Row(
+            children: [
+              Expanded(child: Divider(color: AppColors.border(context))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  context.l10n.or.toLowerCase(),
+                  style: AppTextStyles.meta(context),
                 ),
-                Expanded(child: Divider(color: AppColors.border(context))),
+              ),
+              Expanded(child: Divider(color: AppColors.border(context))),
+            ],
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── Form fields ──
+          AutofillGroup(
+            child: Column(
+              children: [
+                if (_isRegister) ...[
+                  _buildTextField(
+                    controller: _nameController,
+                    hint: context.l10n.displayName,
+                    autofillHints: const [AutofillHints.name],
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                _buildTextField(
+                  controller: _emailController,
+                  hint: context.l10n.email,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  controller: _passwordController,
+                  hint: context.l10n.password,
+                  obscureText: true,
+                  autofillHints: _isRegister
+                      ? const [AutofillHints.newPassword]
+                      : const [AutofillHints.password],
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
-            if (_isRegister) ...[
-              _buildTextField(
-                controller: _nameController,
-                label: context.l10n.displayName,
-                icon: Icons.person_outline,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return context.l10n.enterYourName;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-            _buildTextField(
-              controller: _emailController,
-              label: context.l10n.email,
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return context.l10n.enterYourEmail;
-                }
-                if (!v.contains('@')) {
-                  return context.l10n.enterValidEmail;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _passwordController,
-              label: context.l10n.password,
-              icon: Icons.lock_outline,
-              obscureText: true,
-              validator: (v) {
-                if (v == null || v.isEmpty) {
-                  return context.l10n.enterYourPassword;
-                }
-                if (v.length < 6) {
-                  return context.l10n.passwordMinLength;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            _PressableButton(
-              onPressed: _isLoading ? () {} : _submit,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer(context),
-                  borderRadius: BorderRadius.circular(10),
+          ),
+
+          // ── Forgot password (sign-in only) ──
+          if (!_isRegister) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _isLoading ? null : _sendPasswordReset,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(44, 44),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Center(
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _isRegister
-                              ? context.l10n.createAccount
-                              : context.l10n.signIn,
-                          style: AppTextStyles.bodyMedium(
-                            context,
-                          ).copyWith(color: Colors.white),
-                        ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  if (!_isLoading) {
-                    setState(() {
-                      _isRegister = !_isRegister;
-                      _error = null;
-                    });
-                  }
-                },
                 child: Text(
-                  _isRegister
-                      ? context.l10n.alreadyHaveAccount
-                      : context.l10n.needAccount,
-                  style: AppTextStyles.label(
-                    context,
-                  ).copyWith(color: AppColors.primaryContainer(context)),
+                  context.l10n.forgotPassword,
+                  style: AppTextStyles.label(context).copyWith(
+                    color: AppColors.primaryContainer(context),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
           ],
-        ),
+
+          const SizedBox(height: 28),
+
+          // ── Primary CTA ──
+          _PressableButton(
+            onPressed: _isLoading ? () {} : _submit,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: AppColors.primaryContainer(context),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _isRegister
+                            ? context.l10n.createAccount
+                            : context.l10n.signIn,
+                        style: AppTextStyles.bodyMedium(context).copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Mode toggle ──
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                if (!_isLoading) {
+                  setState(() {
+                    _isRegister = !_isRegister;
+                  });
+                }
+              },
+              child: Text.rich(
+                TextSpan(
+                  style: AppTextStyles.label(context).copyWith(fontSize: 14),
+                  children: [
+                    TextSpan(
+                      text: _isRegister
+                          ? context.l10n.alreadyHaveAccountPrefix
+                          : context.l10n.needAccountPrefix,
+                    ),
+                    TextSpan(
+                      text: _isRegister
+                          ? context.l10n.signIn
+                          : context.l10n.createAccount,
+                      style: TextStyle(
+                        color: AppColors.primaryContainer(context),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTextField({
     required TextEditingController controller,
-    required String label,
-    required IconData icon,
+    required String hint,
     TextInputType? keyboardType,
     bool autocorrect = true,
     bool obscureText = false,
-    String? Function(String?)? validator,
+    List<String>? autofillHints,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       autocorrect: autocorrect,
       obscureText: obscureText,
+      autofillHints: autofillHints,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
       style: AppTextStyles.body(context),
       decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
+        hintText: hint,
+        hintStyle: AppTextStyles.body(
+          context,
+        ).copyWith(color: AppColors.textMuted(context)),
+        filled: true,
+        fillColor: AppColors.surface(context),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border(context), width: 0.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border(context), width: 0.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.primaryContainer(context),
+            width: 1.5,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 1,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 1.5,
+          ),
+        ),
       ),
-      validator: validator,
     );
   }
 }

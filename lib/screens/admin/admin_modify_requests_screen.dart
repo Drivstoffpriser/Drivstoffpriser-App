@@ -22,6 +22,7 @@ import '../../config/app_colors.dart';
 import '../../config/app_text_styles.dart';
 import '../../l10n/l10n_helper.dart';
 import '../../models/station_modify_request.dart';
+import '../../services/backend_api_client.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/proposed_logo_preview.dart';
 
@@ -85,10 +86,26 @@ class _AdminModifyRequestsScreenState extends State<AdminModifyRequestsScreen> {
       ),
     );
     if (confirmed != true) return;
-    await FirestoreService.approveModifyRequest(
-      req,
-      feedback: feedbackController.text.trim(),
-    );
+    try {
+      await BackendApiClient().updateStation(
+        req.stationId,
+        name: req.nameChanged ? req.proposedName : null,
+        address: req.addressChanged ? req.proposedAddress : null,
+        city: req.cityChanged ? req.proposedCity : null,
+        latitude: req.locationChanged ? req.proposedLatitude : null,
+        longitude: req.locationChanged ? req.proposedLongitude : null,
+      );
+      await FirestoreService.approveModifyRequest(
+        req,
+        feedback: feedbackController.text.trim(),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${context.l10n.modifyRequestFailed}: $e')),
+        );
+      }
+    }
     feedbackController.dispose();
     if (mounted) _load();
   }
@@ -127,10 +144,18 @@ class _AdminModifyRequestsScreenState extends State<AdminModifyRequestsScreen> {
       ),
     );
     if (confirmed != true) return;
-    await FirestoreService.rejectModifyRequest(
-      req.id,
-      feedback: feedbackController.text.trim(),
-    );
+    try {
+      await FirestoreService.rejectModifyRequest(
+        req.id,
+        feedback: feedbackController.text.trim(),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${context.l10n.modifyRequestFailed}: $e')),
+        );
+      }
+    }
     feedbackController.dispose();
     if (mounted) _load();
   }

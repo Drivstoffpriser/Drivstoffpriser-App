@@ -263,10 +263,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordMinLength => 'Password must be at least 6 characters';
 
   @override
+  String get createAccountSubtitle => 'Track prices and help the community.';
+
+  @override
+  String get signInSubtitle => 'Welcome back.';
+
+  @override
+  String get alreadyHaveAccountPrefix => 'Already have an account? ';
+
+  @override
+  String get needAccountPrefix => 'Need an account? ';
+
+  @override
   String get alreadyHaveAccount => 'Already have an account? Sign in';
 
   @override
   String get needAccount => 'Need an account? Create one';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get passwordResetSent =>
+      'If an account exists for this email, you will receive a password reset email.';
 
   @override
   String get errorEmailInUse =>
@@ -287,6 +306,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorCredentialInUse =>
       'This credential is already associated with another account.';
+
+  @override
+  String get errorUserDisabled => 'This account has been disabled.';
+
+  @override
+  String get errorTooManyRequests =>
+      'Too many attempts. Please wait a bit and try again.';
+
+  @override
+  String get errorNetworkRequestFailed =>
+      'Network error. Check your connection and try again.';
 
   @override
   String errorAuthFailed(String code) {
@@ -798,6 +828,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will permanently remove this price report.';
 
   @override
+  String deleteReportFailed(String error) {
+    return 'Failed to delete report: $error';
+  }
+
+  @override
   String get coordinates => 'Coordinates';
 
   @override
@@ -813,6 +848,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteStationBody =>
       'This will permanently remove this station from the map.';
+
+  @override
+  String get deleteStationFailed => 'Failed to delete station';
 
   @override
   String get editStationInfo => 'Suggest Edit';
@@ -846,6 +884,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get manageAdmins => 'Manage Admins';
+
+  @override
+  String get manageAdminsSubtitle => 'Promote or demote users by email';
+
+  @override
+  String get manageAdminsIntro =>
+      'Enter a user\'s email to promote them to admin or remove their admin access. Changes take effect next time the user signs in.';
+
+  @override
+  String get manageAdminsEmailHint => 'e.g. user@example.com';
+
+  @override
+  String get promote => 'Promote';
+
+  @override
+  String get demote => 'Demote';
+
+  @override
+  String get adminPromoted => 'User promoted to admin.';
+
+  @override
+  String get adminDemoted => 'Admin access removed.';
+
+  @override
+  String adminUpdateFailed(String error) {
+    return 'Failed to update admin status: $error';
   }
 
   @override
@@ -903,4 +971,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationEmailSent => 'Verification email sent';
+
+  @override
+  String get cameraZoomTipTitle => 'Zoom Tip';
+
+  @override
+  String get cameraZoomTipBody =>
+      'Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder.';
 }

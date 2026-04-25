@@ -44,7 +44,7 @@ Under publisering — trenger 12 testere for å oppfylle Googles krav. Ta kontak
 
 Drivstoffpriser trenger frivillige bidragsytere! Spesielt folk med erfaring innen design, backend og mobilutvikling. Målet er at hele konseptet, fra design til kode til data, tilhører fellesskapet
 
-Sjekk issues, åpne en PR, eller bli med på [Discord](https://discord.gg/Wn63s7AW).
+Sjekk issues, åpne en PR, eller bli med på [Discord](https://discord.com/invite/dUHMVp2HGc).
 
 #### Husk å formatere koden
 

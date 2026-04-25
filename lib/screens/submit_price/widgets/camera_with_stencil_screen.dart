@@ -18,6 +18,7 @@
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../l10n/l10n_helper.dart';
 
@@ -50,7 +51,8 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
   double _currentZoom = 1.0;
   double _baseZoom = 1.0;
 
-  static const _zoomPresets = [1.0, 2.0];
+  static const _zoomPresets = [1.0, 2.0, 10.0, 20.0];
+  static const _zoomTipSeenKey = 'camera_zoom_tip_seen';
 
   @override
   void initState() {
@@ -97,10 +99,38 @@ class _CameraWithStencilScreenState extends State<CameraWithStencilScreen> {
         _minZoom = minZoom;
         _maxZoom = maxZoom;
       });
+
+      _showZoomTipIfNeeded();
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
     }
+  }
+
+  Future<void> _showZoomTipIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_zoomTipSeenKey) ?? false) return;
+    if (!mounted) return;
+
+    await prefs.setBool(_zoomTipSeenKey, true);
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        final l10n = context.l10n;
+        return AlertDialog(
+          title: Text(l10n.cameraZoomTipTitle),
+          content: Text(l10n.cameraZoomTipBody),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.gotIt),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _setZoom(double zoom) async {

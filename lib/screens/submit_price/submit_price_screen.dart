@@ -252,22 +252,13 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
 
     setState(() => _isSubmitting = true);
 
-    int successCount = 0;
-    String? lastError;
-
-    for (final entry in toSubmit.entries) {
-      final success = await priceProvider.submitReport(
-        stationId: widget.station.id,
-        fuelType: entry.key,
-        price: entry.value,
-        userId: userId,
-      );
-      if (success) {
-        successCount++;
-      } else {
-        lastError = priceProvider.error;
-      }
-    }
+    final success = await priceProvider.submitReports(
+      stationId: widget.station.id,
+      prices: toSubmit,
+      userId: userId,
+    );
+    final int successCount = success ? toSubmit.length : 0;
+    final String? lastError = success ? null : priceProvider.error;
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
@@ -276,7 +267,8 @@ class _SubmitPriceScreenState extends State<SubmitPriceScreen> {
       final userProvider = context.read<UserProvider>();
       final stationProvider = context.read<StationProvider>();
       await userProvider.refreshProfile();
-      stationProvider.refreshStations();
+      stationProvider.invalidatePriceCache(widget.station.id);
+      await stationProvider.loadPricesForStations([widget.station.id]);
     }
 
     if (!mounted) return;

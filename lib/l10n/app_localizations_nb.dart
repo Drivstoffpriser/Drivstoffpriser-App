@@ -263,10 +263,29 @@ class AppLocalizationsNb extends AppLocalizations {
   String get passwordMinLength => 'Passordet må være minst 6 tegn';
 
   @override
+  String get createAccountSubtitle => 'Spor priser og hjelp fellesskapet.';
+
+  @override
+  String get signInSubtitle => 'Velkommen tilbake.';
+
+  @override
+  String get alreadyHaveAccountPrefix => 'Har du allerede en konto? ';
+
+  @override
+  String get needAccountPrefix => 'Trenger du en konto? ';
+
+  @override
   String get alreadyHaveAccount => 'Har du allerede en konto? Logg inn';
 
   @override
   String get needAccount => 'Trenger du en konto? Opprett en';
+
+  @override
+  String get forgotPassword => 'Glemt passord?';
+
+  @override
+  String get passwordResetSent =>
+      'Hvis det finnes en konto for denne e-postadressen, vil du motta en e-post for tilbakestilling av passord.';
 
   @override
   String get errorEmailInUse =>
@@ -288,6 +307,17 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get errorCredentialInUse =>
       'Denne legitimasjonen er allerede knyttet til en annen konto.';
+
+  @override
+  String get errorUserDisabled => 'Denne kontoen er deaktivert.';
+
+  @override
+  String get errorTooManyRequests =>
+      'For mange forsøk. Vent litt og prøv igjen.';
+
+  @override
+  String get errorNetworkRequestFailed =>
+      'Nettverksfeil. Sjekk tilkoblingen og prøv igjen.';
 
   @override
   String errorAuthFailed(String code) {
@@ -803,6 +833,11 @@ class AppLocalizationsNb extends AppLocalizations {
       'Dette vil permanent fjerne denne prisrapporten.';
 
   @override
+  String deleteReportFailed(String error) {
+    return 'Kunne ikke slette rapport: $error';
+  }
+
+  @override
   String get coordinates => 'Koordinater';
 
   @override
@@ -818,6 +853,9 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get deleteStationBody =>
       'Dette vil permanent fjerne denne stasjonen fra kartet.';
+
+  @override
+  String get deleteStationFailed => 'Kunne ikke slette stasjonen';
 
   @override
   String get editStationInfo => 'Foreslå endring';
@@ -852,6 +890,37 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String stationId(String id) {
     return 'ID: $id';
+  }
+
+  @override
+  String get manageAdmins => 'Administrer administratorer';
+
+  @override
+  String get manageAdminsSubtitle =>
+      'Forfremme eller degradere brukere etter e-post';
+
+  @override
+  String get manageAdminsIntro =>
+      'Skriv inn en brukers e-post for å forfremme dem til administrator eller fjerne administratortilgangen. Endringer trer i kraft neste gang brukeren logger inn.';
+
+  @override
+  String get manageAdminsEmailHint => 'f.eks. bruker@eksempel.no';
+
+  @override
+  String get promote => 'Forfremme';
+
+  @override
+  String get demote => 'Degradere';
+
+  @override
+  String get adminPromoted => 'Brukeren ble forfremmet til administrator.';
+
+  @override
+  String get adminDemoted => 'Administratortilgang fjernet.';
+
+  @override
+  String adminUpdateFailed(String error) {
+    return 'Kunne ikke oppdatere administratorstatus: $error';
   }
 
   @override
@@ -909,4 +978,11 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get verificationEmailSent => 'Bekreftelses-e-post sendt';
+
+  @override
+  String get cameraZoomTipTitle => 'Zoom-tips';
+
+  @override
+  String get cameraZoomTipBody =>
+      'Bruk knip-for-å-zoome for å zoome nærmere prisskiltet. Du kan også trykke på zoom-knappene under søkeren.';
 }

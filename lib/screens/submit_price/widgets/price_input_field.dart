@@ -23,7 +23,7 @@ import '../../../config/app_text_styles.dart';
 import '../../../l10n/l10n_helper.dart';
 import '../../../models/fuel_type.dart';
 
-class _AutoDecimalFormatter extends TextInputFormatter {
+class AutoDecimalFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -85,7 +85,7 @@ class PriceInputField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
-      inputFormatters: [_AutoDecimalFormatter()],
+      inputFormatters: [AutoDecimalFormatter()],
       style: AppTextStyles.body(context),
       decoration: InputDecoration(
         labelText: '${fuelType.localizedName(context)} (${fuelType.unit})',

@@ -19,6 +19,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,16 +121,22 @@ class UserProvider extends ChangeNotifier {
 
   final _apiClient = BackendApiClient();
 
+  Future<bool> _readAdminClaim(User firebaseUser) async {
+    final tokenResult = await firebaseUser.getIdTokenResult();
+    return tokenResult.claims?['admin'] == true;
+  }
+
   Future<void> _loadProfile(User firebaseUser) async {
     final existing = await FirestoreService.getUserProfile(firebaseUser.uid);
     final reportCount = await _apiClient.getPriceRegistrations();
+    final isAdmin = await _readAdminClaim(firebaseUser);
     if (existing != null) {
       _user = UserProfile(
         id: existing.id,
         displayName: existing.displayName,
         reportCount: reportCount,
         trustScore: existing.trustScore,
-        isAdmin: existing.isAdmin,
+        isAdmin: isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -137,6 +144,7 @@ class UserProvider extends ChangeNotifier {
         displayName: firebaseUser.displayName ?? 'Anonymous',
         reportCount: reportCount,
         trustScore: 1.0,
+        isAdmin: isAdmin,
       );
       await FirestoreService.setUserProfile(_user);
     }
@@ -169,15 +177,17 @@ class UserProvider extends ChangeNotifier {
 
     // Read existing profile to preserve reportCount/trustScore,
     // only create a new one if the user has never been seen before.
-    final uid = _auth.currentUser!.uid;
+    final firebaseUser = _auth.currentUser!;
+    final uid = firebaseUser.uid;
     final existing = await FirestoreService.getUserProfile(uid);
+    final isAdmin = await _readAdminClaim(firebaseUser);
     if (existing != null) {
       _user = UserProfile(
         id: uid,
         displayName: displayName,
         reportCount: existing.reportCount,
         trustScore: existing.trustScore,
-        isAdmin: existing.isAdmin,
+        isAdmin: isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -185,11 +195,12 @@ class UserProvider extends ChangeNotifier {
         displayName: displayName,
         reportCount: 0,
         trustScore: 1.0,
+        isAdmin: isAdmin,
       );
     }
     await FirestoreService.setUserProfile(_user);
     try {
-      await _auth.currentUser?.sendEmailVerification();
+      await firebaseUser.sendEmailVerification();
     } catch (_) {}
     notifyListeners();
   }
@@ -216,6 +227,11 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Send a password-reset email via Firebase Auth.
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
   /// Sign in with an existing email/password account.
   Future<void> signInWithEmail(String email, String password) async {
     final result = await _auth.signInWithEmailAndPassword(
@@ -228,6 +244,36 @@ class UserProvider extends ChangeNotifier {
   /// Sign in with Google. Links to anonymous account when possible;
   /// falls back to direct sign-in if the credential is already used.
   Future<void> signInWithGoogle() async {
+    if (kIsWeb) {
+      await _signInWithGoogleWeb();
+    } else {
+      await _signInWithGoogleNative();
+    }
+  }
+
+  Future<void> _signInWithGoogleWeb() async {
+    final provider = GoogleAuthProvider();
+
+    final currentUser = _auth.currentUser;
+    UserCredential result;
+    if (currentUser != null) {
+      try {
+        result = await currentUser.linkWithPopup(provider);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'credential-already-in-use') {
+          result = await _auth.signInWithPopup(provider);
+        } else {
+          rethrow;
+        }
+      }
+    } else {
+      result = await _auth.signInWithPopup(provider);
+    }
+
+    await _completeGoogleSignIn(result.user);
+  }
+
+  Future<void> _signInWithGoogleNative() async {
     final GoogleSignInAccount googleUser;
     try {
       googleUser = await _googleSignIn.authenticate();
@@ -261,8 +307,10 @@ class UserProvider extends ChangeNotifier {
       await _auth.signInWithCredential(credential);
     }
 
-    // Use Google display name if available
-    final signedInUser = _auth.currentUser;
+    await _completeGoogleSignIn(_auth.currentUser);
+  }
+
+  Future<void> _completeGoogleSignIn(User? signedInUser) async {
     if (signedInUser == null) {
       throw FirebaseAuthException(
         code: 'sign-in-failed',
@@ -270,17 +318,17 @@ class UserProvider extends ChangeNotifier {
       );
     }
 
-    final displayName =
-        signedInUser.displayName ?? googleUser.displayName ?? 'User';
+    final displayName = signedInUser.displayName ?? 'User';
     // Read existing profile to preserve reportCount/trustScore
     final existing = await FirestoreService.getUserProfile(signedInUser.uid);
+    final isAdmin = await _readAdminClaim(signedInUser);
     if (existing != null) {
       _user = UserProfile(
         id: signedInUser.uid,
         displayName: displayName,
         reportCount: existing.reportCount,
         trustScore: existing.trustScore,
-        isAdmin: existing.isAdmin,
+        isAdmin: isAdmin,
       );
     } else {
       _user = UserProfile(
@@ -288,6 +336,7 @@ class UserProvider extends ChangeNotifier {
         displayName: displayName,
         reportCount: 0,
         trustScore: 1.0,
+        isAdmin: isAdmin,
       );
     }
     await FirestoreService.setUserProfile(_user);

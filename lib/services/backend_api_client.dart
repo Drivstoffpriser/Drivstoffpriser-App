@@ -22,6 +22,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
+import '../models/current_price.dart';
 import '../models/fuel_type.dart';
 import '../models/price_history_point.dart';
 import '../models/price_report.dart';
@@ -92,6 +93,26 @@ class BackendApiClient {
     _checkStatus(response);
   }
 
+  Future<void> deleteNoBody(String path) async {
+    final response = await http.delete(
+      _uri(path),
+      headers: await _authHeaders(),
+    );
+    _checkStatus(response);
+  }
+
+  Future<Map<String, dynamic>> patch(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await http.patch(
+      _uri(path),
+      headers: await _authHeaders(),
+      body: jsonEncode(body),
+    );
+    return _decodeMap(response);
+  }
+
   // ── Domain methods ────────────────────────────────────────────────────────
 
   Future<List<Station>> getStations({
@@ -116,35 +137,8 @@ class BackendApiClient {
     ];
   }
 
-  Future<List<Station>> getStationsByBbox({
-    required double minLat,
-    required double minLng,
-    required double maxLat,
-    required double maxLng,
-  }) async {
-    final data = await get(
-      '/stations/bbox',
-      queryParams: {
-        'minLat': minLat.toString(),
-        'minLng': minLng.toString(),
-        'maxLat': maxLat.toString(),
-        'maxLng': maxLng.toString(),
-      },
-    );
-    final raw = data['stations'] as List<dynamic>;
-    return [
-      for (final item in raw)
-        Station.fromBackendJson(item as Map<String, dynamic>),
-    ];
-  }
-
-  Future<List<Station>> searchStations(String query) async {
-    final data = await get('/stations/search', queryParams: {'query': query});
-    final raw = data['stations'] as List<dynamic>;
-    return [
-      for (final item in raw)
-        Station.fromBackendJson(item as Map<String, dynamic>),
-    ];
+  Future<void> deletePriceRegistration(String stationId, String priceId) async {
+    await deleteNoBody('/stations/$stationId/prices/$priceId');
   }
 
   Future<void> registerPrices(
@@ -157,6 +151,47 @@ class BackendApiClient {
           {'fuelType': r.fuelType.backendString, 'price': r.price},
       ],
     });
+  }
+
+  Future<void> deleteStation(String stationId) async {
+    await deleteNoBody('/stations/$stationId');
+  }
+
+  Future<void> updateStation(
+    String stationId, {
+    String? name,
+    String? provider,
+    String? address,
+    String? city,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (provider != null) body['provider'] = provider;
+    if (address != null) body['address'] = address;
+    if (city != null) body['city'] = city;
+    if (latitude != null && longitude != null) {
+      body['location'] = {'lat': latitude, 'lng': longitude};
+    }
+    await patch('/stations/$stationId', body);
+  }
+
+  Future<String> getUserIdByEmail(String email) async {
+    final data = await get('/users/by-email', queryParams: {'email': email});
+    return data['id'] as String;
+  }
+
+  Future<void> promoteAdmin(String userId) async {
+    final response = await http.post(
+      _uri('/users/$userId/admin'),
+      headers: await _authHeaders(),
+    );
+    _checkStatus(response);
+  }
+
+  Future<void> demoteAdmin(String userId) async {
+    await deleteNoBody('/users/$userId/admin');
   }
 
   Future<Set<String>> getFavorites() async {
@@ -215,6 +250,56 @@ class BackendApiClient {
     }).toList();
 
     return (history: history, recentUpdates: recentUpdates);
+  }
+
+  /// GET /stations/last-updated — no auth required.
+  Future<DateTime?> getStationsLastUpdated() async {
+    final response = await http.get(_uri('/stations/last-updated'));
+    _checkStatus(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final raw = data['lastUpdatedAt'];
+    return raw != null ? DateTime.parse(raw as String) : null;
+  }
+
+  /// GET /stations/all — returns all stations without prices.
+  Future<List<Station>> getAllStations() async {
+    final data = await get('/stations/all');
+    final raw = data['stations'] as List<dynamic>;
+    return [
+      for (final item in raw)
+        Station.fromBaseJson(item as Map<String, dynamic>),
+    ];
+  }
+
+  /// GET /stations/prices?stationIds=id1&stationIds=id2...
+  /// Returns prices keyed by station ID.
+  Future<Map<String, Map<FuelType, CurrentPrice>>> getStationPrices(
+    List<String> stationIds,
+  ) async {
+    final queryString = stationIds.map((id) => 'stationIds=$id').join('&');
+    final uri = Uri.parse(
+      '${BackendConfig.baseUrl}/stations/prices?$queryString',
+    );
+    final response = await http.get(uri, headers: await _authHeaders());
+    _checkStatus(response);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final raw = data['stations'] as List<dynamic>;
+
+    final result = <String, Map<FuelType, CurrentPrice>>{};
+    for (final item in raw) {
+      final map = item as Map<String, dynamic>;
+      final stationId = map['stationId'] as String;
+      final prices = <FuelType, CurrentPrice>{};
+      for (final p in (map['prices'] as List<dynamic>)) {
+        final price = CurrentPrice.fromBackendJson(
+          stationId,
+          p as Map<String, dynamic>,
+        );
+        prices[price.fuelType] = price;
+      }
+      result[stationId] = prices;
+    }
+    return result;
   }
 
   static double _toDouble(dynamic v) =>
