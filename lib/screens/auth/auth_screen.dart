@@ -18,6 +18,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -176,6 +177,7 @@ class _AuthScreenState extends State<AuthScreen> {
         await userProvider.signInWithEmail(email, password);
       }
 
+      TextInput.finishAutofillContext();
       if (mounted) {
         if (widget.popOnSuccess) {
           Navigator.pop(context, true);
@@ -315,28 +317,42 @@ class _AuthScreenState extends State<AuthScreen> {
           const SizedBox(height: 28),
 
           // ── Form fields ──
-          if (_isRegister) ...[
-            _buildTextField(
-              controller: _nameController,
-              hint: context.l10n.displayName,
-              textInputAction: TextInputAction.next,
+          AutofillGroup(
+            child: Column(
+              children: [
+                if (_isRegister) ...[
+                  _buildTextField(
+                    controller: _nameController,
+                    hint: context.l10n.displayName,
+                    autofillHints: const [AutofillHints.name],
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                _buildTextField(
+                  controller: _emailController,
+                  hint: context.l10n.email,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  controller: _passwordController,
+                  hint: context.l10n.password,
+                  obscureText: true,
+                  autofillHints: _isRegister
+                      ? const [AutofillHints.newPassword]
+                      : const [AutofillHints.password],
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-          ],
-          _buildTextField(
-            controller: _emailController,
-            hint: context.l10n.email,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 12),
-          _buildTextField(
-            controller: _passwordController,
-            hint: context.l10n.password,
-            obscureText: true,
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _submit(),
           ),
 
           // ── Forgot password (sign-in only) ──
@@ -442,6 +458,7 @@ class _AuthScreenState extends State<AuthScreen> {
     TextInputType? keyboardType,
     bool autocorrect = true,
     bool obscureText = false,
+    List<String>? autofillHints,
     TextInputAction? textInputAction,
     ValueChanged<String>? onFieldSubmitted,
   }) {
@@ -450,6 +467,7 @@ class _AuthScreenState extends State<AuthScreen> {
       keyboardType: keyboardType,
       autocorrect: autocorrect,
       obscureText: obscureText,
+      autofillHints: autofillHints,
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,
       style: AppTextStyles.body(context),
