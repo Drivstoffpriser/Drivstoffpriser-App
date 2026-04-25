@@ -28,7 +28,6 @@ import '../../providers/location_provider.dart';
 import '../../providers/station_provider.dart';
 import '../../services/distance_service.dart';
 import '../../widgets/brand_logo.dart';
-import '../../widgets/loading_indicator.dart';
 import '../map/widgets/brand_filter_bar.dart';
 import '../map/widgets/fuel_filter_bar.dart';
 
@@ -110,10 +109,8 @@ class StationListScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child:
-                (stationProvider.isLoading || stationProvider.isListLoading) &&
-                    sorted.isEmpty
-                ? const LoadingIndicator()
+            child: stationProvider.isListLoading
+                ? const _StationListSkeleton()
                 : RefreshIndicator(
                     onRefresh: () async {
                       try {
@@ -207,6 +204,148 @@ class _StationListTile extends StatefulWidget {
   @override
   State<_StationListTile> createState() => _StationListTileState();
 }
+
+// ── Skeleton loader ──────────────────────────────────────────────────────────
+
+class _StationListSkeleton extends StatefulWidget {
+  const _StationListSkeleton();
+
+  @override
+  State<_StationListSkeleton> createState() => _StationListSkeletonState();
+}
+
+class _StationListSkeletonState extends State<_StationListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark
+        ? AppColors.darkSurfaceHigh
+        : AppColors.lightSurfaceHigh;
+    final highlight = isDark
+        ? AppColors.darkSurfaceHighest
+        : const Color(0xFFD1D5DB);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final shimmerGradient = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          stops: const [0.0, 0.5, 1.0],
+          colors: [base, highlight, base],
+          transform: _SlidingGradientTransform(_controller.value),
+        );
+
+        return ListView.builder(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 100,
+          ),
+          itemCount: 10,
+          itemBuilder: (ctx, i) => _SkeletonTile(gradient: shimmerGradient),
+        );
+      },
+    );
+  }
+}
+
+class _SlidingGradientTransform extends GradientTransform {
+  final double slidePercent;
+  const _SlidingGradientTransform(this.slidePercent);
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(
+      bounds.width * (slidePercent * 2 - 1),
+      0,
+      0,
+    );
+  }
+}
+
+class _SkeletonTile extends StatelessWidget {
+  final Gradient gradient;
+  const _SkeletonTile({required this.gradient});
+
+  Widget _buildBox({
+    double width = double.infinity,
+    double height = 12,
+    double radius = 6,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        gradient: gradient,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          // Brand logo circle
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: gradient,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Name + meta lines
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildBox(width: double.infinity, height: 21),
+                const SizedBox(height: 2),
+                _buildBox(width: 140, height: 17),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Price placeholder
+          _buildBox(width: 52, height: 24, radius: 4),
+          const SizedBox(width: 8),
+          // Favorite icon placeholder
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: gradient,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Station list tile ────────────────────────────────────────────────────────
 
 class _StationListTileState extends State<_StationListTile> {
   bool _isPressed = false;
