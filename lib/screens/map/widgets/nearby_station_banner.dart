@@ -41,7 +41,7 @@ class NearbyStationBanner extends StatefulWidget {
 }
 
 class _NearbyStationBannerState extends State<NearbyStationBanner> {
-  String? _dismissedStationId;
+  final Set<String> _dismissedStationIds = {};
 
   Station? _findNearestStation() {
     final locationProvider = context.watch<LocationProvider>();
@@ -54,6 +54,7 @@ class _NearbyStationBannerState extends State<NearbyStationBanner> {
     double nearestDist = double.infinity;
 
     for (final station in stationProvider.stations) {
+      if (_dismissedStationIds.contains(station.id)) continue;
       final dist = DistanceService.distanceInMeters(
         pos.latitude,
         pos.longitude,
@@ -67,7 +68,6 @@ class _NearbyStationBannerState extends State<NearbyStationBanner> {
     }
 
     if (nearest == null || nearestDist > _nearbyThresholdMeters) return null;
-    if (nearest.id == _dismissedStationId) return null;
 
     return nearest;
   }
@@ -145,8 +145,8 @@ class _NearbyStationBannerState extends State<NearbyStationBanner> {
                     AppRoutes.submitPrice,
                     arguments: station,
                   );
-                  if (submitted == true) {
-                    setState(() => _dismissedStationId = station.id);
+                  if (submitted == true && mounted) {
+                    setState(() => _dismissedStationIds.add(station.id));
                   }
                 },
               ),
@@ -158,7 +158,7 @@ class _NearbyStationBannerState extends State<NearbyStationBanner> {
                     ? const Color(0xFFFF716C)
                     : const Color(0xFFE53935),
                 onTap: () {
-                  setState(() => _dismissedStationId = station.id);
+                  setState(() => _dismissedStationIds.add(station.id));
                 },
               ),
             ],

@@ -182,8 +182,9 @@ class _PriceCaptureScreenState extends State<PriceCaptureScreen> {
     }
   }
 
-  void _goToForm({ScanResult? scanResult}) {
-    Navigator.pushReplacement(
+  Future<void> _goToForm({ScanResult? scanResult}) async {
+    if (!mounted) return;
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => SubmitPriceScreen(
@@ -192,6 +193,8 @@ class _PriceCaptureScreenState extends State<PriceCaptureScreen> {
         ),
       ),
     );
+    if (!mounted) return;
+    Navigator.pop(context, result);
   }
 
   @override
