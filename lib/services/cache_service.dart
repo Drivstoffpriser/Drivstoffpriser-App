@@ -20,11 +20,17 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/current_price.dart';
+import '../models/fuel_type.dart';
 import '../models/station.dart';
 
 class CacheService {
   static const _allStationsKey = 'cached_all_stations';
   static const _serverLastUpdatedKey = 'stations_server_last_updated';
+  static const _pricesCacheKey = 'cached_prices';
+
+  /// TTL for the cross-session price cache.
+  static const priceCacheTtl = Duration(hours: 1);
 
   /// Cache all stations (base data, no prices).
   static Future<void> cacheAllStations(
@@ -64,5 +70,58 @@ class CacheService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('cached_stations');
     await prefs.remove('cached_stations_ts');
+  }
+
+  /// Persist prices and fetch timestamps for stations that have prices.
+  static Future<void> cachePrices(
+    Map<String, Station> stations,
+    Map<String, DateTime> fetchedAt,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = <String, dynamic>{};
+    for (final entry in fetchedAt.entries) {
+      final station = stations[entry.key];
+      if (station == null || station.prices.isEmpty) continue;
+      data[entry.key] = {
+        'prices': station.prices.values.map((p) => p.toJson()).toList(),
+        'fetchedAt': entry.value.toIso8601String(),
+      };
+    }
+    await prefs.setString(_pricesCacheKey, jsonEncode(data));
+  }
+
+  /// Returns cached prices and fetch timestamps, or null if no cache exists.
+  static Future<
+    ({
+      Map<String, Map<FuelType, CurrentPrice>> prices,
+      Map<String, DateTime> fetchedAt,
+    })?
+  >
+  getCachedPrices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_pricesCacheKey);
+    if (raw == null) return null;
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final prices = <String, Map<FuelType, CurrentPrice>>{};
+      final fetchedAt = <String, DateTime>{};
+      for (final entry in data.entries) {
+        final m = entry.value as Map<String, dynamic>;
+        final priceList = (m['prices'] as List)
+            .map((p) => CurrentPrice.fromJson(p as Map<String, dynamic>))
+            .toList();
+        prices[entry.key] = {for (final p in priceList) p.fuelType: p};
+        fetchedAt[entry.key] = DateTime.parse(m['fetchedAt'] as String);
+      }
+      return (prices: prices, fetchedAt: fetchedAt);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Clear the price cache (called on full station refresh).
+  static Future<void> clearPriceCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pricesCacheKey);
   }
 }
