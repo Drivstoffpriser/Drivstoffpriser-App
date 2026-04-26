@@ -105,6 +105,24 @@ class StationProvider extends ChangeNotifier {
         notifyListeners();
       }
 
+      // 1b. Merge cached prices so markers show prices immediately.
+      final cachedPrices = await CacheService.getCachedPrices();
+      if (cachedPrices != null) {
+        final now = DateTime.now();
+        for (final entry in cachedPrices.prices.entries) {
+          final station = _allStations[entry.key];
+          if (station == null) continue;
+          _allStations[entry.key] = station.copyWithPrices(entry.value);
+          // Restore the TTL timestamp only if the cache is still fresh,
+          // so stale prices display immediately but trigger a re-fetch.
+          final ft = cachedPrices.fetchedAt[entry.key]!;
+          if (now.difference(ft) < CacheService.priceCacheTtl) {
+            _priceFetchedAt[entry.key] = ft;
+          }
+        }
+        notifyListeners();
+      }
+
       // 2. Check server timestamp (no auth needed).
       final client = BackendApiClient();
       DateTime? serverLastUpdated;
@@ -197,6 +215,7 @@ class StationProvider extends ChangeNotifier {
         _recomputeBestMapStation();
         notifyListeners();
       }
+      CacheService.cachePrices(_allStations, _priceFetchedAt);
     } catch (e) {
       debugPrint('Failed to load prices: $e');
     } finally {
@@ -494,6 +513,7 @@ class StationProvider extends ChangeNotifier {
       _allStations = {for (final s in stations) s.id: s};
       _priceFetchedAt.clear();
       _listStations = [];
+      await CacheService.clearPriceCache();
 
       final serverLastUpdated = await client.getStationsLastUpdated();
       if (serverLastUpdated != null) {

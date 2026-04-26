@@ -143,34 +143,39 @@ class _MapScreenState extends State<MapScreen> {
     // which makes clearing here safe.
     _clusteredStationIds.clear();
     _priceDebounce?.cancel();
-    _priceDebounce = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final stationProvider = context.read<StationProvider>();
-      final all = stationProvider.brandFilteredStations;
-      if (all.isEmpty) return;
+    _priceDebounce = Timer(
+      hasGesture
+          ? const Duration(milliseconds: 250)
+          : const Duration(milliseconds: 50),
+      () {
+        if (!mounted) return;
+        final stationProvider = context.read<StationProvider>();
+        final all = stationProvider.brandFilteredStations;
+        if (all.isEmpty) return;
 
-      final bounds = camera.visibleBounds;
-      final visibleIds = <String>[];
-      final unclusteredVisibleIds = <String>[];
-      for (final s in all) {
-        if (s.latitude < bounds.south || s.latitude > bounds.north) continue;
-        if (s.longitude < bounds.west || s.longitude > bounds.east) continue;
-        visibleIds.add(s.id);
-        if (!_clusteredStationIds.contains(s.id)) {
-          unclusteredVisibleIds.add(s.id);
+        final bounds = camera.visibleBounds;
+        final visibleIds = <String>[];
+        final unclusteredVisibleIds = <String>[];
+        for (final s in all) {
+          if (s.latitude < bounds.south || s.latitude > bounds.north) continue;
+          if (s.longitude < bounds.west || s.longitude > bounds.east) continue;
+          visibleIds.add(s.id);
+          if (!_clusteredStationIds.contains(s.id)) {
+            unclusteredVisibleIds.add(s.id);
+          }
         }
-      }
 
-      // If only a handful of stations are visible, just fetch for all of them
-      // regardless of cluster state — every marker should show a price.
-      // Otherwise fetch only for the individually-rendered (unclustered) ones,
-      // since cluster bubbles never display prices.
-      final ids = visibleIds.length <= _kPriceFetchAllThreshold
-          ? visibleIds
-          : unclusteredVisibleIds;
-      if (ids.isEmpty) return;
-      stationProvider.loadPricesForStations(ids);
-    });
+        // If only a handful of stations are visible, just fetch for all of them
+        // regardless of cluster state — every marker should show a price.
+        // Otherwise fetch only for the individually-rendered (unclustered) ones,
+        // since cluster bubbles never display prices.
+        final ids = visibleIds.length <= _kPriceFetchAllThreshold
+            ? visibleIds
+            : unclusteredVisibleIds;
+        if (ids.isEmpty) return;
+        stationProvider.loadPricesForStations(ids);
+      },
+    );
   }
 
   @override
