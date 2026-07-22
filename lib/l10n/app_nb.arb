@@ -5,6 +5,7 @@
 
   "navMap": "Kart",
   "navStations": "Stasjoner",
+  "navStatistics": "Statistikk",
   "navProfile": "Profil",
 
   "searchStations": "Søk stasjoner...",
@@ -328,5 +329,29 @@
   "verificationEmailSent": "Bekreftelses-e-post sendt",
 
   "cameraZoomTipTitle": "Zoom-tips",
-  "cameraZoomTipBody": "Bruk knip-for-å-zoome for å zoome nærmere prisskiltet. Du kan også trykke på zoom-knappene under søkeren."
+  "cameraZoomTipBody": "Bruk knip-for-å-zoome for å zoome nærmere prisskiltet. Du kan også trykke på zoom-knappene under søkeren.",
+
+  "statisticsTitle": "Statistikk",
+  "statisticsAllStations": "Alle stasjoner i Norge",
+  "statisticsNearbyStations": "Stasjoner i nærheten",
+  "statisticsHighest": "Høyest",
+  "statisticsLowest": "Lavest",
+  "statisticsActivity": "Prisrapporter",
+  "statisticsLast24h": "Siste 24 timer",
+  "statisticsLast7d": "Siste 7 dager",
+  "statisticsLast30d": "Siste 30 dager",
+  "statisticsNoLocation": "Aktiver posisjon for statistikk i nærheten",
+  "statisticsTabPriser": "Priser",
+  "statisticsTabKjeder": "Kjeder",
+  "statisticsTabRapporter": "Rapporter",
+  "statisticsKjederChartTitle": "Gjennomsnittspriser",
+  "statisticsKjederBrandColumn": "Kjede",
+  "statisticsKjederAvgPriceColumn": "Snitt",
+
+  "statisticsFilterAll": "Hele Norge",
+  "statisticsFilterNearby": "I nærheten",
+
+  "statisticsTopContributors": "Topp-bidragsytere",
+  "statisticsContributorsAllTime": "Totalt",
+  "statisticsAnonymous": "Anonym"
 }

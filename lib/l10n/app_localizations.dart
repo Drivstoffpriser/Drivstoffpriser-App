@@ -116,6 +116,12 @@ abstract class AppLocalizations {
   /// **'Stations'**
   String get navStations;
 
+  /// No description provided for @navStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get navStatistics;
+
   /// No description provided for @navProfile.
   ///
   /// In en, this message translates to:
@@ -1867,6 +1873,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder.'**
   String get cameraZoomTipBody;
+
+  /// No description provided for @statisticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statisticsTitle;
+
+  /// No description provided for @statisticsAllStations.
+  ///
+  /// In en, this message translates to:
+  /// **'All Stations in Norway'**
+  String get statisticsAllStations;
+
+  /// No description provided for @statisticsNearbyStations.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby Stations'**
+  String get statisticsNearbyStations;
+
+  /// No description provided for @statisticsHighest.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest'**
+  String get statisticsHighest;
+
+  /// No description provided for @statisticsLowest.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest'**
+  String get statisticsLowest;
+
+  /// No description provided for @statisticsActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Price Reports'**
+  String get statisticsActivity;
+
+  /// No description provided for @statisticsLast24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 24 hours'**
+  String get statisticsLast24h;
+
+  /// No description provided for @statisticsLast7d.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get statisticsLast7d;
+
+  /// No description provided for @statisticsLast30d.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get statisticsLast30d;
+
+  /// No description provided for @statisticsNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable location to see nearby statistics'**
+  String get statisticsNoLocation;
+
+  /// No description provided for @statisticsTabPriser.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices'**
+  String get statisticsTabPriser;
+
+  /// No description provided for @statisticsTabKjeder.
+  ///
+  /// In en, this message translates to:
+  /// **'Brands'**
+  String get statisticsTabKjeder;
+
+  /// No description provided for @statisticsTabRapporter.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get statisticsTabRapporter;
+
+  /// No description provided for @statisticsKjederChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Average prices'**
+  String get statisticsKjederChartTitle;
+
+  /// No description provided for @statisticsKjederBrandColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get statisticsKjederBrandColumn;
+
+  /// No description provided for @statisticsKjederAvgPriceColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg'**
+  String get statisticsKjederAvgPriceColumn;
+
+  /// No description provided for @statisticsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All of Norway'**
+  String get statisticsFilterAll;
+
+  /// No description provided for @statisticsFilterNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get statisticsFilterNearby;
+
+  /// No description provided for @statisticsTopContributors.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Contributors'**
+  String get statisticsTopContributors;
+
+  /// No description provided for @statisticsContributorsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get statisticsContributorsAllTime;
+
+  /// No description provided for @statisticsAnonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous'**
+  String get statisticsAnonymous;
 }
 
 class _AppLocalizationsDelegate
