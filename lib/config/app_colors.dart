@@ -49,6 +49,48 @@ class AppColors {
   // ── Accent (bright cyan) ──
   static const Color accent = Color(0xFF00d1ff);
 
+  // ── Leaderboard medal colors (rank 1/2/3) ──
+  // Dark mode: bright, saturated — they glow against dark surfaces.
+  // Light mode: deeper, lower-lightness variants that stay readable on grey.
+  static const Color rankGold = Color(0xFFFFD93D);
+  static const Color rankSilver = Color(0xFFB2BEC3);
+  static const Color rankBronze = Color(0xFFCD8052);
+  static const Color rankGoldLight = Color(0xFFA07800);
+  static const Color rankSilverLight = Color(0xFF6B7A8D);
+  static const Color rankBronzeLight = Color(0xFF8B5E3C);
+
+  static Color rankColor(BuildContext context, int rank) {
+    final dark = _isDark(context);
+    switch (rank) {
+      case 1:
+        return dark ? rankGold : rankGoldLight;
+      case 2:
+        return dark ? rankSilver : rankSilverLight;
+      case 3:
+        return dark ? rankBronze : rankBronzeLight;
+      default:
+        return Colors.transparent;
+    }
+  }
+
+  // ── Provider chart line colors (14 distinct hues for data visualisation) ──
+  static const List<Color> providerChartColors = [
+    Color(0xFF00D1FF), // cyan
+    Color(0xFFFF6B6B), // coral
+    Color(0xFF6BCB77), // green
+    Color(0xFFFFD93D), // yellow
+    Color(0xFFFF9F43), // orange
+    Color(0xFFA29BFE), // lavender
+    Color(0xFFFF6EC7), // pink
+    Color(0xFF00CEC9), // teal
+    Color(0xFFE17055), // terracotta
+    Color(0xFF74B9FF), // sky blue
+    Color(0xFFFD79A8), // rose
+    Color(0xFF55EFC4), // mint
+    Color(0xFFB2BEC3), // silver
+    Color(0xFFFDCB6E), // honey
+  ];
+
   // ── Context-aware helpers ──
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
@@ -82,6 +124,9 @@ class AppColors {
 
   static Color primaryContainer(BuildContext context) =>
       _isDark(context) ? darkPrimaryContainer : lightPrimaryContainer;
+
+  static Color secondary(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF6EDF85) : lightSecondary;
 
   /// Color indicating how fresh a price update is.
   static Color freshness(Duration age) {
