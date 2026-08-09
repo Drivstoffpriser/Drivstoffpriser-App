@@ -18,6 +18,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navStations => 'Stations';
 
   @override
+  String get navStatistics => 'Statistics';
+
+  @override
   String get navProfile => 'Profile';
 
   @override
@@ -978,4 +981,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cameraZoomTipBody =>
       'Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder.';
+
+  @override
+  String get statisticsTitle => 'Statistics';
+
+  @override
+  String get statisticsAllStations => 'All Stations in Norway';
+
+  @override
+  String get statisticsNearbyStations => 'Nearby Stations';
+
+  @override
+  String get statisticsHighest => 'Highest';
+
+  @override
+  String get statisticsLowest => 'Lowest';
+
+  @override
+  String get statisticsActivity => 'Price Reports';
+
+  @override
+  String get statisticsLast24h => 'Last 24 hours';
+
+  @override
+  String get statisticsLast7d => 'Last 7 days';
+
+  @override
+  String get statisticsLast30d => 'Last 30 days';
+
+  @override
+  String get statisticsNoLocation => 'Enable location to see nearby statistics';
+
+  @override
+  String get statisticsTabPriser => 'Prices';
+
+  @override
+  String get statisticsTabKjeder => 'Brands';
+
+  @override
+  String get statisticsTabRapporter => 'Reports';
+
+  @override
+  String get statisticsKjederChartTitle => 'Average prices';
+
+  @override
+  String get statisticsKjederBrandColumn => 'Brand';
+
+  @override
+  String get statisticsKjederAvgPriceColumn => 'Avg';
+
+  @override
+  String get statisticsFilterAll => 'All of Norway';
+
+  @override
+  String get statisticsFilterNearby => 'Nearby';
+
+  @override
+  String get statisticsTopContributors => 'Top Contributors';
+
+  @override
+  String get statisticsContributorsAllTime => 'All time';
+
+  @override
+  String get statisticsAnonymous => 'Anonymous';
 }
