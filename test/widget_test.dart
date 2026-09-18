@@ -29,6 +29,7 @@ import 'package:fuel_price_tracker/app.dart';
 import 'package:fuel_price_tracker/providers/location_provider.dart';
 import 'package:fuel_price_tracker/providers/price_provider.dart';
 import 'package:fuel_price_tracker/providers/station_provider.dart';
+import 'package:fuel_price_tracker/providers/statistics_provider.dart';
 import 'package:fuel_price_tracker/providers/user_provider.dart';
 
 class MockFirebasePlatform extends Fake
@@ -100,6 +101,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => StationProvider()),
           ChangeNotifierProvider(create: (_) => PriceProvider()),
           ChangeNotifierProvider(create: (_) => LocationProvider()),
+          ChangeNotifierProvider(create: (_) => StatisticsProvider()),
           ChangeNotifierProvider(create: (_) => UserProvider()),
         ],
         child: const App(),
