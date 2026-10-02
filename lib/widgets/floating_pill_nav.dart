@@ -30,6 +30,7 @@ import '../providers/user_provider.dart';
 import '../screens/map/map_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/station_detail/station_list_screen.dart';
+import '../screens/statistics/statistics_screen.dart';
 import '../services/firestore_service.dart';
 import 'onboarding_dialog.dart';
 import 'web_constrained.dart';
@@ -45,7 +46,12 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
   int _currentIndex = 0;
   bool _hasCheckedFeedback = false;
 
-  static const _screens = [MapScreen(), StationListScreen(), SettingsScreen()];
+  static const _screens = [
+    MapScreen(),
+    StationListScreen(),
+    StatisticsScreen(),
+    SettingsScreen(),
+  ];
 
   @override
   void didChangeDependencies() {
@@ -206,6 +212,7 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
               _screens[0],
               WebConstrained(child: _screens[1]),
               WebConstrained(child: _screens[2]),
+              WebConstrained(child: _screens[3]),
             ],
           ),
           Positioned(
@@ -264,12 +271,20 @@ class _FloatingPillNavState extends State<FloatingPillNav> {
                           ),
                           const SizedBox(width: 2),
                           _NavTab(
+                            icon: Icons.bar_chart_outlined,
+                            activeIcon: Icons.bar_chart,
+                            label: context.l10n.navStatistics,
+                            isActive: _currentIndex == 2,
+                            onTap: () => setState(() => _currentIndex = 2),
+                          ),
+                          const SizedBox(width: 2),
+                          _NavTab(
                             icon: Icons.person_outline,
                             activeIcon: Icons.person,
                             label: context.l10n.navProfile,
-                            isActive: _currentIndex == 2,
+                            isActive: _currentIndex == 3,
                             onTap: () {
-                              setState(() => _currentIndex = 2);
+                              setState(() => _currentIndex = 3);
                               context.read<UserProvider>().reloadUser();
                               context.read<UserProvider>().refreshProfile();
                             },
