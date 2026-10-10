@@ -5,6 +5,7 @@
 
   "navMap": "Map",
   "navStations": "Stations",
+  "navStatistics": "Statistics",
   "navProfile": "Profile",
 
   "searchStations": "Search stations...",
@@ -353,5 +354,29 @@
   "verificationEmailSent": "Verification email sent",
 
   "cameraZoomTipTitle": "Zoom Tip",
-  "cameraZoomTipBody": "Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder."
+  "cameraZoomTipBody": "Use pinch-to-zoom to zoom in closer to the price sign. You can also tap the zoom buttons below the viewfinder.",
+
+  "statisticsTitle": "Statistics",
+  "statisticsAllStations": "All Stations in Norway",
+  "statisticsNearbyStations": "Nearby Stations",
+  "statisticsHighest": "Highest",
+  "statisticsLowest": "Lowest",
+  "statisticsActivity": "Price Reports",
+  "statisticsLast24h": "Last 24 hours",
+  "statisticsLast7d": "Last 7 days",
+  "statisticsLast30d": "Last 30 days",
+  "statisticsNoLocation": "Enable location to see nearby statistics",
+  "statisticsTabPriser": "Prices",
+  "statisticsTabKjeder": "Brands",
+  "statisticsTabRapporter": "Reports",
+  "statisticsKjederChartTitle": "Average prices",
+  "statisticsKjederBrandColumn": "Brand",
+  "statisticsKjederAvgPriceColumn": "Avg",
+
+  "statisticsFilterAll": "All of Norway",
+  "statisticsFilterNearby": "Nearby",
+
+  "statisticsTopContributors": "Top Contributors",
+  "statisticsContributorsAllTime": "All time",
+  "statisticsAnonymous": "Anonymous"
 }

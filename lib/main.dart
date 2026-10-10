@@ -31,6 +31,7 @@ import 'firebase_options.dart';
 import 'providers/location_provider.dart';
 import 'providers/price_provider.dart';
 import 'providers/station_provider.dart';
+import 'providers/statistics_provider.dart';
 import 'providers/user_provider.dart';
 
 void main() async {
@@ -80,6 +81,7 @@ void main() async {
         ChangeNotifierProvider.value(value: stationProvider),
         ChangeNotifierProvider(create: (_) => PriceProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => StatisticsProvider()),
         ChangeNotifierProvider.value(value: userProvider),
       ],
       child: const App(),
