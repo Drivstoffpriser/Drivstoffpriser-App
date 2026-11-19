@@ -18,6 +18,9 @@ class AppLocalizationsNb extends AppLocalizations {
   String get navStations => 'Stasjoner';
 
   @override
+  String get navStatistics => 'Statistikk';
+
+  @override
   String get navProfile => 'Profil';
 
   @override
@@ -985,4 +988,68 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get cameraZoomTipBody =>
       'Bruk knip-for-å-zoome for å zoome nærmere prisskiltet. Du kan også trykke på zoom-knappene under søkeren.';
+
+  @override
+  String get statisticsTitle => 'Statistikk';
+
+  @override
+  String get statisticsAllStations => 'Alle stasjoner i Norge';
+
+  @override
+  String get statisticsNearbyStations => 'Stasjoner i nærheten';
+
+  @override
+  String get statisticsHighest => 'Høyest';
+
+  @override
+  String get statisticsLowest => 'Lavest';
+
+  @override
+  String get statisticsActivity => 'Prisrapporter';
+
+  @override
+  String get statisticsLast24h => 'Siste 24 timer';
+
+  @override
+  String get statisticsLast7d => 'Siste 7 dager';
+
+  @override
+  String get statisticsLast30d => 'Siste 30 dager';
+
+  @override
+  String get statisticsNoLocation =>
+      'Aktiver posisjon for statistikk i nærheten';
+
+  @override
+  String get statisticsTabPriser => 'Priser';
+
+  @override
+  String get statisticsTabKjeder => 'Kjeder';
+
+  @override
+  String get statisticsTabRapporter => 'Rapporter';
+
+  @override
+  String get statisticsKjederChartTitle => 'Gjennomsnittspriser';
+
+  @override
+  String get statisticsKjederBrandColumn => 'Kjede';
+
+  @override
+  String get statisticsKjederAvgPriceColumn => 'Snitt';
+
+  @override
+  String get statisticsFilterAll => 'Hele Norge';
+
+  @override
+  String get statisticsFilterNearby => 'I nærheten';
+
+  @override
+  String get statisticsTopContributors => 'Topp-bidragsytere';
+
+  @override
+  String get statisticsContributorsAllTime => 'Totalt';
+
+  @override
+  String get statisticsAnonymous => 'Anonym';
 }
